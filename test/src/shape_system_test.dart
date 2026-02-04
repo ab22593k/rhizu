@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/shape_system.dart';
+import 'package:rhizu/rhizu.dart';
 
 void main() {
   group('Shape System Tests', () {

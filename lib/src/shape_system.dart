@@ -87,21 +87,16 @@ class ShapePreview extends StatelessWidget {
         height: 100,
         decoration: BoxDecoration(color: const Color(0xFFE0E0E0)),
         child: ClipPath(
-          // Note: To truly use SVGs as generic paths in Flutter requires parsing the SVG path data
-          // and converting it to a Path object. flutter_svg typically renders the SVG.
-          // For masking, we can use a ShaderMask or similar, but ClipPath needs a Path.
-          // For this previewer, we will just display the SVG.
           child: Stack(
             children: [
               SvgPicture.asset(
                 shapeAsset!,
                 fit: BoxFit.cover,
-                // Placeholder color filter to show it as a shape
                 colorFilter: const ColorFilter.mode(
                   Color(0xFF6750A4),
                   BlendMode.srcIn,
                 ),
-                package: 'rhizu', // Important if this is a package
+                package: 'rhizu',
               ),
               if (child != null) Center(child: child),
             ],
@@ -128,5 +123,18 @@ class ShapePreview extends StatelessWidget {
 
 @Preview()
 Widget previewShape() {
-  return const ShapePreview(shapeAsset: ExpressiveShapes.flower);
+  return const Wrap(
+    spacing: 8,
+    runSpacing: 8,
+    children: [
+      ShapePreview(shapeAsset: ExpressiveShapes.flower),
+      ShapePreview(shapeAsset: ExpressiveShapes.burst),
+      ShapePreview(shapeAsset: ExpressiveShapes.heart),
+      ShapePreview(shapeAsset: ExpressiveShapes.diamond),
+      ShapePreview(shapeAsset: ExpressiveShapes.boom),
+      ShapePreview(shapeAsset: ExpressiveShapes.clover4),
+      ShapePreview(shapeAsset: ExpressiveShapes.pixelCircle),
+      ShapePreview(shapeAsset: ExpressiveShapes.sunny),
+    ],
+  );
 }
