@@ -35,7 +35,6 @@ class PhysicsShowcase extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(useMaterial3: true, colorSchemeSeed: Colors.indigo),
       home: Scaffold(
-        appBar: AppBar(title: const Text('M3 Motion Physics')),
         body: ListView(
           padding: const EdgeInsets.all(16),
           children: _tokens.entries.map((e) {
