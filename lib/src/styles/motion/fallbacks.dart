@@ -9,8 +9,6 @@ import 'package:flutter/animation.dart';
 class MotionFallbacks {
   const MotionFallbacks._();
 
-  // --- Expressive ---
-
   /// Expressive Fast Spatial (350ms)
   static const Cubic expressiveFastSpatial = Cubic(0.42, 1.67, 0.21, 0.90);
   static const Duration expressiveFastSpatialDuration = Duration(
@@ -46,8 +44,6 @@ class MotionFallbacks {
   static const Duration expressiveSlowEffectsDuration = Duration(
     milliseconds: 300,
   );
-
-  // --- Standard ---
 
   /// Standard Fast Spatial (350ms)
   static const Cubic standardFastSpatial = Cubic(0.27, 1.06, 0.18, 1.00);
