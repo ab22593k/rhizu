@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
 import 'package:rhizu/src/components/indicators/morphing.dart';
 
 void main() {
@@ -146,6 +147,100 @@ void main() {
       );
 
       expect(find.byType(MorphingLI), findsNothing);
+    });
+
+    testWidgets('MorphingLI respects size parameter', (
+      WidgetTester tester,
+    ) async {
+      // Default size
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI()));
+      final containerFinder = find.byType(Container).first;
+      final Container container = tester.widget(containerFinder);
+
+      // Default size is 48.0
+      expect(
+        container.constraints?.minWidth,
+        equals(LoadingIndicatorConstants.containerSize),
+      );
+      expect(
+        container.constraints?.minHeight,
+        equals(LoadingIndicatorConstants.containerSize),
+      );
+
+      // Custom size
+      const double customSize = 96.0;
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLI(size: customSize)),
+      );
+      final containerFinder2 = find.byType(Container).first;
+      final Container container2 = tester.widget(containerFinder2);
+
+      expect(container2.constraints?.minWidth, equals(customSize));
+      expect(container2.constraints?.minHeight, equals(customSize));
+    });
+
+    testWidgets('MorphingLI clamps size to constraints', (
+      WidgetTester tester,
+    ) async {
+      // Too small -> clamped to min (24.0)
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 10.0)));
+      final containerFinder = find.byType(Container).first;
+      final Container container = tester.widget(containerFinder);
+
+      expect(
+        container.constraints?.minWidth,
+        equals(LoadingIndicatorConstants.minContainerSize),
+      );
+
+      // Too large -> clamped to max (240.0)
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 300.0)));
+      final containerFinder2 = find.byType(Container).first;
+      final Container container2 = tester.widget(containerFinder2);
+
+      expect(
+        container2.constraints?.minWidth,
+        equals(LoadingIndicatorConstants.maxContainerSize),
+      );
+    });
+
+    testWidgets('MorphingLI named constructors set correct sizes', (
+      WidgetTester tester,
+    ) async {
+      // Small
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI.small()));
+      expect(
+        (tester.widget(find.byType(Container).first) as Container)
+            .constraints
+            ?.minWidth,
+        equals(LoadingIndicatorConstants.minContainerSize),
+      );
+
+      // Medium
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI.medium()));
+      expect(
+        (tester.widget(find.byType(Container).first) as Container)
+            .constraints
+            ?.minWidth,
+        equals(LoadingIndicatorConstants.defaultContainerSize),
+      );
+
+      // Large
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI.large()));
+      expect(
+        (tester.widget(find.byType(Container).first) as Container)
+            .constraints
+            ?.minWidth,
+        equals(96.0),
+      );
+
+      // Extra Large
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI.extraLarge()));
+      expect(
+        (tester.widget(find.byType(Container).first) as Container)
+            .constraints
+            ?.minWidth,
+        equals(144.0),
+      );
     });
   });
 

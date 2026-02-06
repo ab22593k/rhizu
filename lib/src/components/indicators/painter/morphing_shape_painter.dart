@@ -32,6 +32,11 @@ class MorphingShapePainter extends CustomPainter {
   /// step rotation that advances 90 degrees per shape transition.
   final double rotation;
 
+  /// The scale factor for the shape.
+  ///
+  /// This allows the shape to be resized based on the container size.
+  final double scale;
+
   /// Creates a morphing shape painter.
   ///
   /// All parameters are required and define how the shape should be rendered.
@@ -41,6 +46,7 @@ class MorphingShapePainter extends CustomPainter {
     required this.nextShape,
     required this.progress,
     required this.rotation,
+    this.scale = 1.0,
   });
 
   @override
@@ -72,8 +78,8 @@ class MorphingShapePainter extends CustomPainter {
 
       // Get radius for current and next shape at this angle
       // The rotation is handled by the canvas rotation, not here
-      final double r1 = currentPolarShape.getRadius(theta);
-      final double r2 = nextPolarShape.getRadius(theta);
+      final double r1 = currentPolarShape.getRadius(theta, scale: scale);
+      final double r2 = nextPolarShape.getRadius(theta, scale: scale);
 
       // Interpolate radius based on progress
       final double r = lerpDouble(r1, r2, progress)!;
@@ -104,6 +110,7 @@ class MorphingShapePainter extends CustomPainter {
         oldDelegate.rotation != rotation ||
         oldDelegate.currentShape != currentShape ||
         oldDelegate.nextShape != nextShape ||
-        oldDelegate.color != color;
+        oldDelegate.color != color ||
+        oldDelegate.scale != scale;
   }
 }

@@ -134,7 +134,9 @@ class PolarShape {
   /// for smooth results at arbitrary angles.
   ///
   /// The angle is automatically normalized to the range [0, 2*pi).
-  double getRadius(double theta) {
+  ///
+  /// The [scale] parameter allows resizing the shape. Defaults to 1.0.
+  double getRadius(double theta, {double scale = 1.0}) {
     // Normalize angle to [0, 2*pi)
     theta = theta % (2 * math.pi);
     if (theta < 0) theta += 2 * math.pi;
@@ -146,6 +148,8 @@ class PolarShape {
     final double t = pos - pos.floor();
 
     // Linear interpolation between adjacent radius values
-    return radii[index1] * (1 - t) + radii[index2] * t;
+    final rawRadius = radii[index1] * (1 - t) + radii[index2] * t;
+
+    return rawRadius * scale;
   }
 }

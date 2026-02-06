@@ -21,6 +21,24 @@ class LoadingIndicatorConstants {
   /// so the radius is 38 / 2 = 19.0.
   static const double indicatorRadius = 19.0;
 
+  /// Minimum container size in logical pixels.
+  static const double minContainerSize = 24.0;
+
+  /// Maximum container size in logical pixels.
+  static const double maxContainerSize = 240.0;
+
+  /// Default container size in logical pixels.
+  static const double defaultContainerSize = containerSize;
+
+  /// Ratio between the active indicator diameter and container size.
+  /// 38.0 / 48.0 = 0.7916666666666666
+  static const double indicatorToContainerRatio = 38.0 / 48.0;
+
+  /// Calculates the indicator radius for a given container size.
+  static double getIndicatorRadius(double containerSize) {
+    return (containerSize * indicatorToContainerRatio) / 2;
+  }
+
   // ============================================================================
   // Animation Timing
   // ============================================================================
@@ -65,6 +83,12 @@ class LoadingIndicatorConstants {
   ///
   /// Calculated as: indicatorRadius / svgCenter = 19.0 / 190.0 = 0.1
   static const double svgScaleFactor = 0.1;
+
+  /// Calculates the SVG scale factor for a given container size.
+  static double getSvgScaleFactor(double containerSize) {
+    final indicatorRadius = getIndicatorRadius(containerSize);
+    return indicatorRadius / svgCenter;
+  }
 
   /// Number of samples to take when parsing an SVG path into polar coordinates.
   ///
