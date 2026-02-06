@@ -1,91 +1,45 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 
-class WavyCircularProgressIndicator extends StatefulWidget {
-  final double? value; // Null for indeterminate
-  final Color color;
-  final Color trackColor;
-  final double radius;
-  final double strokeWidth;
-  final int waves; // Frequency of the wave
-  final double amplitude; // Height of the wave
-  final double trackGap; // Gap between Active indicator and track
+import '../constants.dart';
 
-  const WavyCircularProgressIndicator({
-    super.key,
-    this.value,
-    required this.color,
-    required this.trackColor,
-    this.radius = 24.0,
-    this.strokeWidth = 4.0,
-    this.waves = 12,
-    this.amplitude = 2.0,
-    this.trackGap = 4.0,
-  });
-
-  @override
-  State<WavyCircularProgressIndicator> createState() =>
-      _WavyCircularProgressIndicatorState();
-}
-
-class _WavyCircularProgressIndicatorState
-    extends State<WavyCircularProgressIndicator>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: widget.radius * 2,
-      height: widget.radius * 2,
-      child: AnimatedBuilder(
-        animation: _controller,
-        builder: (context, child) {
-          return CustomPaint(
-            painter: _WavyProgressPainter(
-              progress: widget.value,
-              rotation: _controller.value * 2 * math.pi,
-              color: widget.color,
-              trackColor: widget.trackColor,
-              strokeWidth: widget.strokeWidth,
-              waves: widget.waves,
-              amplitude: widget.amplitude,
-              trackGap: widget.trackGap,
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class _WavyProgressPainter extends CustomPainter {
+/// A custom painter that renders a wavy circular progress indicator.
+///
+/// This painter supports both determinate (with progress value) and
+/// indeterminate (spinning) modes. The active indicator is rendered as
+/// a wavy line while the track can be rendered as either a flat circle
+/// (indeterminate) or an arc (determinate).
+class WavyProgressPainter extends CustomPainter {
+  /// The current progress value (0.0 to 1.0) or null for indeterminate mode.
   final double? progress;
+
+  /// The current rotation angle in radians (for indeterminate mode).
   final double rotation;
+
+  /// The color of the active progress indicator.
   final Color color;
+
+  /// The color of the track (background) arc.
   final Color trackColor;
+
+  /// The width of the stroke lines in logical pixels.
   final double strokeWidth;
+
+  /// The number of waves (frequency) around the circle.
   final int waves;
+
+  /// The amplitude (height) of the wave in logical pixels.
   final double amplitude;
+
+  /// The gap between the active indicator and track in logical pixels.
   final double trackGap;
 
-  _WavyProgressPainter({
+  /// Creates a wavy progress painter.
+  ///
+  /// All parameters are required and define the visual appearance
+  /// and behavior of the progress indicator.
+  const WavyProgressPainter({
     required this.progress,
     required this.rotation,
     required this.color,
@@ -118,11 +72,11 @@ class _WavyProgressPainter extends CustomPainter {
     // 1. Draw Track (Flat)
     if (progress != null) {
       // Determinate: Track collapses as active grows, with a gap
-      final double gap = 4.0; // 4dp gap
-      final double gapAngle = gap / baseRadius;
+      final double gapAngle = trackGap / baseRadius;
       final double activeSweep = 2 * math.pi * progress!.clamp(0.0, 1.0);
 
-      final double trackStartAngle = -math.pi / 2 + activeSweep + gapAngle;
+      final double trackStartAngle =
+          WavyProgressConstants.startAngleOffset + activeSweep + gapAngle;
       final double trackSweepAngle = (2 * math.pi) - activeSweep - gapAngle;
 
       if (trackSweepAngle > 0) {
@@ -142,19 +96,20 @@ class _WavyProgressPainter extends CustomPainter {
     // 2. Draw Active Indicator (Wavy)
     if (progress != null) {
       // DETERMINATE MODE
-      final Path activePath = _createWavyPath(
+      final Path activePath = createWavyPath(
         center: center,
         baseRadius: baseRadius,
-        startAngle: -math.pi / 2, // Start from top
+        startAngle: WavyProgressConstants.startAngleOffset,
         sweepAngle: 2 * math.pi * progress!.clamp(0.0, 1.0),
         globalRotation: 0,
       );
       canvas.drawPath(activePath, activePaint);
     } else {
       // INDETERMINATE MODE (Spinner)
-      // We create a sub-segment of the wave that rotates
-      const tailLength = (2 * math.pi) * 0.75;
-      final Path activePath = _createWavyPath(
+      // Create a sub-segment of the wave that rotates
+      final tailLength =
+          (2 * math.pi) * WavyProgressConstants.indeterminateTailLength;
+      final Path activePath = createWavyPath(
         center: center,
         baseRadius: baseRadius,
         startAngle: 0,
@@ -165,7 +120,14 @@ class _WavyProgressPainter extends CustomPainter {
     }
   }
 
-  Path _createWavyPath({
+  /// Creates a wavy path segment.
+  ///
+  /// [center] The center point of the circle.
+  /// [baseRadius] The base radius (center of wave oscillation).
+  /// [startAngle] The starting angle in radians.
+  /// [sweepAngle] The angle span in radians.
+  /// [globalRotation] Additional rotation applied to the entire path.
+  Path createWavyPath({
     required Offset center,
     required double baseRadius,
     required double startAngle,
@@ -173,7 +135,7 @@ class _WavyProgressPainter extends CustomPainter {
     required double globalRotation,
   }) {
     final path = Path();
-    const step = 0.01; // Resolution of the curve
+    const step = WavyProgressConstants.pathStep;
     bool first = true;
 
     // Iterate through the angles to create the vertices
@@ -206,34 +168,14 @@ class _WavyProgressPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _WavyProgressPainter oldDelegate) {
+  bool shouldRepaint(covariant WavyProgressPainter oldDelegate) {
     return oldDelegate.progress != progress ||
         oldDelegate.rotation != rotation ||
         oldDelegate.color != color ||
-        oldDelegate.trackGap != trackGap;
+        oldDelegate.trackGap != trackGap ||
+        oldDelegate.trackColor != trackColor ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.waves != waves ||
+        oldDelegate.amplitude != amplitude;
   }
 }
-
-@Preview(name: 'Expressive Loader (Contained)')
-Widget previewExpressiveLoaderContained() => MaterialApp(
-  home: Scaffold(
-    body: Builder(
-      builder: (context) => Center(
-        child: Row(
-          mainAxisAlignment: .center,
-          spacing: 40.0,
-          children: [
-            WavyCircularProgressIndicator(
-              color: Theme.of(context).colorScheme.primary,
-              trackColor: Theme.of(context).colorScheme.secondaryContainer,
-              radius: 26,
-              strokeWidth: 8,
-              waves: 8,
-              amplitude: 2.5,
-            ),
-          ],
-        ),
-      ),
-    ),
-  ),
-);
