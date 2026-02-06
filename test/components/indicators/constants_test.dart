@@ -74,19 +74,19 @@ void main() {
     test('getIndicatorRadius returns correct values', () {
       // For default size 48.0, radius should be 19.0
       expect(
-        LoadingIndicatorConstants.getIndicatorRadius(48.0),
+        LoadingIndicatorConstants.getIndicatorRadius(48),
         closeTo(19.0, 0.0001),
       );
 
       // For min size 24.0, radius should be 9.5
       expect(
-        LoadingIndicatorConstants.getIndicatorRadius(24.0),
+        LoadingIndicatorConstants.getIndicatorRadius(24),
         closeTo(9.5, 0.0001),
       );
 
       // For max size 240.0, radius should be 95.0
       expect(
-        LoadingIndicatorConstants.getIndicatorRadius(240.0),
+        LoadingIndicatorConstants.getIndicatorRadius(240),
         closeTo(95.0, 0.0001),
       );
     });
@@ -94,13 +94,13 @@ void main() {
     test('getSvgScaleFactor returns correct values', () {
       // For default size 48.0, scale factor should be 0.1 (19.0 / 190.0)
       expect(
-        LoadingIndicatorConstants.getSvgScaleFactor(48.0),
+        LoadingIndicatorConstants.getSvgScaleFactor(48),
         closeTo(0.1, 0.0001),
       );
 
       // For min size 24.0, scale factor should be 0.05 (9.5 / 190.0)
       expect(
-        LoadingIndicatorConstants.getSvgScaleFactor(24.0),
+        LoadingIndicatorConstants.getSvgScaleFactor(24),
         closeTo(0.05, 0.0001),
       );
     });

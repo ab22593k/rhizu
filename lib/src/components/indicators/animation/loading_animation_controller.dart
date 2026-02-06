@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
-import '../shapes/shape_type.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
+import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 
 /// Controller for the loading indicator animation.
 ///
@@ -12,27 +12,6 @@ import '../shapes/shape_type.dart';
 /// - Morphing between shapes (650ms per transition)
 /// - Shape sequence progression (7 shapes in cycle)
 class LoadingAnimationController {
-  late final AnimationController _rotationController;
-  late final AnimationController _morphController;
-
-  int _currentIndex = 0;
-  bool _isDisposed = false;
-
-  final VoidCallback? _onShapeChange;
-  final List<ShapeType> _shapeSequence;
-
-  /// The current shape in the animation sequence.
-  ShapeType get currentShape => _shapeSequence[_currentIndex];
-
-  /// The next shape to morph to.
-  ShapeType get nextShape =>
-      _shapeSequence[(_currentIndex + 1) % _shapeSequence.length];
-
-  /// The current index in the shape sequence.
-  int get currentIndex => _currentIndex;
-
-  /// Whether this controller has been disposed.
-  bool get isDisposed => _isDisposed;
 
   /// Creates a new animation controller.
   ///
@@ -59,6 +38,27 @@ class LoadingAnimationController {
 
     _startMorphSequence();
   }
+  late final AnimationController _rotationController;
+  late final AnimationController _morphController;
+
+  int _currentIndex = 0;
+  bool _isDisposed = false;
+
+  final VoidCallback? _onShapeChange;
+  final List<ShapeType> _shapeSequence;
+
+  /// The current shape in the animation sequence.
+  ShapeType get currentShape => _shapeSequence[_currentIndex];
+
+  /// The next shape to morph to.
+  ShapeType get nextShape =>
+      _shapeSequence[(_currentIndex + 1) % _shapeSequence.length];
+
+  /// The current index in the shape sequence.
+  int get currentIndex => _currentIndex;
+
+  /// Whether this controller has been disposed.
+  bool get isDisposed => _isDisposed;
 
   /// The rotation animation controller value [0, 1].
   double get rotationValue => _rotationController.value;
@@ -73,7 +73,7 @@ class LoadingAnimationController {
       Listenable.merge([_morphController, _rotationController]);
 
   void _startMorphSequence() {
-    _morphController.forward(from: 0.0).then((_) {
+    _morphController.forward(from: 0).then((_) {
       if (!_isDisposed) {
         _currentIndex = (_currentIndex + 1) % _shapeSequence.length;
         _onShapeChange?.call();

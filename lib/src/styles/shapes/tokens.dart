@@ -8,31 +8,31 @@ class ShapeTokens {
   const ShapeTokens._();
 
   /// Corner radius: None (0.0dp)
-  static const double cornerNone = 0.0;
+  static const double cornerNone = 0;
 
   /// Corner radius: Extra small (4.0dp)
-  static const double cornerExtraSmall = 4.0;
+  static const double cornerExtraSmall = 4;
 
   /// Corner radius: Small (8.0dp)
-  static const double cornerSmall = 8.0;
+  static const double cornerSmall = 8;
 
   /// Corner radius: Medium (12.0dp)
-  static const double cornerMedium = 12.0;
+  static const double cornerMedium = 12;
 
   /// Corner radius: Large (16.0dp)
-  static const double cornerLarge = 16.0;
+  static const double cornerLarge = 16;
 
   /// Corner radius: Large increased (20.0dp)
-  static const double cornerLargeIncreased = 20.0;
+  static const double cornerLargeIncreased = 20;
 
   /// Corner radius: Extra large (28.0dp)
-  static const double cornerExtraLarge = 28.0;
+  static const double cornerExtraLarge = 28;
 
   /// Corner radius: Extra large increased (32.0dp)
-  static const double cornerExtraLargeIncreased = 32.0;
+  static const double cornerExtraLargeIncreased = 32;
 
   /// Corner radius: Extra extra large (48.0dp)
-  static const double cornerExtraExtraLarge = 48.0;
+  static const double cornerExtraExtraLarge = 48;
 
   /// Corner radius: Full (fully rounded)
   static const double cornerFull = double.infinity;
@@ -91,7 +91,7 @@ class ShapeTokens {
   ///
   /// Returns 0.0 if the result is negative.
   static double calculateOpticalRoundness(double outerRadius, double padding) {
-    final double result = outerRadius - padding;
+    final result = outerRadius - padding;
     return result > 0 ? result : 0.0;
   }
 }

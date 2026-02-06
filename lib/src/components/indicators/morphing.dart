@@ -1,4 +1,3 @@
-library;
 
 import 'dart:math' as math;
 import 'dart:ui';
@@ -6,11 +5,11 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-import 'animation/loading_animation_controller.dart';
-import 'animation/spring_curve.dart';
-import 'constants.dart';
-import 'containment.dart';
-import 'painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/components/indicators/animation/loading_animation_controller.dart';
+import 'package:rhizu/src/components/indicators/animation/spring_curve.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
+import 'package:rhizu/src/components/indicators/containment.dart';
+import 'package:rhizu/src/components/indicators/painter/morphing_shape_painter.dart';
 
 export 'containment.dart';
 export 'shapes/shape_type.dart';
@@ -41,18 +40,6 @@ export 'shapes/shape_type.dart';
 /// const MorphingLI(size: 64.0)
 /// ```
 class MorphingLI extends StatefulWidget {
-  /// How the loading indicator should be visually contained.
-  ///
-  /// Defaults to [Containment.simple] which shows only the animated shape.
-  /// Use [Containment.contained] for a circular container background.
-  final Containment containment;
-
-  /// The size of the loading indicator in logical pixels.
-  ///
-  /// Defaults to [LoadingIndicatorConstants.defaultContainerSize] (48.0).
-  /// Must be between [LoadingIndicatorConstants.minContainerSize] (24.0)
-  /// and [LoadingIndicatorConstants.maxContainerSize] (240.0).
-  final double size;
 
   /// Creates a loading indicator.
   ///
@@ -80,6 +67,18 @@ class MorphingLI extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
   }) : size = 144.0;
+  /// How the loading indicator should be visually contained.
+  ///
+  /// Defaults to [Containment.simple] which shows only the animated shape.
+  /// Use [Containment.contained] for a circular container background.
+  final Containment containment;
+
+  /// The size of the loading indicator in logical pixels.
+  ///
+  /// Defaults to [LoadingIndicatorConstants.defaultContainerSize] (48.0).
+  /// Must be between [LoadingIndicatorConstants.minContainerSize] (24.0)
+  /// and [LoadingIndicatorConstants.maxContainerSize] (240.0).
+  final double size;
 
   @override
   State<MorphingLI> createState() => _MorphingLIState();
@@ -107,15 +106,15 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
 
-    final bool isContained = widget.containment == Containment.contained;
-    final Color indicatorColor = isContained
+    final isContained = widget.containment == Containment.contained;
+    final indicatorColor = isContained
         ? colorScheme.onPrimaryContainer
         : colorScheme.primary;
-    final Color containerColor = isContained
+    final containerColor = isContained
         ? colorScheme.primaryContainer
         : Colors.transparent;
 
-    final double clampedSize = widget.size.clamp(
+    final clampedSize = widget.size.clamp(
       LoadingIndicatorConstants.minContainerSize,
       LoadingIndicatorConstants.maxContainerSize,
     );
@@ -165,22 +164,22 @@ Widget previewExpressiveLoaderContained() => const Scaffold(
   body: Center(
     child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 24.0,
+      spacing: 24,
       children: [
         // Row 1: Simple (different sizes)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 24.0,
+          spacing: 24,
           children: [
-            MorphingLI.small(containment: Containment.simple),
-            MorphingLI.medium(containment: Containment.simple),
-            MorphingLI.large(containment: Containment.simple),
+            MorphingLI.small(),
+            MorphingLI.medium(),
+            MorphingLI.large(),
           ],
         ),
         // Row 2: Contained (different sizes)
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 24.0,
+          spacing: 24,
           children: [
             MorphingLI.small(containment: Containment.contained),
             MorphingLI.medium(containment: Containment.contained),

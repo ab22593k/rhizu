@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-import 'animation/progress_animation_controller.dart';
-import 'constants.dart';
-import 'painter/wavy_progress_painter.dart';
+import 'package:rhizu/src/components/indicators/animation/progress_animation_controller.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
+import 'package:rhizu/src/components/indicators/painter/wavy_progress_painter.dart';
 
 /// A wavy circular progress indicator widget.
 ///
@@ -30,6 +30,19 @@ import 'painter/wavy_progress_painter.dart';
 /// )
 /// ```
 class CircularPI extends StatefulWidget {
+
+  /// Creates a wavy circular progress indicator.
+  ///
+  /// [color] and [trackColor] are required. All other parameters have defaults.
+  const CircularPI({
+    required this.color, required this.trackColor, super.key,
+    this.value,
+    this.radius = WavyProgressConstants.defaultRadius,
+    this.strokeWidth = WavyProgressConstants.defaultStrokeWidth,
+    this.waves = WavyProgressConstants.defaultWaves,
+    this.amplitude = WavyProgressConstants.defaultAmplitude,
+    this.trackGap = WavyProgressConstants.defaultTrackGap,
+  });
   /// The current progress value (0.0 to 1.0) or null for indeterminate mode.
   ///
   /// When null, the indicator spins continuously.
@@ -70,21 +83,6 @@ class CircularPI extends StatefulWidget {
   /// Only applies in determinate mode.
   /// Defaults to [WavyProgressConstants.defaultTrackGap].
   final double trackGap;
-
-  /// Creates a wavy circular progress indicator.
-  ///
-  /// [color] and [trackColor] are required. All other parameters have defaults.
-  const CircularPI({
-    super.key,
-    this.value,
-    required this.color,
-    required this.trackColor,
-    this.radius = WavyProgressConstants.defaultRadius,
-    this.strokeWidth = WavyProgressConstants.defaultStrokeWidth,
-    this.waves = WavyProgressConstants.defaultWaves,
-    this.amplitude = WavyProgressConstants.defaultAmplitude,
-    this.trackGap = WavyProgressConstants.defaultTrackGap,
-  });
 
   @override
   State<CircularPI> createState() => _CircularPIState();
@@ -158,7 +156,7 @@ Widget previewWavyProgressIndicator() => Scaffold(
     builder: (context) => Center(
       child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
-        spacing: 40.0,
+        spacing: 40,
         children: [
           CircularPI(
             color: Theme.of(context).colorScheme.primary,

@@ -19,22 +19,22 @@ void main() {
 
     test('BorderRadius tokens are correctly derived', () {
       expect(ShapeTokens.borderRadiusNone, BorderRadius.zero);
-      expect(ShapeTokens.borderRadiusExtraSmall, BorderRadius.circular(4.0));
-      expect(ShapeTokens.borderRadiusSmall, BorderRadius.circular(8.0));
-      expect(ShapeTokens.borderRadiusMedium, BorderRadius.circular(12.0));
-      expect(ShapeTokens.borderRadiusLarge, BorderRadius.circular(16.0));
+      expect(ShapeTokens.borderRadiusExtraSmall, BorderRadius.circular(4));
+      expect(ShapeTokens.borderRadiusSmall, BorderRadius.circular(8));
+      expect(ShapeTokens.borderRadiusMedium, BorderRadius.circular(12));
+      expect(ShapeTokens.borderRadiusLarge, BorderRadius.circular(16));
       expect(
         ShapeTokens.borderRadiusLargeIncreased,
-        BorderRadius.circular(20.0),
+        BorderRadius.circular(20),
       );
-      expect(ShapeTokens.borderRadiusExtraLarge, BorderRadius.circular(28.0));
+      expect(ShapeTokens.borderRadiusExtraLarge, BorderRadius.circular(28));
       expect(
         ShapeTokens.borderRadiusExtraLargeIncreased,
-        BorderRadius.circular(32.0),
+        BorderRadius.circular(32),
       );
       expect(
         ShapeTokens.borderRadiusExtraExtraLarge,
-        BorderRadius.circular(48.0),
+        BorderRadius.circular(48),
       );
       expect(
         ShapeTokens.borderRadiusFull,
@@ -43,10 +43,10 @@ void main() {
     });
 
     test('calculateOpticalRoundness returns correct inner radius', () {
-      expect(ShapeTokens.calculateOpticalRoundness(48.0, 14.0), 34.0);
-      expect(ShapeTokens.calculateOpticalRoundness(16.0, 4.0), 12.0);
+      expect(ShapeTokens.calculateOpticalRoundness(48, 14), 34.0);
+      expect(ShapeTokens.calculateOpticalRoundness(16, 4), 12.0);
       expect(
-        ShapeTokens.calculateOpticalRoundness(8.0, 10.0),
+        ShapeTokens.calculateOpticalRoundness(8, 10),
         0.0,
       ); // Should not be negative
     });

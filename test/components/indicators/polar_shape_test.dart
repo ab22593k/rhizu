@@ -2,8 +2,8 @@ import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/components/indicators/shapes/polar_shape.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 import 'package:rhizu/src/components/indicators/shapes/shape_registry.dart';
+import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 
 void main() {
   group('ShapeType', () {
@@ -37,7 +37,7 @@ void main() {
 
     test('getRadius returns interpolated value', () {
       // Create a shape with uniform radius
-      final radii = List<double>.filled(360, 10.0);
+      final radii = List<double>.filled(360, 10);
       final shape = PolarShape(radii);
 
       // Test various angles
@@ -48,7 +48,7 @@ void main() {
     });
 
     test('getRadius handles angle normalization', () {
-      final radii = List<double>.filled(360, 5.0);
+      final radii = List<double>.filled(360, 5);
       final shape = PolarShape(radii);
 
       // Negative angles should be normalized
@@ -67,7 +67,7 @@ void main() {
       expect(shape.getRadius(0), closeTo(10.0, 0.1));
 
       // At angle corresponding to index 1 (1 degree), should be 20.0
-      final angle1Degree = 2 * math.pi / 360;
+      const angle1Degree = 2 * math.pi / 360;
       expect(shape.getRadius(angle1Degree), closeTo(20.0, 0.1));
     });
 
@@ -80,7 +80,7 @@ void main() {
       expect(shape.getRadius(0), equals(10.0));
 
       // Scale 2.0
-      expect(shape.getRadius(0, scale: 2.0), equals(20.0));
+      expect(shape.getRadius(0, scale: 2), equals(20.0));
 
       // Scale 0.5
       expect(shape.getRadius(0, scale: 0.5), equals(5.0));

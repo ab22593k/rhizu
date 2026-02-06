@@ -9,19 +9,19 @@ class LoadingIndicatorConstants {
   ///
   /// The container provides space for the animated indicator and any
   /// background styling (e.g., for contained mode).
-  static const double containerSize = 48.0;
+  static const double containerSize = 48;
 
   /// The radius of the active loading indicator in logical pixels.
   ///
   /// The indicator occupies 38dp within the 48dp container,
   /// so the radius is 38 / 2 = 19.0.
-  static const double indicatorRadius = 19.0;
+  static const double indicatorRadius = 19;
 
   /// Minimum container size in logical pixels.
-  static const double minContainerSize = 24.0;
+  static const double minContainerSize = 24;
 
   /// Maximum container size in logical pixels.
-  static const double maxContainerSize = 240.0;
+  static const double maxContainerSize = 240;
 
   /// Default container size in logical pixels.
   static const double defaultContainerSize = containerSize;
@@ -56,12 +56,12 @@ class LoadingIndicatorConstants {
   /// The size of the SVG viewport used for shape definitions.
   ///
   /// All shape SVGs are defined in a square viewport of this size.
-  static const double svgViewportSize = 380.0;
+  static const double svgViewportSize = 380;
 
   /// The center point of the SVG viewport.
   ///
   /// Shapes are centered at this coordinate in SVG space.
-  static const double svgCenter = 190.0;
+  static const double svgCenter = 190;
 
   /// Scale factor to convert from SVG coordinates to local coordinates.
   ///
@@ -90,10 +90,10 @@ class WavyProgressConstants {
   /// Default radius of the progress indicator in logical pixels.
   ///
   /// The total widget size will be radius * 2.
-  static const double defaultRadius = 24.0;
+  static const double defaultRadius = 24;
 
   /// Default stroke width for the indicator lines in logical pixels.
-  static const double defaultStrokeWidth = 4.0;
+  static const double defaultStrokeWidth = 4;
 
   /// Default number of waves (frequency) around the circle.
   ///
@@ -103,15 +103,15 @@ class WavyProgressConstants {
   /// Default amplitude (height) of the wave in logical pixels.
   ///
   /// This determines how far the wave deviates from the base radius.
-  static const double defaultAmplitude = 2.0;
+  static const double defaultAmplitude = 2;
 
   /// Default gap between the active indicator and track in logical pixels.
-  static const double defaultTrackGap = 4.0;
+  static const double defaultTrackGap = 4;
 
   /// Gap angle calculation divisor.
   ///
   /// Used to convert track gap distance to angle for determinate mode.
-  static const double trackGapAngleDivisor = 4.0;
+  static const double trackGapAngleDivisor = 4;
 
   /// Duration for one complete rotation in indeterminate mode.
   static const Duration rotationDuration = Duration(seconds: 2);

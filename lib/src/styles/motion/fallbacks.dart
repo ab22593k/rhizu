@@ -16,7 +16,7 @@ class MotionFallbacks {
   );
 
   /// Expressive Default Spatial (500ms)
-  static const Cubic expressiveDefaultSpatial = Cubic(0.38, 1.21, 0.22, 1.00);
+  static const Cubic expressiveDefaultSpatial = Cubic(0.38, 1.21, 0.22, 1);
   static const Duration expressiveDefaultSpatialDuration = Duration(
     milliseconds: 500,
   );
@@ -28,55 +28,55 @@ class MotionFallbacks {
   );
 
   /// Expressive Fast Effects (150ms)
-  static const Cubic expressiveFastEffects = Cubic(0.31, 0.94, 0.34, 1.00);
+  static const Cubic expressiveFastEffects = Cubic(0.31, 0.94, 0.34, 1);
   static const Duration expressiveFastEffectsDuration = Duration(
     milliseconds: 150,
   );
 
   /// Expressive Default Effects (200ms)
-  static const Cubic expressiveDefaultEffects = Cubic(0.34, 0.80, 0.34, 1.00);
+  static const Cubic expressiveDefaultEffects = Cubic(0.34, 0.80, 0.34, 1);
   static const Duration expressiveDefaultEffectsDuration = Duration(
     milliseconds: 200,
   );
 
   /// Expressive Slow Effects (300ms)
-  static const Cubic expressiveSlowEffects = Cubic(0.34, 0.88, 0.34, 1.00);
+  static const Cubic expressiveSlowEffects = Cubic(0.34, 0.88, 0.34, 1);
   static const Duration expressiveSlowEffectsDuration = Duration(
     milliseconds: 300,
   );
 
   /// Standard Fast Spatial (350ms)
-  static const Cubic standardFastSpatial = Cubic(0.27, 1.06, 0.18, 1.00);
+  static const Cubic standardFastSpatial = Cubic(0.27, 1.06, 0.18, 1);
   static const Duration standardFastSpatialDuration = Duration(
     milliseconds: 350,
   );
 
   /// Standard Default Spatial (500ms)
-  static const Cubic standardDefaultSpatial = Cubic(0.27, 1.06, 0.18, 1.00);
+  static const Cubic standardDefaultSpatial = Cubic(0.27, 1.06, 0.18, 1);
   static const Duration standardDefaultSpatialDuration = Duration(
     milliseconds: 500,
   );
 
   /// Standard Slow Spatial (750ms)
-  static const Cubic standardSlowSpatial = Cubic(0.27, 1.06, 0.18, 1.00);
+  static const Cubic standardSlowSpatial = Cubic(0.27, 1.06, 0.18, 1);
   static const Duration standardSlowSpatialDuration = Duration(
     milliseconds: 750,
   );
 
   /// Standard Fast Effects (150ms)
-  static const Cubic standardFastEffects = Cubic(0.31, 0.94, 0.34, 1.00);
+  static const Cubic standardFastEffects = Cubic(0.31, 0.94, 0.34, 1);
   static const Duration standardFastEffectsDuration = Duration(
     milliseconds: 150,
   );
 
   /// Standard Default Effects (200ms)
-  static const Cubic standardDefaultEffects = Cubic(0.34, 0.80, 0.34, 1.00);
+  static const Cubic standardDefaultEffects = Cubic(0.34, 0.80, 0.34, 1);
   static const Duration standardDefaultEffectsDuration = Duration(
     milliseconds: 200,
   );
 
   /// Standard Slow Effects (300ms)
-  static const Cubic standardSlowEffects = Cubic(0.34, 0.88, 0.34, 1.00);
+  static const Cubic standardSlowEffects = Cubic(0.34, 0.88, 0.34, 1);
   static const Duration standardSlowEffectsDuration = Duration(
     milliseconds: 300,
   );

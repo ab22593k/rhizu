@@ -2,7 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
 
 /// Controller for the wavy circular progress indicator animation.
 ///
@@ -10,17 +10,6 @@ import '../constants.dart';
 /// In determinate mode (when progress is provided), the animation may be
 /// disabled or used for visual effects.
 class WavyProgressAnimationController {
-  late final AnimationController _controller;
-  bool _isDisposed = false;
-
-  /// The current rotation value [0, 1] representing 0 to 360 degrees.
-  double get value => _controller.value;
-
-  /// Whether this controller has been disposed.
-  bool get isDisposed => _isDisposed;
-
-  /// The animation controller for listening to animation updates.
-  Animation<double> get animation => _controller;
 
   /// Creates a new animation controller for the wavy progress indicator.
   ///
@@ -35,6 +24,17 @@ class WavyProgressAnimationController {
       duration: duration ?? WavyProgressConstants.rotationDuration,
     )..repeat();
   }
+  late final AnimationController _controller;
+  bool _isDisposed = false;
+
+  /// The current rotation value [0, 1] representing 0 to 360 degrees.
+  double get value => _controller.value;
+
+  /// Whether this controller has been disposed.
+  bool get isDisposed => _isDisposed;
+
+  /// The animation controller for listening to animation updates.
+  Animation<double> get animation => _controller;
 
   /// Gets the current rotation angle in radians.
   ///

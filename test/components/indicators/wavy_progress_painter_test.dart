@@ -7,13 +7,13 @@ void main() {
     test('constructor stores all parameters', () {
       const painter = WavyProgressPainter(
         progress: 0.5,
-        rotation: 1.0,
+        rotation: 1,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter.progress, equals(0.5));
@@ -29,13 +29,13 @@ void main() {
     test('constructor accepts null progress for indeterminate mode', () {
       const painter = WavyProgressPainter(
         progress: null,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter.progress, isNull);
@@ -44,24 +44,24 @@ void main() {
     test('shouldRepaint returns true when progress changes', () {
       const painter1 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       const painter2 = WavyProgressPainter(
         progress: 0.6,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter1.shouldRepaint(painter2), isTrue);
@@ -70,24 +70,24 @@ void main() {
     test('shouldRepaint returns true when rotation changes', () {
       const painter1 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       const painter2 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 1.0,
+        rotation: 1,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter1.shouldRepaint(painter2), isTrue);
@@ -96,24 +96,24 @@ void main() {
     test('shouldRepaint returns true when color changes', () {
       const painter1 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       const painter2 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.green,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter1.shouldRepaint(painter2), isTrue);
@@ -122,24 +122,24 @@ void main() {
     test('shouldRepaint returns false when nothing changes', () {
       const painter1 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       const painter2 = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       expect(painter1.shouldRepaint(painter2), isFalse);
@@ -148,13 +148,13 @@ void main() {
     test('createWavyPath generates a valid path', () {
       const painter = WavyProgressPainter(
         progress: 0.5,
-        rotation: 0.0,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       final path = painter.createWavyPath(
@@ -172,14 +172,14 @@ void main() {
 
     test('createWavyPath closes path for full circle', () {
       const painter = WavyProgressPainter(
-        progress: 1.0,
-        rotation: 0.0,
+        progress: 1,
+        rotation: 0,
         color: Colors.red,
         trackColor: Colors.blue,
-        strokeWidth: 4.0,
+        strokeWidth: 4,
         waves: 12,
-        amplitude: 2.0,
-        trackGap: 4.0,
+        amplitude: 2,
+        trackGap: 4,
       );
 
       final path = painter.createWavyPath(

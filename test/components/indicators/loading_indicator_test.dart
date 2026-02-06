@@ -5,7 +5,7 @@ import 'package:rhizu/src/components/indicators/morphing.dart';
 
 void main() {
   group('MorphingLI', () {
-    testWidgets('renders without error', (WidgetTester tester) async {
+    testWidgets('renders without error', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLI())),
       );
@@ -14,7 +14,7 @@ void main() {
     });
 
     testWidgets('renders in simple mode by default', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLI())),
@@ -30,19 +30,18 @@ void main() {
       );
 
       // In simple mode, background should be transparent
-      final decoration = container.decoration as BoxDecoration;
+      final decoration = container.decoration! as BoxDecoration;
       expect(decoration.color, equals(Colors.transparent));
     });
 
     testWidgets('renders in contained mode with background', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.blue,
-              brightness: Brightness.light,
             ),
           ),
           home: const Scaffold(
@@ -60,7 +59,7 @@ void main() {
             .first,
       );
 
-      final decoration = container.decoration as BoxDecoration;
+      final decoration = container.decoration! as BoxDecoration;
       final colorScheme = Theme.of(
         tester.element(find.byType(MorphingLI)),
       ).colorScheme;
@@ -70,18 +69,17 @@ void main() {
     });
 
     testWidgets('uses correct colors in simple mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.blue,
-              brightness: Brightness.light,
             ),
           ),
           home: const Scaffold(
-            body: MorphingLI(containment: Containment.simple),
+            body: MorphingLI(),
           ),
         ),
       );
@@ -99,7 +97,7 @@ void main() {
       );
     });
 
-    testWidgets('container has correct size', (WidgetTester tester) async {
+    testWidgets('container has correct size', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLI())),
       );
@@ -117,7 +115,7 @@ void main() {
       expect(container.constraints?.maxHeight, equals(48.0));
     });
 
-    testWidgets('animates when displayed', (WidgetTester tester) async {
+    testWidgets('animates when displayed', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLI())),
       );
@@ -133,7 +131,7 @@ void main() {
     });
 
     testWidgets('disposes controllers when removed', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLI())),
@@ -150,12 +148,12 @@ void main() {
     });
 
     testWidgets('MorphingLI respects size parameter', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Default size
       await tester.pumpWidget(const MaterialApp(home: MorphingLI()));
       final containerFinder = find.byType(Container).first;
-      final Container container = tester.widget(containerFinder);
+      final container = tester.widget<Container>(containerFinder);
 
       // Default size is 48.0
       expect(
@@ -168,24 +166,24 @@ void main() {
       );
 
       // Custom size
-      const double customSize = 96.0;
+      const customSize = 96.0;
       await tester.pumpWidget(
         const MaterialApp(home: MorphingLI(size: customSize)),
       );
       final containerFinder2 = find.byType(Container).first;
-      final Container container2 = tester.widget(containerFinder2);
+      final container2 = tester.widget<Container>(containerFinder2);
 
       expect(container2.constraints?.minWidth, equals(customSize));
       expect(container2.constraints?.minHeight, equals(customSize));
     });
 
     testWidgets('MorphingLI clamps size to constraints', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Too small -> clamped to min (24.0)
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 10.0)));
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 10)));
       final containerFinder = find.byType(Container).first;
-      final Container container = tester.widget(containerFinder);
+      final container = tester.widget<Container>(containerFinder);
 
       expect(
         container.constraints?.minWidth,
@@ -193,9 +191,9 @@ void main() {
       );
 
       // Too large -> clamped to max (240.0)
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 300.0)));
+      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 300)));
       final containerFinder2 = find.byType(Container).first;
-      final Container container2 = tester.widget(containerFinder2);
+      final container2 = tester.widget<Container>(containerFinder2);
 
       expect(
         container2.constraints?.minWidth,
@@ -204,7 +202,7 @@ void main() {
     });
 
     testWidgets('MorphingLI named constructors set correct sizes', (
-      WidgetTester tester,
+      tester,
     ) async {
       // Small
       await tester.pumpWidget(const MaterialApp(home: MorphingLI.small()));

@@ -14,42 +14,42 @@ void main() {
       final spring = MotionTokens.expressiveFastSpatial;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 1400.0);
-      expect(spring.damping, closeTo(calculateDamping(0.9, 1400.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(0.9, 1400), 0.0001));
     });
 
     test('Expressive Fast Effects', () {
       final spring = MotionTokens.expressiveFastEffects;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 3800.0);
-      expect(spring.damping, closeTo(calculateDamping(1.0, 3800.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(1, 3800), 0.0001));
     });
 
     test('Expressive Default Spatial', () {
       final spring = MotionTokens.expressiveDefaultSpatial;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 700.0);
-      expect(spring.damping, closeTo(calculateDamping(0.9, 700.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(0.9, 700), 0.0001));
     });
 
     test('Expressive Default Effects', () {
       final spring = MotionTokens.expressiveDefaultEffects;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 1600.0);
-      expect(spring.damping, closeTo(calculateDamping(1.0, 1600.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(1, 1600), 0.0001));
     });
 
     test('Expressive Slow Spatial', () {
       final spring = MotionTokens.expressiveSlowSpatial;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 300.0);
-      expect(spring.damping, closeTo(calculateDamping(0.9, 300.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(0.9, 300), 0.0001));
     });
 
     test('Expressive Slow Effects', () {
       final spring = MotionTokens.expressiveSlowEffects;
       expect(spring.mass, 1.0);
       expect(spring.stiffness, 800.0);
-      expect(spring.damping, closeTo(calculateDamping(1.0, 800.0), 0.0001));
+      expect(spring.damping, closeTo(calculateDamping(1, 800), 0.0001));
     });
   });
 

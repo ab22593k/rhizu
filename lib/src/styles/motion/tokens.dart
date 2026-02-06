@@ -18,48 +18,48 @@ class MotionTokens {
   /// Expressive Fast Spatial
   /// Damping Ratio: 0.9, Stiffness: 1400
   static final SpringDescription expressiveFastSpatial = SpringDescription(
-    mass: 1.0,
-    stiffness: 1400.0,
-    damping: _damping(0.9, 1400.0),
+    mass: 1,
+    stiffness: 1400,
+    damping: _damping(0.9, 1400),
   );
 
   /// Expressive Fast Effects
   /// Damping Ratio: 1.0, Stiffness: 3800
   static final SpringDescription expressiveFastEffects = SpringDescription(
-    mass: 1.0,
-    stiffness: 3800.0,
-    damping: _damping(1.0, 3800.0),
+    mass: 1,
+    stiffness: 3800,
+    damping: _damping(1, 3800),
   );
 
   /// Expressive Default Spatial
   /// Damping Ratio: 0.9, Stiffness: 700
   static final SpringDescription expressiveDefaultSpatial = SpringDescription(
-    mass: 1.0,
-    stiffness: 700.0,
-    damping: _damping(0.9, 700.0),
+    mass: 1,
+    stiffness: 700,
+    damping: _damping(0.9, 700),
   );
 
   /// Expressive Default Effects
   /// Damping Ratio: 1.0, Stiffness: 1600
   static final SpringDescription expressiveDefaultEffects = SpringDescription(
-    mass: 1.0,
-    stiffness: 1600.0,
-    damping: _damping(1.0, 1600.0),
+    mass: 1,
+    stiffness: 1600,
+    damping: _damping(1, 1600),
   );
 
   /// Expressive Slow Spatial
   /// Damping Ratio: 0.9, Stiffness: 300
   static final SpringDescription expressiveSlowSpatial = SpringDescription(
-    mass: 1.0,
-    stiffness: 300.0,
-    damping: _damping(0.9, 300.0),
+    mass: 1,
+    stiffness: 300,
+    damping: _damping(0.9, 300),
   );
 
   /// Expressive Slow Effects
   /// Damping Ratio: 1.0, Stiffness: 800
   static final SpringDescription expressiveSlowEffects = SpringDescription(
-    mass: 1.0,
-    stiffness: 800.0,
-    damping: _damping(1.0, 800.0),
+    mass: 1,
+    stiffness: 800,
+    damping: _damping(1, 800),
   );
 }

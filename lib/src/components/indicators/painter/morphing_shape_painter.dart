@@ -3,9 +3,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import '../constants.dart';
-import '../shapes/shape_registry.dart';
-import '../shapes/shape_type.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
+import 'package:rhizu/src/components/indicators/shapes/shape_registry.dart';
+import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 
 /// A custom painter that renders a morphing shape animation.
 ///
@@ -14,6 +14,18 @@ import '../shapes/shape_type.dart';
 /// polar coordinate interpolation to ensure topology-safe morphing
 /// (no glitches between shapes with different point counts).
 class MorphingShapePainter extends CustomPainter {
+
+  /// Creates a morphing shape painter.
+  ///
+  /// All parameters are required and define how the shape should be rendered.
+  MorphingShapePainter({
+    required this.color,
+    required this.currentShape,
+    required this.nextShape,
+    required this.progress,
+    required this.rotation,
+    this.scale = 1.0,
+  });
   /// The color to fill the shape with.
   final Color color;
 
@@ -37,27 +49,15 @@ class MorphingShapePainter extends CustomPainter {
   /// This allows the shape to be resized based on the container size.
   final double scale;
 
-  /// Creates a morphing shape painter.
-  ///
-  /// All parameters are required and define how the shape should be rendered.
-  MorphingShapePainter({
-    required this.color,
-    required this.currentShape,
-    required this.nextShape,
-    required this.progress,
-    required this.rotation,
-    this.scale = 1.0,
-  });
-
   @override
   void paint(Canvas canvas, Size size) {
-    final Paint paint = Paint()
+    final paint = Paint()
       ..color = color
       ..style = PaintingStyle.fill
       ..isAntiAlias = true;
 
-    final double centerX = size.width / 2;
-    final double centerY = size.height / 2;
+    final centerX = size.width / 2;
+    final centerY = size.height / 2;
 
     canvas.save();
     canvas.translate(centerX, centerY);
@@ -65,35 +65,35 @@ class MorphingShapePainter extends CustomPainter {
 
     // Generate a path by interpolating polar coordinates (radius at angle theta)
     // This ensures topology-safe morphing (no glitches between different point counts).
-    final Path path = Path();
-    final int steps = LoadingIndicatorConstants.shapeResolution;
-    final List<Offset> points = [];
+    final path = Path();
+    const steps = LoadingIndicatorConstants.shapeResolution;
+    final points = <Offset>[];
 
     // Get polar shape definitions from registry
     final currentPolarShape = ShapeRegistry.get(currentShape);
     final nextPolarShape = ShapeRegistry.get(nextShape);
 
-    for (int i = 0; i <= steps; i++) {
-      final double theta = (i / steps) * 2 * math.pi;
+    for (var i = 0; i <= steps; i++) {
+      final theta = (i / steps) * 2 * math.pi;
 
       // Get radius for current and next shape at this angle
       // The rotation is handled by the canvas rotation, not here
-      final double r1 = currentPolarShape.getRadius(theta, scale: scale);
-      final double r2 = nextPolarShape.getRadius(theta, scale: scale);
+      final r1 = currentPolarShape.getRadius(theta, scale: scale);
+      final r2 = nextPolarShape.getRadius(theta, scale: scale);
 
       // Interpolate radius based on progress
-      final double r = lerpDouble(r1, r2, progress)!;
+      final r = lerpDouble(r1, r2, progress)!;
 
       // Convert polar to Cartesian coordinates
-      final double x = r * math.cos(theta);
-      final double y = r * math.sin(theta);
+      final x = r * math.cos(theta);
+      final y = r * math.sin(theta);
       points.add(Offset(x, y));
     }
 
     // Build the path from calculated points
     if (points.isNotEmpty) {
       path.moveTo(points[0].dx, points[0].dy);
-      for (int i = 1; i < points.length; i++) {
+      for (var i = 1; i < points.length; i++) {
         path.lineTo(points[i].dx, points[i].dy);
       }
       path.close();

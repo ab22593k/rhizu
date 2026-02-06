@@ -16,17 +16,17 @@ import 'package:flutter/physics.dart';
 /// Note: You must ensure the animation duration is long enough for the
 /// spring to settle, otherwise the animation will clip.
 class SpringCurve extends Curve {
-  final SpringDescription description;
-  final double estimatedDuration;
 
   SpringCurve(this.description)
     : estimatedDuration = _estimateDuration(description);
+  final SpringDescription description;
+  final double estimatedDuration;
 
   static double _estimateDuration(SpringDescription desc) {
     // Rough estimate of settling time.
     // In a real system we might solve for amplitude < epsilon.
     // For M3 springs, 2-3 seconds is usually safe for the tail.
-    return 2.0;
+    return 2;
   }
 
   @override
@@ -37,7 +37,7 @@ class SpringCurve extends Curve {
     final simulation = SpringSimulation(description, 0, 1, 0);
 
     // If t is 1.0, force final position to avoid floating point errors
-    if (t >= 1.0) return 1.0;
+    if (t >= 1.0) return 1;
 
     return simulation.x(time);
   }

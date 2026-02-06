@@ -7,7 +7,7 @@ void main() {
       const curve = SpringCurve();
 
       // Test at various points
-      for (double t = 0.0; t <= 1.0; t += 0.1) {
+      for (var t = 0.0; t <= 1.0; t += 0.1) {
         final value = curve.transform(t);
         expect(value, greaterThanOrEqualTo(-0.2)); // Allow undershoot
         expect(value, lessThanOrEqualTo(1.2)); // Allow overshoot
@@ -16,21 +16,21 @@ void main() {
 
     test('transform returns 0 at t=0', () {
       const curve = SpringCurve();
-      expect(curve.transform(0.0), equals(0.0));
+      expect(curve.transform(0), equals(0.0));
     });
 
     test('transform returns approximately 1 at t=1', () {
       const curve = SpringCurve();
       // Spring curves may overshoot, so we check it's close to 1
-      expect(curve.transform(1.0), closeTo(1.0, 0.2));
+      expect(curve.transform(1), closeTo(1.0, 0.2));
     });
 
     test('transform is monotonic (generally increasing)', () {
       const curve = SpringCurve();
-      double previousValue = 0.0;
+      var previousValue = 0.0;
 
       // Check that values generally increase (allowing for small spring oscillations)
-      for (double t = 0.1; t <= 1.0; t += 0.1) {
+      for (var t = 0.1; t <= 1.0; t += 0.1) {
         final value = curve.transform(t);
         // The curve should generally move forward despite spring oscillations
         expect(value, greaterThan(previousValue - 0.2));
@@ -43,7 +43,7 @@ void main() {
 
       // A spring curve typically overshoots around 0.6-0.8
       final values = <double>[];
-      for (double t = 0.0; t <= 1.0; t += 0.05) {
+      for (var t = 0.0; t <= 1.0; t += 0.05) {
         values.add(curve.transform(t));
       }
 

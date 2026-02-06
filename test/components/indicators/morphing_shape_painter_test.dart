@@ -10,8 +10,8 @@ void main() {
       currentShape: ShapeType.burst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
-      rotation: 0.0,
-      scale: 2.0,
+      rotation: 0,
+      scale: 2,
     );
 
     expect(painter.scale, equals(2.0));
@@ -23,8 +23,7 @@ void main() {
       currentShape: ShapeType.burst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
-      rotation: 0.0,
-      scale: 1.0,
+      rotation: 0,
     );
 
     final painter2 = MorphingShapePainter(
@@ -32,8 +31,8 @@ void main() {
       currentShape: ShapeType.burst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
-      rotation: 0.0,
-      scale: 2.0, // Different scale
+      rotation: 0,
+      scale: 2, // Different scale
     );
 
     expect(painter1.shouldRepaint(painter2), isTrue);
@@ -46,8 +45,7 @@ void main() {
       currentShape: ShapeType.burst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
-      rotation: 0.0,
-      scale: 1.0,
+      rotation: 0,
     );
 
     final painter2 = MorphingShapePainter(
@@ -55,8 +53,7 @@ void main() {
       currentShape: ShapeType.burst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
-      rotation: 0.0,
-      scale: 1.0, // Same scale
+      rotation: 0,
     );
 
     expect(painter1.shouldRepaint(painter2), isFalse);

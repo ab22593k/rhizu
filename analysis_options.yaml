@@ -1,4 +1,15 @@
-include: package:flutter_lints/flutter.yaml
+include: package:very_good_analysis/analysis_options.yaml
+
+analyzer:
+  errors:
+    public_member_api_docs: ignore
+    lines_longer_than_80_chars: ignore
+    discarded_futures: ignore
+    cascade_invocations: ignore
+    parameter_assignments: ignore
+    unreachable_from_main: ignore
+    prefer_int_literals: ignore
+    sort_pub_dependencies: ignore
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

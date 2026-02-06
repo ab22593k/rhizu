@@ -5,10 +5,10 @@ import 'package:rhizu/src/components/indicators/progress.dart';
 void main() {
   group('Circular PI', () {
     testWidgets('renders without error in indeterminate mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(color: Colors.blue, trackColor: Colors.grey),
           ),
@@ -19,10 +19,10 @@ void main() {
     });
 
     testWidgets('renders without error in determinate mode', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
               value: 0.5,
@@ -36,9 +36,9 @@ void main() {
       expect(find.byType(CircularPI), findsOneWidget);
     });
 
-    testWidgets('uses correct default values', (WidgetTester tester) async {
+    testWidgets('uses correct default values', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(color: Colors.blue, trackColor: Colors.grey),
           ),
@@ -55,19 +55,19 @@ void main() {
       expect(widget.value, isNull);
     });
 
-    testWidgets('accepts custom values', (WidgetTester tester) async {
+    testWidgets('accepts custom values', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
               value: 0.75,
               color: Colors.red,
               trackColor: Colors.black,
-              radius: 50.0,
-              strokeWidth: 8.0,
+              radius: 50,
+              strokeWidth: 8,
               waves: 8,
-              amplitude: 5.0,
-              trackGap: 10.0,
+              amplitude: 5,
+              trackGap: 10,
             ),
           ),
         ),
@@ -86,15 +86,15 @@ void main() {
     });
 
     testWidgets('has correct size based on radius', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
               color: Colors.blue,
               trackColor: Colors.grey,
-              radius: 30.0,
+              radius: 30,
             ),
           ),
         ),
@@ -111,9 +111,9 @@ void main() {
       expect(sizedBox.height, equals(60.0));
     });
 
-    testWidgets('renders CustomPaint', (WidgetTester tester) async {
+    testWidgets('renders CustomPaint', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(color: Colors.blue, trackColor: Colors.grey),
           ),
@@ -130,10 +130,10 @@ void main() {
     });
 
     testWidgets('disposes controller when removed', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(color: Colors.blue, trackColor: Colors.grey),
           ),
@@ -151,13 +151,12 @@ void main() {
     });
 
     testWidgets('switches between determinate and indeterminate modes', (
-      WidgetTester tester,
+      tester,
     ) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
-              value: null, // Indeterminate
               color: Colors.blue,
               trackColor: Colors.grey,
             ),
@@ -169,7 +168,7 @@ void main() {
 
       // Switch to determinate
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
               value: 0.5, // Determinate
@@ -184,10 +183,9 @@ void main() {
 
       // Switch back to indeterminate
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(
-              value: null, // Indeterminate again
               color: Colors.blue,
               trackColor: Colors.grey,
             ),
@@ -198,9 +196,9 @@ void main() {
       expect(find.byType(CircularPI), findsOneWidget);
     });
 
-    testWidgets('animates in indeterminate mode', (WidgetTester tester) async {
+    testWidgets('animates in indeterminate mode', (tester) async {
       await tester.pumpWidget(
-        MaterialApp(
+        const MaterialApp(
           home: Scaffold(
             body: CircularPI(color: Colors.blue, trackColor: Colors.grey),
           ),
