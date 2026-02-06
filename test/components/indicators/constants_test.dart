@@ -53,6 +53,57 @@ void main() {
         lessThan(LoadingIndicatorConstants.containerSize),
       );
     });
+
+    // Responsive sizing tests
+    test('min container size is 24.0', () {
+      expect(LoadingIndicatorConstants.minContainerSize, equals(24.0));
+    });
+
+    test('max container size is 240.0', () {
+      expect(LoadingIndicatorConstants.maxContainerSize, equals(240.0));
+    });
+
+    test('indicator to container ratio is correct', () {
+      // 38.0 / 48.0 = 0.7916666666666666
+      expect(
+        LoadingIndicatorConstants.indicatorToContainerRatio,
+        closeTo(0.7916, 0.0001),
+      );
+    });
+
+    test('getIndicatorRadius returns correct values', () {
+      // For default size 48.0, radius should be 19.0
+      expect(
+        LoadingIndicatorConstants.getIndicatorRadius(48.0),
+        closeTo(19.0, 0.0001),
+      );
+
+      // For min size 24.0, radius should be 9.5
+      expect(
+        LoadingIndicatorConstants.getIndicatorRadius(24.0),
+        closeTo(9.5, 0.0001),
+      );
+
+      // For max size 240.0, radius should be 95.0
+      expect(
+        LoadingIndicatorConstants.getIndicatorRadius(240.0),
+        closeTo(95.0, 0.0001),
+      );
+    });
+
+    test('getSvgScaleFactor returns correct values', () {
+      // For default size 48.0, scale factor should be 0.1 (19.0 / 190.0)
+      expect(
+        LoadingIndicatorConstants.getSvgScaleFactor(48.0),
+        closeTo(0.1, 0.0001),
+      );
+
+      // For min size 24.0, scale factor should be 0.05 (9.5 / 190.0)
+      expect(
+        LoadingIndicatorConstants.getSvgScaleFactor(24.0),
+        closeTo(0.05, 0.0001),
+      );
+    });
   });
 
   group('WavyProgressConstants', () {

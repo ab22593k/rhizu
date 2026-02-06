@@ -1,3 +1,5 @@
+library;
+
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -20,13 +22,23 @@ export 'shapes/shape_type.dart';
 /// "expressive" loading animation that provides visual feedback during
 /// short wait periods.
 ///
+/// The indicator is responsive and can be sized between 24dp and 240dp.
+/// Several named constructors are provided for common sizes:
+/// - [MorphingLI.small] (24dp)
+/// - [MorphingLI.medium] (48dp, default)
+/// - [MorphingLI.large] (96dp)
+/// - [MorphingLI.extraLarge] (144dp)
+///
 /// Example usage:
 /// ```dart
-/// // Simple loading indicator
-/// const RZLoadingIndicator()
+/// // Simple loading indicator (default 48dp)
+/// const MorphingLI()
 ///
-/// // Contained loading indicator with background
-/// const RZLoadingIndicator(containment: Containment.contained)
+/// // Small contained indicator
+/// const MorphingLI.small(containment: Containment.contained)
+///
+/// // Custom size
+/// const MorphingLI(size: 64.0)
 /// ```
 class MorphingLI extends StatefulWidget {
   /// How the loading indicator should be visually contained.
@@ -35,10 +47,39 @@ class MorphingLI extends StatefulWidget {
   /// Use [Containment.contained] for a circular container background.
   final Containment containment;
 
+  /// The size of the loading indicator in logical pixels.
+  ///
+  /// Defaults to [LoadingIndicatorConstants.defaultContainerSize] (48.0).
+  /// Must be between [LoadingIndicatorConstants.minContainerSize] (24.0)
+  /// and [LoadingIndicatorConstants.maxContainerSize] (240.0).
+  final double size;
+
   /// Creates a loading indicator.
   ///
   /// The [containment] parameter controls the visual presentation.
-  const MorphingLI({super.key, this.containment = Containment.simple});
+  const MorphingLI({
+    super.key,
+    this.containment = Containment.simple,
+    this.size = LoadingIndicatorConstants.defaultContainerSize,
+  });
+
+  /// Creates a small loading indicator (24dp).
+  const MorphingLI.small({super.key, this.containment = Containment.simple})
+    : size = LoadingIndicatorConstants.minContainerSize;
+
+  /// Creates a medium loading indicator (48dp).
+  const MorphingLI.medium({super.key, this.containment = Containment.simple})
+    : size = LoadingIndicatorConstants.defaultContainerSize;
+
+  /// Creates a large loading indicator (96dp).
+  const MorphingLI.large({super.key, this.containment = Containment.simple})
+    : size = 96.0;
+
+  /// Creates an extra large loading indicator (144dp).
+  const MorphingLI.extraLarge({
+    super.key,
+    this.containment = Containment.simple,
+  }) : size = 144.0;
 
   @override
   State<MorphingLI> createState() => _MorphingLIState();
@@ -74,9 +115,14 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
         ? colorScheme.primaryContainer
         : Colors.transparent;
 
+    final double clampedSize = widget.size.clamp(
+      LoadingIndicatorConstants.minContainerSize,
+      LoadingIndicatorConstants.maxContainerSize,
+    );
+
     return Container(
-      width: LoadingIndicatorConstants.containerSize,
-      height: LoadingIndicatorConstants.containerSize,
+      width: clampedSize,
+      height: clampedSize,
       decoration: BoxDecoration(color: containerColor, shape: BoxShape.circle),
       child: AnimatedBuilder(
         animation: _animationController.animation,
@@ -104,6 +150,8 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
               nextShape: _animationController.nextShape,
               progress: morphProgress,
               rotation: globalRotation + stepRotation,
+              scale:
+                  clampedSize / LoadingIndicatorConstants.defaultContainerSize,
             ),
           );
         },
@@ -115,12 +163,30 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
 @Preview(name: 'Expressive Loader (Contained)')
 Widget previewExpressiveLoaderContained() => const Scaffold(
   body: Center(
-    child: Row(
+    child: Column(
       mainAxisAlignment: MainAxisAlignment.center,
-      spacing: 40.0,
+      spacing: 24.0,
       children: [
-        MorphingLI(containment: Containment.simple),
-        MorphingLI(containment: Containment.contained),
+        // Row 1: Simple (different sizes)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 24.0,
+          children: [
+            MorphingLI.small(containment: Containment.simple),
+            MorphingLI.medium(containment: Containment.simple),
+            MorphingLI.large(containment: Containment.simple),
+          ],
+        ),
+        // Row 2: Contained (different sizes)
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          spacing: 24.0,
+          children: [
+            MorphingLI.small(containment: Containment.contained),
+            MorphingLI.medium(containment: Containment.contained),
+            MorphingLI.large(containment: Containment.contained),
+          ],
+        ),
       ],
     ),
   ),

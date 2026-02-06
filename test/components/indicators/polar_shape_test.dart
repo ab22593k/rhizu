@@ -70,6 +70,21 @@ void main() {
       final angle1Degree = 2 * math.pi / 360;
       expect(shape.getRadius(angle1Degree), closeTo(20.0, 0.1));
     });
+
+    test('getRadius accepts scale parameter', () {
+      // Create a simple circle with radius 10.0
+      final radii = List.filled(360, 10.0);
+      final shape = PolarShape(radii);
+
+      // Default scale (1.0)
+      expect(shape.getRadius(0), equals(10.0));
+
+      // Scale 2.0
+      expect(shape.getRadius(0, scale: 2.0), equals(20.0));
+
+      // Scale 0.5
+      expect(shape.getRadius(0, scale: 0.5), equals(5.0));
+    });
   });
 
   group('ShapeRegistry', () {
