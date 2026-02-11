@@ -3,7 +3,8 @@ enum WindowSizeClass {
   medium,
   expanded,
   large,
-  extraLarge;
+  extraLarge
+  ;
 
   static WindowSizeClass fromWidth(double width) {
     if (width < 600) return WindowSizeClass.compact;

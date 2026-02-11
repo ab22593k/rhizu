@@ -12,7 +12,6 @@ import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 /// - Morphing between shapes (650ms per transition)
 /// - Shape sequence progression (7 shapes in cycle)
 class LoadingAnimationController {
-
   /// Creates a new animation controller.
   ///
   /// [vsync] provides the ticker for the animation controllers.

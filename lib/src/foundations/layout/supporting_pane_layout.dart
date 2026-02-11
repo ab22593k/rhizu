@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:rhizu/src/foundations/window_size_class.dart';
 
 class SupportingPaneLayout extends StatelessWidget {
-
   const SupportingPaneLayout({
-    required this.main, required this.supporting, super.key,
+    required this.main,
+    required this.supporting,
+    super.key,
     this.mainFlex = 2,
     this.supportingFlex = 1,
   });

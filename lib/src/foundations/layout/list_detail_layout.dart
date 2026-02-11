@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:rhizu/src/foundations/window_size_class.dart';
 
 class ListDetailLayout extends StatelessWidget {
-
   const ListDetailLayout({
-    required this.list, required this.detail, super.key,
+    required this.list,
+    required this.detail,
+    super.key,
     this.isDetailVisible = false,
     this.listFlex = 1,
     this.detailFlex = 1,

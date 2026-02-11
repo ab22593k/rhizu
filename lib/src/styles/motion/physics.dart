@@ -16,7 +16,6 @@ import 'package:flutter/physics.dart';
 /// Note: You must ensure the animation duration is long enough for the
 /// spring to settle, otherwise the animation will clip.
 class SpringCurve extends Curve {
-
   SpringCurve(this.description)
     : estimatedDuration = _estimateDuration(description);
   final SpringDescription description;

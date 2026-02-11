@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:rhizu/src/foundations/window_size_class.dart';
 
 class FeedLayout extends StatelessWidget {
-
   const FeedLayout({
-    required this.itemCount, required this.itemBuilder, super.key,
+    required this.itemCount,
+    required this.itemBuilder,
+    super.key,
     this.childAspectRatio = 0.8,
   });
   final int itemCount;

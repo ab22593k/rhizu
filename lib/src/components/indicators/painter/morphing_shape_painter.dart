@@ -14,7 +14,6 @@ import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 /// polar coordinate interpolation to ensure topology-safe morphing
 /// (no glitches between shapes with different point counts).
 class MorphingShapePainter extends CustomPainter {
-
   /// Creates a morphing shape painter.
   ///
   /// All parameters are required and define how the shape should be rendered.
@@ -26,6 +25,7 @@ class MorphingShapePainter extends CustomPainter {
     required this.rotation,
     this.scale = 1.0,
   });
+
   /// The color to fill the shape with.
   final Color color;
 

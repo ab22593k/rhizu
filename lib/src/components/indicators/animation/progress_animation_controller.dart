@@ -10,7 +10,6 @@ import 'package:rhizu/src/components/indicators/constants.dart';
 /// In determinate mode (when progress is provided), the animation may be
 /// disabled or used for visual effects.
 class WavyProgressAnimationController {
-
   /// Creates a new animation controller for the wavy progress indicator.
   ///
   /// [vsync] provides the ticker for the animation controller.

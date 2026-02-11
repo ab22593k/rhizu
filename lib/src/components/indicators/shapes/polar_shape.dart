@@ -15,7 +15,6 @@ import 'package:path_drawing/path_drawing.dart';
 /// - Radius r is the distance from the center
 /// - Full circle: theta ranges from 0 to 2*pi radians (0 to 360 degrees)
 class PolarShape {
-
   /// Creates a PolarShape with the given radius values.
   ///
   /// The [radii] list must contain exactly 360 values, one for each degree.
@@ -90,6 +89,7 @@ class PolarShape {
 
     return PolarShape(radii);
   }
+
   /// Radius values at 1-degree intervals (0 to 359).
   ///
   /// Index 0 corresponds to theta = 0 degrees (positive x-axis direction),

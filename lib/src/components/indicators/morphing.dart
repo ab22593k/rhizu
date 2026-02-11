@@ -1,4 +1,3 @@
-
 import 'dart:math' as math;
 import 'dart:ui';
 
@@ -8,11 +7,27 @@ import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/src/components/indicators/animation/loading_animation_controller.dart';
 import 'package:rhizu/src/components/indicators/animation/spring_curve.dart';
 import 'package:rhizu/src/components/indicators/constants.dart';
-import 'package:rhizu/src/components/indicators/containment.dart';
 import 'package:rhizu/src/components/indicators/painter/morphing_shape_painter.dart';
 
-export 'containment.dart';
 export 'shapes/shape_type.dart';
+
+/// Defines how the loading indicator is visually contained.
+///
+/// This affects both the background styling and the color
+/// scheme applied to the indicator.
+enum Containment {
+  /// Simple loading indicator without a container.
+  ///
+  /// Uses the theme's primary color for the indicator.
+  /// No background container is shown.
+  simple,
+
+  /// Contained loading indicator with a circular container.
+  ///
+  /// Uses the theme's primaryContainer color for the background
+  /// and onPrimaryContainer color for the indicator.
+  contained,
+}
 
 /// Loading indicators show the progress for a short wait time.
 ///
@@ -40,7 +55,6 @@ export 'shapes/shape_type.dart';
 /// const MorphingLI(size: 64.0)
 /// ```
 class MorphingLI extends StatefulWidget {
-
   /// Creates a loading indicator.
   ///
   /// The [containment] parameter controls the visual presentation.
@@ -67,6 +81,7 @@ class MorphingLI extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
   }) : size = 144.0;
+
   /// How the loading indicator should be visually contained.
   ///
   /// Defaults to [Containment.simple] which shows only the animated shape.
