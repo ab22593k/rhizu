@@ -76,8 +76,9 @@ class LoadingIndicatorConstants {
 
   /// Number of samples to take when parsing an SVG path into polar coordinates.
   ///
-  /// Using 4 samples per degree (1440 total) provides high accuracy.
-  static const int svgSampleCount = 1440;
+  /// Using 2 samples per degree (720 total) provides good accuracy
+  /// while reducing parsing time by 50% compared to 4 samples per degree.
+  static const int svgSampleCount = 720;
 }
 
 /// Constants used throughout the wavy circular progress indicator component.

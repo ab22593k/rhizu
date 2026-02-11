@@ -56,8 +56,8 @@ class PolarShape {
     final length = metric.length;
 
     // Sample the path to populate the radii table
-    // Using 1440 samples (4 per degree) for high accuracy
-    const sampleCount = 1440;
+    // Using 720 samples (2 per degree) for good accuracy with reduced computation
+    const sampleCount = 720;
 
     for (var i = 0; i < sampleCount; i++) {
       final distance = (i / sampleCount) * length;

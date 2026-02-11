@@ -341,22 +341,20 @@ LinearSpecs specForLinear({
 
 @Preview(name: 'Progress circular')
 Widget previewProgressCircular() {
-  return const MaterialApp(
-    home: Scaffold(
-      body: Center(
-        child: Row(
-          mainAxisAlignment: .spaceEvenly,
-          children: [
-            PI(
-              value: 0.25,
-              size: CircularPISize.s,
-            ),
-            CircularPI(
-              value: 0.5,
-              shape: PIShape.flat,
-            ),
-          ],
-        ),
+  return const Scaffold(
+    body: Center(
+      child: Row(
+        mainAxisAlignment: .spaceEvenly,
+        children: [
+          PI(
+            value: 0.25,
+            size: CircularPISize.s,
+          ),
+          CircularPI(
+            value: 0.5,
+            shape: PIShape.flat,
+          ),
+        ],
       ),
     ),
   );
@@ -364,27 +362,25 @@ Widget previewProgressCircular() {
 
 @Preview(name: 'Progress Linear')
 Widget previewProgressLinear() {
-  return const MaterialApp(
-    home: Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: .spaceEvenly,
-          children: [
-            SizedBox(
-              width: 400,
-              child: LinearPI(
-                value: 0.6,
-              ),
+  return const Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: .spaceEvenly,
+        children: [
+          SizedBox(
+            width: 400,
+            child: LinearPI(
+              value: 0.6,
             ),
-            SizedBox(
-              width: 400,
-              child: LinearPI(
-                value: 0.9,
-                shape: PIShape.flat,
-              ),
+          ),
+          SizedBox(
+            width: 400,
+            child: LinearPI(
+              value: 0.9,
+              shape: PIShape.flat,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     ),
   );

@@ -134,41 +134,49 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
       LoadingIndicatorConstants.maxContainerSize,
     );
 
-    return Container(
-      width: clampedSize,
-      height: clampedSize,
-      decoration: BoxDecoration(color: containerColor, shape: BoxShape.circle),
-      child: AnimatedBuilder(
-        animation: _animationController.animation,
-        builder: (context, child) {
-          final morphProgress = const SpringCurve().transform(
-            _animationController.morphValue,
-          );
+    // RepaintBoundary isolates the animation from parent repaints,
+    // preventing unnecessary GPU work when the parent widget changes.
+    return RepaintBoundary(
+      child: Container(
+        width: clampedSize,
+        height: clampedSize,
+        decoration: BoxDecoration(
+          color: containerColor,
+          shape: BoxShape.circle,
+        ),
+        child: AnimatedBuilder(
+          animation: _animationController.animation,
+          builder: (context, child) {
+            final morphProgress = const SpringCurve().transform(
+              _animationController.morphValue,
+            );
 
-          final globalRotation =
-              _animationController.rotationValue * 2 * math.pi;
-          final currentStepRotation =
-              _animationController.currentIndex * (math.pi / 2);
-          final nextStepRotation =
-              (_animationController.currentIndex + 1) * (math.pi / 2);
-          final stepRotation = lerpDouble(
-            currentStepRotation,
-            nextStepRotation,
-            morphProgress,
-          )!;
+            final globalRotation =
+                _animationController.rotationValue * 2 * math.pi;
+            final currentStepRotation =
+                _animationController.currentIndex * (math.pi / 2);
+            final nextStepRotation =
+                (_animationController.currentIndex + 1) * (math.pi / 2);
+            final stepRotation = lerpDouble(
+              currentStepRotation,
+              nextStepRotation,
+              morphProgress,
+            )!;
 
-          return CustomPaint(
-            painter: MorphingShapePainter(
-              color: indicatorColor,
-              currentShape: _animationController.currentShape,
-              nextShape: _animationController.nextShape,
-              progress: morphProgress,
-              rotation: globalRotation + stepRotation,
-              scale:
-                  clampedSize / LoadingIndicatorConstants.defaultContainerSize,
-            ),
-          );
-        },
+            return CustomPaint(
+              painter: MorphingShapePainter(
+                color: indicatorColor,
+                currentShape: _animationController.currentShape,
+                nextShape: _animationController.nextShape,
+                progress: morphProgress,
+                rotation: globalRotation + stepRotation,
+                scale:
+                    clampedSize /
+                    LoadingIndicatorConstants.defaultContainerSize,
+              ),
+            );
+          },
+        ),
       ),
     );
   }

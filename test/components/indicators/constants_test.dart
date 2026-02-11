@@ -42,8 +42,8 @@ void main() {
       expect(LoadingIndicatorConstants.svgScaleFactor, equals(0.1));
     });
 
-    test('SVG sample count is 1440', () {
-      expect(LoadingIndicatorConstants.svgSampleCount, equals(1440));
+    test('SVG sample count is 720', () {
+      expect(LoadingIndicatorConstants.svgSampleCount, equals(720));
     });
 
     test('indicator fits within container', () {

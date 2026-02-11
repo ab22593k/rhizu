@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:rhizu/src/foundations/window_size_class.dart';
 
-class ListDetailLayout extends StatelessWidget {
+/// A list-detail layout that shows either single or dual pane based on window size.
+///
+/// Uses cached calculations to avoid recomputing window size class
+/// on every layout pass.
+class ListDetailLayout extends StatefulWidget {
   const ListDetailLayout({
     required this.list,
     required this.detail,
@@ -17,25 +21,45 @@ class ListDetailLayout extends StatelessWidget {
   final int detailFlex;
 
   @override
+  State<ListDetailLayout> createState() => _ListDetailLayoutState();
+}
+
+class _ListDetailLayoutState extends State<ListDetailLayout> {
+  late bool? _cachedIsCompact;
+  double? _cachedWidth;
+
+  /// Determines if layout should show single pane with caching.
+  bool _isCompact(double width) {
+    if (_cachedWidth != null && width == _cachedWidth) {
+      return _cachedIsCompact!;
+    }
+
+    _cachedWidth = width;
+    final sizeClass = WindowSizeClass.fromWidth(width);
+    _cachedIsCompact =
+        sizeClass == WindowSizeClass.compact ||
+        sizeClass == WindowSizeClass.medium;
+
+    return _cachedIsCompact!;
+  }
+
+  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final sizeClass = WindowSizeClass.fromWidth(constraints.maxWidth);
-
         // Compact/Medium: Single pane
         // Expanded+: Side-by-side
-        if (sizeClass == WindowSizeClass.compact ||
-            sizeClass == WindowSizeClass.medium) {
-          if (isDetailVisible) {
-            return detail;
+        if (_isCompact(constraints.maxWidth)) {
+          if (widget.isDetailVisible) {
+            return widget.detail;
           } else {
-            return list;
+            return widget.list;
           }
         } else {
           return Row(
             children: [
-              Expanded(flex: listFlex, child: list),
-              Expanded(flex: detailFlex, child: detail),
+              Expanded(flex: widget.listFlex, child: widget.list),
+              Expanded(flex: widget.detailFlex, child: widget.detail),
             ],
           );
         }

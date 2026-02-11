@@ -13,6 +13,8 @@ import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 /// creating a smooth morphing effect. The shapes are rendered using
 /// polar coordinate interpolation to ensure topology-safe morphing
 /// (no glitches between shapes with different point counts).
+///
+/// Optimized for zero-allocation rendering using object pooling.
 class MorphingShapePainter extends CustomPainter {
   /// Creates a morphing shape painter.
   ///
@@ -25,6 +27,15 @@ class MorphingShapePainter extends CustomPainter {
     required this.rotation,
     this.scale = 1.0,
   });
+
+  /// Pooled Path object to avoid allocation on every frame.
+  final Path _path = Path();
+
+  /// Pooled list of points to avoid allocation on every frame.
+  final List<Offset> _points = List<Offset>.filled(
+    LoadingIndicatorConstants.shapeResolution + 1,
+    Offset.zero,
+  );
 
   /// The color to fill the shape with.
   final Color color;
@@ -65,14 +76,15 @@ class MorphingShapePainter extends CustomPainter {
 
     // Generate a path by interpolating polar coordinates (radius at angle theta)
     // This ensures topology-safe morphing (no glitches between different point counts).
-    final path = Path();
+    // Uses pooled objects to avoid allocation on every frame.
+    _path.reset();
     const steps = LoadingIndicatorConstants.shapeResolution;
-    final points = <Offset>[];
 
     // Get polar shape definitions from registry
     final currentPolarShape = ShapeRegistry.get(currentShape);
     final nextPolarShape = ShapeRegistry.get(nextShape);
 
+    // Calculate all points first (reusing pooled list)
     for (var i = 0; i <= steps; i++) {
       final theta = (i / steps) * 2 * math.pi;
 
@@ -87,24 +99,22 @@ class MorphingShapePainter extends CustomPainter {
       // Convert polar to Cartesian coordinates
       final x = r * math.cos(theta);
       final y = r * math.sin(theta);
-      points.add(Offset(x, y));
+      _points[i] = Offset(x, y);
     }
 
     // Build the path from calculated points
-    if (points.isNotEmpty) {
-      path.moveTo(points[0].dx, points[0].dy);
-      for (var i = 1; i < points.length; i++) {
-        path.lineTo(points[i].dx, points[i].dy);
-      }
-      path.close();
+    _path.moveTo(_points[0].dx, _points[0].dy);
+    for (var i = 1; i <= steps; i++) {
+      _path.lineTo(_points[i].dx, _points[i].dy);
     }
+    _path.close();
 
-    canvas.drawPath(path, paint);
+    canvas.drawPath(_path, paint);
     canvas.restore();
   }
 
   @override
-  bool shouldRepaint(MorphingShapePainter oldDelegate) {
+  bool shouldRepaint(covariant MorphingShapePainter oldDelegate) {
     // Repaint if any visual property changes
     return oldDelegate.progress != progress ||
         oldDelegate.rotation != rotation ||

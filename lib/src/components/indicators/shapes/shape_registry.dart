@@ -6,6 +6,9 @@ import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
 /// This class provides a centralized way to access shape definitions
 /// by their [ShapeType] enum value. Each shape is lazily initialized
 /// from its SVG path data when first requested.
+///
+/// To avoid first-frame jank, call [prewarm] during app initialization
+/// before the loading indicator is first displayed.
 class ShapeRegistry {
   const ShapeRegistry._();
 
@@ -21,6 +24,22 @@ class ShapeRegistry {
   /// and caches the shape from its SVG path data.
   static PolarShape get(ShapeType type) {
     return _shapes.putIfAbsent(type, () => _createShape(type));
+  }
+
+  /// Prewarms all shape definitions to avoid jank on first display.
+  ///
+  /// Call this during app initialization, before `runApp`:
+  /// ```dart
+  /// void main() {
+  ///   ShapeRegistry.prewarm();
+  ///   runApp(MyApp());
+  /// }
+  /// ```
+  ///
+  /// This eagerly parses all SVG paths so the first loading indicator
+  /// animation starts smoothly without frame drops.
+  static void prewarm() {
+    ShapeType.values.forEach(get);
   }
 
   /// Creates a polar shape from its type.

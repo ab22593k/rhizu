@@ -10,6 +10,9 @@ import 'package:flutter/physics.dart';
 ///
 /// The curve transforms linear progress [0, 1] into spring-based motion,
 /// creating an "expressive" feel where the animation overshoots and settles.
+///
+/// Optimized with a pre-computed lookup table for O(1) evaluation,
+/// avoiding expensive physics simulation on every frame.
 class SpringCurve extends Curve {
   /// Creates a SpringCurve with the default spring parameters.
   ///
@@ -19,23 +22,41 @@ class SpringCurve extends Curve {
   /// - Damping: 15 (normalized from 0.6)
   const SpringCurve();
 
-  @override
-  double transformInternal(double t) {
-    // Standard critically damped spring approximation
-    // The spring description is tuned to match the design spec
+  /// Number of samples in the lookup table.
+  /// Higher values provide smoother interpolation at the cost of memory.
+  static const int _lookupTableSize = 100;
+
+  /// Pre-computed lookup table for spring values.
+  /// Computed once on first access to avoid static initialization overhead.
+  static final List<double> _lookupTable = _computeLookupTable();
+
+  /// Computes the lookup table values using the spring simulation.
+  static List<double> _computeLookupTable() {
+    const springTime = 0.650;
     final simulation = SpringSimulation(
       const SpringDescription(
         mass: 1,
         stiffness: 200,
-        damping: 15, // Normalized from damping ratio 0.6
+        damping: 15,
       ),
-      0, // Start position
-      1, // End position
-      0, // Initial velocity
+      0,
+      1,
+      0,
     );
 
-    // Combine the spring simulation with linear progression
-    // This creates a spring effect that doesn't overshoot too much
-    return simulation.x(t * 0.650) + t * (1 - simulation.x(0.650));
+    return List.generate(_lookupTableSize, (i) {
+      final t = i / (_lookupTableSize - 1);
+      return simulation.x(t * springTime) + t * (1 - simulation.x(springTime));
+    });
+  }
+
+  @override
+  double transformInternal(double t) {
+    // Use lookup table for O(1) evaluation instead of physics simulation
+    final index = (t * (_lookupTableSize - 1)).round().clamp(
+      0,
+      _lookupTableSize - 1,
+    );
+    return _lookupTable[index];
   }
 }
