@@ -5,6 +5,7 @@ export 'package:google_fonts/google_fonts.dart';
 export 'package:hugeicons/hugeicons.dart';
 
 // Components
+export 'src/components/buttons/segmented_button_group.dart';
 export 'src/components/indicators/morphing.dart';
 export 'src/components/indicators/progress.dart';
 // Foundations
