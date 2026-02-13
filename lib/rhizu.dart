@@ -10,6 +10,7 @@ export 'src/components/indicators/progress.dart';
 // Foundations
 export 'src/foundations/layout/feed_layout.dart';
 export 'src/foundations/layout/list_detail_layout.dart';
+export 'src/foundations/layout/smooth_scroll.dart';
 export 'src/foundations/layout/supporting_pane_layout.dart';
 export 'src/foundations/window_size_class.dart';
 // Styles
