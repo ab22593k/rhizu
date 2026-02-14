@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-/// Sizes available for [ExpressiveSegmentedButton] based on Material 3 Expressive specs.
+/// Sizes available for [SegmentedButton] based on Material 3 Expressive specs.
 enum SegmentedButtonSize {
   /// Extra Small - 32dp height.
   xs,
@@ -93,8 +93,8 @@ enum SegmentedButtonSize {
 /// - Specific corner radii: Fully rounded outer corners, 8dp inner corners.
 /// - 5 Sizes: XS, S, M, L, XL.
 /// - Motion: Selection expands width with animation.
-class ExpressiveSegmentedButton<T> extends StatelessWidget {
-  const ExpressiveSegmentedButton({
+class SegmentedButton<T> extends StatelessWidget {
+  const SegmentedButton({
     required this.segments,
     required this.selected,
     super.key,
@@ -222,7 +222,7 @@ class _Segment<T> extends StatelessWidget {
     // Colors based on state
     final backgroundColor = isSelected
         ? colorScheme.secondaryContainer
-        : colorScheme.surfaceContainerHighest; // Standard M3 unselected
+        : colorScheme.surfaceContainerHighest;
 
     final foregroundColor = isSelected
         ? colorScheme.onSecondaryContainer
@@ -236,7 +236,7 @@ class _Segment<T> extends StatelessWidget {
     // Inner corners: 8dp
     // Outer corners: Fully rounded (Stadium)
     const innerRadius = 8.0;
-    const fullRadius = 999.0; // Effectively stadium
+    const fullRadius = 999.0;
 
     BorderRadiusGeometry borderRadius;
 
@@ -377,77 +377,14 @@ class _Segment<T> extends StatelessWidget {
 
 enum _PreviewChoice { list, grid, map }
 
-@Preview(name: 'SegmentedButton - Sizes')
-Widget previewSegmentedButtonSizes() {
-  return const _SegmentedButtonSizePreview();
-}
-
-class _SegmentedButtonSizePreview extends StatefulWidget {
-  const _SegmentedButtonSizePreview();
-
-  @override
-  State<_SegmentedButtonSizePreview> createState() =>
-      _SegmentedButtonSizePreviewState();
-}
-
-class _SegmentedButtonSizePreviewState
-    extends State<_SegmentedButtonSizePreview> {
-  _PreviewChoice _selected = _PreviewChoice.list;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              for (final size in SegmentedButtonSize.values) ...[
-                Text(
-                  size.name.toUpperCase(),
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                const SizedBox(height: 8),
-                ExpressiveSegmentedButton<_PreviewChoice>(
-                  size: size,
-                  segments: const [
-                    ButtonSegment(
-                      value: _PreviewChoice.list,
-                      label: Text('List'),
-                      icon: Icon(Icons.list),
-                    ),
-                    ButtonSegment(
-                      value: _PreviewChoice.grid,
-                      label: Text('Grid'),
-                      icon: Icon(Icons.grid_view),
-                    ),
-                    ButtonSegment(
-                      value: _PreviewChoice.map,
-                      label: Text('Map'),
-                      icon: Icon(Icons.map),
-                    ),
-                  ],
-                  selected: {_selected},
-                  onSelectionChanged: (newSelection) {
-                    setState(() {
-                      _selected = newSelection.first;
-                    });
-                  },
-                ),
-                const SizedBox(height: 24),
-              ],
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-@Preview(name: 'SegmentedButton - MultiSelect')
+@Preview(name: 'SegmentedButton - MultiSelect & IconOnly')
 Widget previewSegmentedButtonMultiSelect() {
-  return const _SegmentedButtonMultiSelectPreview();
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      body: _SegmentedButtonMultiSelectPreview(),
+    ),
+  );
 }
 
 class _SegmentedButtonMultiSelectPreview extends StatefulWidget {
@@ -464,42 +401,41 @@ class _SegmentedButtonMultiSelectPreviewState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ExpressiveSegmentedButton<_PreviewChoice>(
-          multiSelectionEnabled: true,
-          segments: const [
-            ButtonSegment(
-              value: _PreviewChoice.list,
-              label: Text('List'),
-              icon: Icon(Icons.list),
-            ),
-            ButtonSegment(
-              value: _PreviewChoice.grid,
-              label: Text('Grid'),
-              icon: Icon(Icons.grid_view),
-            ),
-            ButtonSegment(
-              value: _PreviewChoice.map,
-              label: Text('Map'),
-              icon: Icon(Icons.map),
-            ),
-          ],
-          selected: _selected,
-          onSelectionChanged: (newSelection) {
-            setState(() {
-              _selected = newSelection;
-            });
-          },
-        ),
+    return Center(
+      child: Column(
+        mainAxisAlignment: .spaceEvenly,
+        children: [
+          SegmentedButton<_PreviewChoice>(
+            multiSelectionEnabled: true,
+            segments: const [
+              ButtonSegment(
+                value: _PreviewChoice.list,
+                label: Text('List'),
+                icon: Icon(Icons.list),
+              ),
+              ButtonSegment(
+                value: _PreviewChoice.grid,
+                label: Text('Grid'),
+                icon: Icon(Icons.grid_view),
+              ),
+              ButtonSegment(
+                value: _PreviewChoice.map,
+                label: Text('Map'),
+                icon: Icon(Icons.map),
+              ),
+            ],
+            selected: _selected,
+            onSelectionChanged: (newSelection) {
+              setState(() {
+                _selected = newSelection;
+              });
+            },
+          ),
+          const _SegmentedButtonIconOnlyPreview(),
+        ],
       ),
     );
   }
-}
-
-@Preview(name: 'SegmentedButton - Icon Only')
-Widget previewSegmentedButtonIconOnly() {
-  return const _SegmentedButtonIconOnlyPreview();
 }
 
 class _SegmentedButtonIconOnlyPreview extends StatefulWidget {
@@ -516,42 +452,45 @@ class _SegmentedButtonIconOnlyPreviewState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: ExpressiveSegmentedButton<_PreviewChoice>(
-          size: SegmentedButtonSize.s,
-          segments: const [
-            ButtonSegment(
-              value: _PreviewChoice.list,
-              icon: Icon(Icons.list),
-              tooltip: 'List',
-            ),
-            ButtonSegment(
-              value: _PreviewChoice.grid,
-              icon: Icon(Icons.grid_view),
-              tooltip: 'Grid',
-            ),
-            ButtonSegment(
-              value: _PreviewChoice.map,
-              icon: Icon(Icons.map),
-              tooltip: 'Map',
-            ),
-          ],
-          selected: {_selected},
-          onSelectionChanged: (newSelection) {
-            setState(() {
-              _selected = newSelection.first;
-            });
-          },
-        ),
+    return Center(
+      child: SegmentedButton<_PreviewChoice>(
+        size: SegmentedButtonSize.s,
+        segments: const [
+          ButtonSegment(
+            value: _PreviewChoice.list,
+            icon: Icon(Icons.list),
+            tooltip: 'List',
+          ),
+          ButtonSegment(
+            value: _PreviewChoice.grid,
+            icon: Icon(Icons.grid_view),
+            tooltip: 'Grid',
+          ),
+          ButtonSegment(
+            value: _PreviewChoice.map,
+            icon: Icon(Icons.map),
+            tooltip: 'Map',
+          ),
+        ],
+        selected: {_selected},
+        onSelectionChanged: (newSelection) {
+          setState(() {
+            _selected = newSelection.first;
+          });
+        },
       ),
     );
   }
 }
 
-@Preview(name: 'SegmentedButton - Common Layouts')
+@Preview(name: 'SegmentedButton - Common Layouts', size: Size.fromHeight(450))
 Widget previewCommonLayouts() {
-  return const _CommonLayoutsPreview();
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      body: _CommonLayoutsPreview(),
+    ),
+  );
 }
 
 class _CommonLayoutsPreview extends StatefulWidget {
@@ -570,121 +509,119 @@ class _CommonLayoutsPreviewState extends State<_CommonLayoutsPreview> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(24.0),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'Label buttons',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              ExpressiveSegmentedButton<_PreviewChoice>(
-                segments: const [
-                  ButtonSegment(
-                    value: _PreviewChoice.list,
-                    label: Text('List'),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.grid,
-                    label: Text('Grid'),
-                  ),
-                  ButtonSegment(value: _PreviewChoice.map, label: Text('Map')),
-                ],
-                selected: {_selectedLabel},
-                onSelectionChanged: (val) =>
-                    setState(() => _selectedLabel = val.first),
-              ),
-              const SizedBox(height: 24),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              'Label buttons',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<_PreviewChoice>(
+              segments: const [
+                ButtonSegment(
+                  value: _PreviewChoice.list,
+                  label: Text('List'),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.grid,
+                  label: Text('Grid'),
+                ),
+                ButtonSegment(value: _PreviewChoice.map, label: Text('Map')),
+              ],
+              selected: {_selectedLabel},
+              onSelectionChanged: (val) =>
+                  setState(() => _selectedLabel = val.first),
+            ),
+            const SizedBox(height: 24),
 
-              Text(
-                'Label and icon buttons',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              ExpressiveSegmentedButton<_PreviewChoice>(
-                segments: const [
-                  ButtonSegment(
-                    value: _PreviewChoice.list,
-                    label: Text('List'),
-                    icon: Icon(Icons.list),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.grid,
-                    label: Text('Grid'),
-                    icon: Icon(Icons.grid_view),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.map,
-                    label: Text('Map'),
-                    icon: Icon(Icons.map),
-                  ),
-                ],
-                selected: {_selectedLabelIcon},
-                onSelectionChanged: (val) =>
-                    setState(() => _selectedLabelIcon = val.first),
-              ),
-              const SizedBox(height: 24),
+            Text(
+              'Label and icon buttons',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<_PreviewChoice>(
+              segments: const [
+                ButtonSegment(
+                  value: _PreviewChoice.list,
+                  label: Text('List'),
+                  icon: Icon(Icons.list),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.grid,
+                  label: Text('Grid'),
+                  icon: Icon(Icons.grid_view),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.map,
+                  label: Text('Map'),
+                  icon: Icon(Icons.map),
+                ),
+              ],
+              selected: {_selectedLabelIcon},
+              onSelectionChanged: (val) =>
+                  setState(() => _selectedLabelIcon = val.first),
+            ),
+            const SizedBox(height: 24),
 
-              Text(
-                'Extra small icon buttons',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              ExpressiveSegmentedButton<_PreviewChoice>(
-                size: SegmentedButtonSize.xs,
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: _PreviewChoice.list,
-                    icon: Icon(Icons.list),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.grid,
-                    icon: Icon(Icons.grid_view),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.map,
-                    icon: Icon(Icons.map),
-                  ),
-                ],
-                selected: {_selectedIconXS},
-                onSelectionChanged: (val) =>
-                    setState(() => _selectedIconXS = val.first),
-              ),
-              const SizedBox(height: 24),
+            Text(
+              'Extra small icon buttons',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<_PreviewChoice>(
+              size: SegmentedButtonSize.xs,
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: _PreviewChoice.list,
+                  icon: Icon(Icons.list),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.grid,
+                  icon: Icon(Icons.grid_view),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.map,
+                  icon: Icon(Icons.map),
+                ),
+              ],
+              selected: {_selectedIconXS},
+              onSelectionChanged: (val) =>
+                  setState(() => _selectedIconXS = val.first),
+            ),
+            const SizedBox(height: 24),
 
-              Text(
-                'Large icon buttons',
-                style: Theme.of(context).textTheme.titleSmall,
-              ),
-              const SizedBox(height: 8),
-              ExpressiveSegmentedButton<_PreviewChoice>(
-                size: SegmentedButtonSize.l,
-                showSelectedIcon: false,
-                segments: const [
-                  ButtonSegment(
-                    value: _PreviewChoice.list,
-                    icon: Icon(Icons.list),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.grid,
-                    icon: Icon(Icons.grid_view),
-                  ),
-                  ButtonSegment(
-                    value: _PreviewChoice.map,
-                    icon: Icon(Icons.map),
-                  ),
-                ],
-                selected: {_selectedIconL},
-                onSelectionChanged: (val) =>
-                    setState(() => _selectedIconL = val.first),
-              ),
-            ],
-          ),
+            Text(
+              'Large icon buttons',
+              style: Theme.of(context).textTheme.titleSmall,
+            ),
+            const SizedBox(height: 8),
+            SegmentedButton<_PreviewChoice>(
+              size: SegmentedButtonSize.l,
+              showSelectedIcon: false,
+              segments: const [
+                ButtonSegment(
+                  value: _PreviewChoice.list,
+                  icon: Icon(Icons.list),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.grid,
+                  icon: Icon(Icons.grid_view),
+                ),
+                ButtonSegment(
+                  value: _PreviewChoice.map,
+                  icon: Icon(Icons.map),
+                ),
+              ],
+              selected: {_selectedIconL},
+              onSelectionChanged: (val) =>
+                  setState(() => _selectedIconL = val.first),
+            ),
+          ],
         ),
       ),
     );

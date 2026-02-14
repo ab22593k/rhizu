@@ -64,7 +64,7 @@ class PI extends StatelessWidget {
   }
 }
 
-class CircularPI extends StatefulWidget {
+class CircularPI extends StatelessWidget {
   const CircularPI({
     super.key,
     this.value,
@@ -82,93 +82,63 @@ class CircularPI extends StatefulWidget {
   final Color? trackColor;
   final double rotation;
 
-  @override
-  State<CircularPI> createState() => _CircularPIState();
-}
-
-class _CircularPIState extends State<CircularPI>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
   bool get _shouldAnimate {
-    final v = widget.value;
-    return widget.shape == PIShape.wavy &&
+    final v = value;
+    return shape == PIShape.wavy &&
         (v == null || (v >= 1.0)) &&
-        widget.rotation == 0.0;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controller =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 3600),
-        )..addListener(() {
-          if (mounted && _shouldAnimate) setState(() {});
-        });
-    if (_shouldAnimate) {
-      _controller.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant CircularPI oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_shouldAnimate) {
-      if (!_controller.isAnimating) _controller.repeat();
-    } else {
-      if (_controller.isAnimating) _controller.stop();
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+        rotation == 0.0;
   }
 
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
-    final active = widget.activeColor ?? cs.primary;
-    final track =
-        widget.trackColor ?? cs.onSurfaceVariant.withValues(alpha: 0.24);
-    final wantsWavy = widget.shape == PIShape.wavy;
-    final diameter = wantsWavy
-        ? widget.size.diameterWavy
-        : widget.size.diameterFlat;
-
-    final rot = widget.rotation != 0.0
-        ? widget.rotation
-        : (_shouldAnimate ? _controller.value * 2 * math.pi : 0.0);
+    final active = activeColor ?? cs.primary;
+    final track = trackColor ?? cs.onSurfaceVariant.withValues(alpha: 0.24);
+    final wantsWavy = shape == PIShape.wavy;
+    final diameter = wantsWavy ? size.diameterWavy : size.diameterFlat;
 
     return RepaintBoundary(
       child: SizedBox(
         width: diameter,
         height: diameter,
-        child: CustomPaint(
-          painter: wantsWavy
-              ? CircularWavyPainter(
-                  value: widget.value,
-                  active: active,
-                  track: track,
-                  rotation: rot,
-                )
-              : CircularFlatPainter(
-                  value: widget.value,
-                  active: active,
-                  track: track,
-                  rotation: rot,
-                  size: widget.size,
-                ),
-        ),
+        child: _shouldAnimate
+            ? RepeatingAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 3600),
+                animatable: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  final rot = value * 2 * math.pi;
+                  return CustomPaint(
+                    painter: CircularWavyPainter(
+                      value: this.value,
+                      active: active,
+                      track: track,
+                      rotation: rot,
+                    ),
+                  );
+                },
+              )
+            : CustomPaint(
+                painter: wantsWavy
+                    ? CircularWavyPainter(
+                        value: value,
+                        active: active,
+                        track: track,
+                        rotation: rotation,
+                      )
+                    : CircularFlatPainter(
+                        value: value,
+                        active: active,
+                        track: track,
+                        rotation: rotation,
+                        size: size,
+                      ),
+              ),
       ),
     );
   }
 }
 
-class LinearPI extends StatefulWidget {
+class LinearPI extends StatelessWidget {
   const LinearPI({
     super.key,
     this.value,
@@ -188,63 +158,18 @@ class LinearPI extends StatefulWidget {
   final double phase;
   final double inset;
 
-  @override
-  State<LinearPI> createState() => _LinearPIState();
-}
-
-class _LinearPIState extends State<LinearPI>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _controller;
-
   bool get _shouldAnimate {
-    final v = widget.value;
-    return widget.shape == PIShape.wavy &&
-        (v == null || (v >= 1.0)) &&
-        widget.phase == 0.0;
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _controller =
-        AnimationController(
-          vsync: this,
-          duration: const Duration(milliseconds: 1200),
-        )..addListener(() {
-          if (mounted && _shouldAnimate) setState(() {});
-        });
-    if (_shouldAnimate) {
-      _controller.repeat();
-    }
-  }
-
-  @override
-  void didUpdateWidget(covariant LinearPI oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (_shouldAnimate) {
-      if (!_controller.isAnimating) _controller.repeat();
-    } else {
-      if (_controller.isAnimating) _controller.stop();
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
+    final v = value;
+    return shape == PIShape.wavy && (v == null || (v >= 1.0)) && phase == 0.0;
   }
 
   @override
   Widget build(BuildContext context) {
-    // final theme = Theme.of(context);
-    // final m3e =
-    // theme.extension<M3ETheme>() ?? M3ETheme.defaults(theme.colorScheme);
-
     // Farben aus m3e_design beziehen (überschreibbar per Props)
     final active = ColorScheme.of(context).primary;
     final track = ColorScheme.of(context).surfaceContainerHighest;
 
-    final spec = specForLinear(size: widget.size, shape: widget.shape);
+    final spec = specForLinear(size: size, shape: shape);
 
     // Total height equals the taller of the two strokes sharing the same baseline.
     // For wavy, add vertical amplitude; for flat, it's just the trackHeight.
@@ -253,24 +178,38 @@ class _LinearPIState extends State<LinearPI>
         : spec.trackHeight;
     final totalHeight = activeHeight;
 
-    final phaseValue = widget.phase != 0.0
-        ? widget.phase
-        : (_shouldAnimate ? _controller.value * 2 * math.pi : 0.0);
-
     return RepaintBoundary(
       child: SizedBox(
         height: totalHeight,
         width: double.infinity,
-        child: CustomPaint(
-          painter: LinearPainter(
-            value: widget.value,
-            spec: spec,
-            active: widget.activeColor ?? active,
-            track: widget.trackColor ?? track,
-            phase: phaseValue,
-            inset: widget.inset,
-          ),
-        ),
+        child: _shouldAnimate
+            ? RepeatingAnimationBuilder<double>(
+                duration: const Duration(milliseconds: 1200),
+                animatable: Tween(begin: 0.0, end: 1.0),
+                builder: (context, value, child) {
+                  final phaseValue = value * 2 * math.pi;
+                  return CustomPaint(
+                    painter: LinearPainter(
+                      value: this.value,
+                      spec: spec,
+                      active: activeColor ?? active,
+                      track: trackColor ?? track,
+                      phase: phaseValue,
+                      inset: inset,
+                    ),
+                  );
+                },
+              )
+            : CustomPaint(
+                painter: LinearPainter(
+                  value: value,
+                  spec: spec,
+                  active: activeColor ?? active,
+                  track: trackColor ?? track,
+                  phase: phase,
+                  inset: inset,
+                ),
+              ),
       ),
     );
   }

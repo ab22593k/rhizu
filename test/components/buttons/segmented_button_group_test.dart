@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide SegmentedButton;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/components/buttons/segmented_button_group.dart';
 
@@ -8,7 +8,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ExpressiveSegmentedButton<int>(
+            body: SegmentedButton<int>(
               segments: const [
                 ButtonSegment(value: 1, label: Text('One')),
                 ButtonSegment(value: 2, label: Text('Two')),
@@ -31,7 +31,7 @@ void main() {
     });
 
     testWidgets('updates selection on tap', (tester) async {
-      Set<int> selected = {1};
+      var selected = {1};
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -41,7 +41,7 @@ void main() {
           home: Scaffold(
             body: StatefulBuilder(
               builder: (context, setState) {
-                return ExpressiveSegmentedButton<int>(
+                return SegmentedButton<int>(
                   segments: const [
                     ButtonSegment(value: 1, label: Text('One')),
                     ButtonSegment(value: 2, label: Text('Two')),
@@ -69,7 +69,7 @@ void main() {
     });
 
     testWidgets('supports multi-selection', (tester) async {
-      Set<int> selected = {1};
+      var selected = {1};
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -79,7 +79,7 @@ void main() {
           home: Scaffold(
             body: StatefulBuilder(
               builder: (context, setState) {
-                return ExpressiveSegmentedButton<int>(
+                return SegmentedButton<int>(
                   multiSelectionEnabled: true,
                   segments: const [
                     ButtonSegment(value: 1, label: Text('One')),
@@ -113,7 +113,7 @@ void main() {
     });
 
     testWidgets('respects emptySelectionAllowed', (tester) async {
-      Set<int> selected = {1};
+      var selected = {1};
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData(
@@ -123,8 +123,7 @@ void main() {
           home: Scaffold(
             body: StatefulBuilder(
               builder: (context, setState) {
-                return ExpressiveSegmentedButton<int>(
-                  emptySelectionAllowed: false,
+                return SegmentedButton<int>(
                   segments: const [
                     ButtonSegment(value: 1, label: Text('One')),
                   ],
@@ -153,7 +152,7 @@ void main() {
         MaterialApp(
           home: Scaffold(
             body: Center(
-              child: ExpressiveSegmentedButton<int>(
+              child: SegmentedButton<int>(
                 size: SegmentedButtonSize.xs,
                 segments: const [
                   ButtonSegment(value: 1, label: Text('One')),
@@ -185,7 +184,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ExpressiveSegmentedButton<int>(
+            body: SegmentedButton<int>(
               showSelectedIcon: false,
               segments: const [
                 ButtonSegment(value: 1, label: Text('One')),
