@@ -278,48 +278,54 @@ LinearSpecs specForLinear({
   ),
 };
 
-@Preview(name: 'Progress circular')
+@Preview(name: 'Progress circular', size: Size.fromHeight(150))
 Widget previewProgressCircular() {
-  return const Scaffold(
-    body: Center(
-      child: Row(
-        mainAxisAlignment: .spaceEvenly,
-        children: [
-          PI(
-            value: 0.25,
-            size: CircularPISize.s,
-          ),
-          CircularPI(
-            value: 0.5,
-            shape: PIShape.flat,
-          ),
-        ],
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      body: Center(
+        child: Row(
+          mainAxisAlignment: .spaceEvenly,
+          children: [
+            PI(
+              value: 0.25,
+              size: CircularPISize.s,
+            ),
+            CircularPI(
+              value: 0.5,
+              shape: PIShape.flat,
+            ),
+          ],
+        ),
       ),
     ),
   );
 }
 
-@Preview(name: 'Progress Linear')
+@Preview(name: 'Progress Linear', size: Size.fromHeight(200))
 Widget previewProgressLinear() {
-  return const Scaffold(
-    body: Center(
-      child: Column(
-        mainAxisAlignment: .spaceEvenly,
-        children: [
-          SizedBox(
-            width: 400,
-            child: LinearPI(
-              value: 0.6,
+  return const MaterialApp(
+    debugShowCheckedModeBanner: false,
+    home: Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: .spaceEvenly,
+          children: [
+            SizedBox(
+              width: 400,
+              child: LinearPI(
+                value: 0.6,
+              ),
             ),
-          ),
-          SizedBox(
-            width: 400,
-            child: LinearPI(
-              value: 0.9,
-              shape: PIShape.flat,
+            SizedBox(
+              width: 400,
+              child: LinearPI(
+                value: 0.9,
+                shape: PIShape.flat,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     ),
   );
