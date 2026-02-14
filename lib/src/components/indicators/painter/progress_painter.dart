@@ -16,7 +16,7 @@ class CircularFlatPainter extends CustomPainter {
   final Color active;
   final Color track;
   final double rotation;
-  final CircularPISize size;
+  final CircularProgressIndicatorSize size;
 
   @override
   void paint(Canvas canvas, Size s) {
