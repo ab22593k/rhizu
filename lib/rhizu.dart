@@ -6,6 +6,7 @@ export 'package:hugeicons/hugeicons.dart';
 
 // Components
 export 'src/components/buttons/segmented_button_group.dart';
+export 'src/components/buttons/split_button.dart';
 export 'src/components/indicators/morphing.dart';
 export 'src/components/indicators/progress.dart';
 // Foundations
