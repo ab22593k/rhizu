@@ -127,10 +127,10 @@ void main() {
       expect(WavyProgressConstants.defaultTrackGap, equals(4.0));
     });
 
-    test('rotation duration is 2 seconds', () {
+    test('rotation duration is 1000ms', () {
       expect(
         WavyProgressConstants.rotationDuration,
-        equals(const Duration(seconds: 2)),
+        equals(const Duration(milliseconds: 1000)),
       );
     });
 

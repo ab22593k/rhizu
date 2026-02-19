@@ -37,7 +37,7 @@ class SpringCurve extends Curve {
       const SpringDescription(
         mass: 1,
         stiffness: 200,
-        damping: 15,
+        damping: 16.97,
       ),
       0,
       1,

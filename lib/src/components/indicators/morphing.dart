@@ -183,37 +183,35 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
 }
 
 @Preview(name: 'Morphing Loader')
-Widget previewExpressiveLoaderContained() => const Scaffold(
-  body: MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 24,
-          children: [
-            // Row 1: Simple (different sizes)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 24,
-              children: [
-                MorphingLI.small(),
-                MorphingLI.medium(),
-                MorphingLI.large(),
-              ],
-            ),
-            // Row 2: Contained (different sizes)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              spacing: 24,
-              children: [
-                MorphingLI.small(containment: Containment.contained),
-                MorphingLI.medium(containment: Containment.contained),
-                MorphingLI.large(containment: Containment.contained),
-              ],
-            ),
-          ],
-        ),
+Widget previewExpressiveLoaderContained() => const MaterialApp(
+  debugShowCheckedModeBanner: false,
+  home: Scaffold(
+    body: Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        spacing: 24,
+        children: [
+          // Row 1: Simple (different sizes)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 24,
+            children: [
+              MorphingLI.small(),
+              MorphingLI.medium(),
+              MorphingLI.large(),
+            ],
+          ),
+          // Row 2: Contained (different sizes)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            spacing: 24,
+            children: [
+              MorphingLI.small(containment: Containment.contained),
+              MorphingLI.medium(containment: Containment.contained),
+              MorphingLI.large(containment: Containment.contained),
+            ],
+          ),
+        ],
       ),
     ),
   ),

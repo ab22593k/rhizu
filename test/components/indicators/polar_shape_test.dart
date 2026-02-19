@@ -13,7 +13,7 @@ void main() {
 
     test('default shape sequence has correct order', () {
       expect(defaultShapeSequence.length, equals(7));
-      expect(defaultShapeSequence[0], equals(ShapeType.burst));
+      expect(defaultShapeSequence[0], equals(ShapeType.softBurst));
       expect(defaultShapeSequence[1], equals(ShapeType.cookie9));
       expect(defaultShapeSequence[2], equals(ShapeType.pentagon));
       expect(defaultShapeSequence[3], equals(ShapeType.pill));
@@ -99,15 +99,15 @@ void main() {
     });
 
     test('shape registry caches shapes', () {
-      final shape1 = ShapeRegistry.get(ShapeType.burst);
-      final shape2 = ShapeRegistry.get(ShapeType.burst);
+      final shape1 = ShapeRegistry.get(ShapeType.softBurst);
+      final shape2 = ShapeRegistry.get(ShapeType.softBurst);
 
       // Should be the same instance (cached)
       expect(identical(shape1, shape2), isTrue);
     });
 
     test('different shape types produce different radii', () {
-      final burstShape = ShapeRegistry.get(ShapeType.burst);
+      final burstShape = ShapeRegistry.get(ShapeType.softBurst);
       final ovalShape = ShapeRegistry.get(ShapeType.oval);
 
       // Burst and oval should have significantly different radii

@@ -3,8 +3,8 @@
 /// Each shape type corresponds to a unique polar shape that can be morphed
 /// into other shapes during the loading animation sequence.
 enum ShapeType {
-  /// A star-burst shape with multiple points radiating outward.
-  burst,
+  /// A soft star-burst shape with gentle undulations.
+  softBurst,
 
   /// A cookie-like shape with 9 scalloped edges.
   cookie9,
@@ -30,7 +30,7 @@ enum ShapeType {
 /// This sequence defines the order in which shapes morph from one to another
 /// during the continuous animation loop.
 const List<ShapeType> defaultShapeSequence = [
-  ShapeType.burst,
+  ShapeType.softBurst,
   ShapeType.cookie9,
   ShapeType.pentagon,
   ShapeType.pill,

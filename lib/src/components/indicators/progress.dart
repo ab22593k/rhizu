@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/rhizu.dart';
+import 'package:rhizu/src/components/indicators/constants.dart';
 
 /// Re-exports the painters used by the progress indicator widgets.
 ///
@@ -303,7 +304,7 @@ class LinearProgressIndicator extends StatelessWidget {
         width: double.infinity,
         child: _shouldAnimate
             ? RepeatingAnimationBuilder<double>(
-                duration: const Duration(milliseconds: 1200),
+                duration: const Duration(milliseconds: 1000),
                 animatable: Tween(begin: 0.0, end: 1.0),
                 builder: (context, value, child) {
                   final phaseValue = value * 2 * math.pi;
@@ -344,7 +345,7 @@ class LinearSpecs {
     required this.trailingMargin,
     required this.isWavy,
     this.waveAmplitude = 0,
-    this.wavePeriod = 40,
+    this.wavePeriod = WavyProgressConstants.defaultWavePeriod,
   });
 
   final double trackHeight;
@@ -366,17 +367,17 @@ LinearSpecs specForLinear({
       trackHeight: 4,
       gap: 4,
       dotDiameter: 4,
-      dotOffset: 4,
-      trailingMargin: 4,
+      dotOffset: 0,
+      trailingMargin: 2,
       isWavy: false,
     ),
   (ProgressIndicatorShape.flat, LinearProgressIndicatorSize.m) =>
     const LinearSpecs(
       trackHeight: 8,
       gap: 4,
-      dotDiameter: 4,
-      dotOffset: 2,
-      trailingMargin: 8,
+      dotDiameter: 8,
+      dotOffset: 0,
+      trailingMargin: 4,
       isWavy: false,
     ),
   (ProgressIndicatorShape.wavy, LinearProgressIndicatorSize.s) =>
@@ -387,7 +388,6 @@ LinearSpecs specForLinear({
       dotOffset: 2,
       trailingMargin: 10,
       isWavy: true,
-      waveAmplitude: 3,
     ),
   (ProgressIndicatorShape.wavy, LinearProgressIndicatorSize.m) =>
     const LinearSpecs(
@@ -397,7 +397,6 @@ LinearSpecs specForLinear({
       dotOffset: 2,
       trailingMargin: 14,
       isWavy: true,
-      waveAmplitude: 3,
     ),
 };
 

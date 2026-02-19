@@ -106,6 +106,9 @@ class WavyProgressConstants {
   /// This determines how far the wave deviates from the base radius.
   static const double defaultAmplitude = 2;
 
+  /// Default wave period (wavelength) in logical pixels.
+  static const double defaultWavePeriod = 48;
+
   /// Default gap between the active indicator and track in logical pixels.
   static const double defaultTrackGap = 4;
 
@@ -115,7 +118,7 @@ class WavyProgressConstants {
   static const double trackGapAngleDivisor = 4;
 
   /// Duration for one complete rotation in indeterminate mode.
-  static const Duration rotationDuration = Duration(seconds: 2);
+  static const Duration rotationDuration = Duration(milliseconds: 1000);
 
   /// Step size for path generation (resolution of the curve).
   ///

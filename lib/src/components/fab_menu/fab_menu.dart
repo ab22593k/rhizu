@@ -22,12 +22,14 @@ class FabMenuItemWidget extends StatelessWidget {
     required this.item,
     required this.animation,
     required this.onItemPressed,
+    required this.index,
     super.key,
   });
 
   final FabMenuItem item;
   final Animation<double> animation;
   final VoidCallback onItemPressed;
+  final int index;
 
   @override
   Widget build(BuildContext context) {
@@ -52,6 +54,7 @@ class FabMenuItemWidget extends StatelessWidget {
             ),
             const SizedBox(width: 12),
             FloatingActionButton.small(
+              heroTag: 'fab_menu_item_$index',
               onPressed: () {
                 item.onPressed();
                 onItemPressed(); // Close the menu
@@ -124,79 +127,78 @@ class _FabMenuState extends State<FabMenu> with SingleTickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox.expand(
-      // Fill available space to position correctly
-      child: Stack(
-        alignment: widget.alignment,
-        children: [
-          // Dimmer/Backdrop (optional, but good for focus)
-          if (_isExpanded)
-            Positioned.fill(
-              child: GestureDetector(
-                onTap: _toggleMenu,
-                behavior: HitTestBehavior.translucent,
-                child: Container(color: Colors.transparent),
-              ),
-            ),
-
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.end, // Align items to end
-              children: [
-                // Menu Items
-                ...List.generate(widget.children.length, (index) {
-                  // Stagger logic
-                  // Reverse index for collapse so bottom items disappear first?
-                  // Spec: "Stagger delay 30-50ms".
-                  // Index 0 is top item? No, usually FAB is at bottom, so index 0 is closest to FAB?
-                  // Let's assume children[0] is bottom-most item above FAB.
-
-                  final intervalStart = 0.0 + (index * 0.1);
-                  final intervalEnd = 0.6 + (index * 0.1);
-
-                  final itemAnimation = CurvedAnimation(
-                    parent: _controller,
-                    curve: Interval(
-                      math.min(intervalStart, 0.8),
-                      math.min(intervalEnd, 1.0),
-                      curve: Curves.easeInOutCubicEmphasized,
-                    ),
-                  );
-
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12), // Spacing
-                    child: FabMenuItemWidget(
-                      item: widget.children[index], // Pass item
-                      animation: itemAnimation,
-                      onItemPressed: _toggleMenu,
-                    ),
-                  );
-                }),
-
-                // Main FAB
-                FloatingActionButton(
-                  key: const ValueKey('fab_menu_toggle'),
-                  onPressed: _toggleMenu,
-                  child: RotationTransition(
-                    turns: _rotateAnimation,
-                    child: const Icon(Icons.add),
-                  ),
-                ),
-              ],
+    return Stack(
+      alignment: widget.alignment,
+      children: [
+        // Dimmer/Backdrop (optional, but good for focus)
+        if (_isExpanded)
+          Positioned.fill(
+            child: GestureDetector(
+              onTap: _toggleMenu,
+              behavior: HitTestBehavior.translucent,
+              child: Container(color: Colors.transparent),
             ),
           ),
-        ],
-      ),
+
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.end, // Align items to end
+            children: [
+              // Menu Items
+              ...List.generate(widget.children.length, (index) {
+                // Stagger logic
+                // Reverse index for collapse so bottom items disappear first?
+                // Spec: "Stagger delay 30-50ms".
+                // Index 0 is top item? No, usually FAB is at bottom, so index 0 is closest to FAB?
+                // Let's assume children[0] is bottom-most item above FAB.
+
+                final intervalStart = 0.0 + (index * 0.1);
+                final intervalEnd = 0.6 + (index * 0.1);
+
+                final itemAnimation = CurvedAnimation(
+                  parent: _controller,
+                  curve: Interval(
+                    math.min(intervalStart, 0.8),
+                    math.min(intervalEnd, 1.0),
+                    curve: Curves.easeInOutCubicEmphasized,
+                  ),
+                );
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 12), // Spacing
+                  child: FabMenuItemWidget(
+                    item: widget.children[index], // Pass item
+                    animation: itemAnimation,
+                    onItemPressed: _toggleMenu,
+                    index: index,
+                  ),
+                );
+              }),
+
+              // Main FAB
+              FloatingActionButton(
+                key: const ValueKey('fab_menu_toggle'),
+                heroTag: 'fab_menu_main',
+                onPressed: _toggleMenu,
+                child: RotationTransition(
+                  turns: _rotateAnimation,
+                  child: const Icon(Icons.add),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 // --- Preview ---
 
-@Preview(name: 'Expressive FabMenu', size: Size.fromHeight(280))
-Widget previewExpressiveFabMenu() {
+@Preview(name: 'FabMenus', size: Size.fromHeight(280))
+Widget fabMenuPreview() {
   return MaterialApp(
     debugShowCheckedModeBanner: false,
     home: Scaffold(

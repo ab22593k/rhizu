@@ -5,10 +5,11 @@ export 'package:google_fonts/google_fonts.dart';
 export 'package:hugeicons/hugeicons.dart';
 
 // Components
-export 'src/components/buttons/segmented_button_group.dart';
 export 'src/components/buttons/split_button.dart';
+export 'src/components/fab_menu/fab_menu.dart';
 export 'src/components/indicators/morphing.dart';
 export 'src/components/indicators/progress.dart';
+export 'src/components/toolbars/toolbars.dart';
 // Foundations
 export 'src/foundations/layout/feed_layout.dart';
 export 'src/foundations/layout/list_detail_layout.dart';

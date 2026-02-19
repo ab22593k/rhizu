@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import 'package:rhizu/src/components/buttons/segmented_button_group.dart'
-    as expressive;
 import 'package:rhizu/src/components/buttons/split_button.dart';
 
 /// The type of [Toolbar].
@@ -182,7 +180,7 @@ class Toolbar extends StatelessWidget {
     // Orientation
     if (layout == ToolbarLayout.horizontal) {
       content = Row(
-        mainAxisSize: MainAxisSize.min, // Hug content for floating
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: centerTitle
             ? MainAxisAlignment.center
             : MainAxisAlignment.start,
@@ -190,7 +188,7 @@ class Toolbar extends StatelessWidget {
       );
     } else {
       content = Column(
-        mainAxisSize: MainAxisSize.min, // Hug content
+        mainAxisSize: MainAxisSize.min,
         mainAxisAlignment: centerTitle
             ? MainAxisAlignment.center
             : MainAxisAlignment.start,
@@ -237,9 +235,10 @@ class Toolbar extends StatelessWidget {
 
 // --- Preview ---
 
-@Preview(name: 'Expressive Toolbars', size: Size.fromHeight(700))
-Widget previewExpressiveToolbar() {
+@Preview(name: 'Toolbars', size: Size.fromHeight(700))
+Widget toolbarPreview() {
   return const MaterialApp(
+    debugShowCheckedModeBanner: false,
     home: Scaffold(
       body: ExpressiveToolbarPreview(),
     ),
@@ -348,15 +347,6 @@ class ExpressiveToolbarPreview extends StatelessWidget {
               const Text('Selection: 3'),
               const SizedBox(width: 8),
               IconButton(onPressed: () {}, icon: const Icon(Icons.close)),
-              const SizedBox(height: 20, child: VerticalDivider()),
-              expressive.SegmentedButton<int>(
-                selected: const {1},
-                onSelectionChanged: (_) {},
-                segments: const [
-                  ButtonSegment(value: 1, icon: Icon(Icons.list)),
-                  ButtonSegment(value: 2, icon: Icon(Icons.grid_view)),
-                ],
-              ),
             ],
           ),
         ],

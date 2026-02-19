@@ -7,7 +7,7 @@ void main() {
   test('MorphingShapePainter accepts scale parameter', () {
     final painter = MorphingShapePainter(
       color: Colors.blue,
-      currentShape: ShapeType.burst,
+      currentShape: ShapeType.softBurst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
@@ -20,7 +20,7 @@ void main() {
   test('MorphingShapePainter triggers repaint when scale changes', () {
     final painter1 = MorphingShapePainter(
       color: Colors.blue,
-      currentShape: ShapeType.burst,
+      currentShape: ShapeType.softBurst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
@@ -28,7 +28,7 @@ void main() {
 
     final painter2 = MorphingShapePainter(
       color: Colors.blue,
-      currentShape: ShapeType.burst,
+      currentShape: ShapeType.softBurst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
@@ -42,7 +42,7 @@ void main() {
   test('MorphingShapePainter does not trigger repaint when scale is same', () {
     final painter1 = MorphingShapePainter(
       color: Colors.blue,
-      currentShape: ShapeType.burst,
+      currentShape: ShapeType.softBurst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
@@ -50,7 +50,7 @@ void main() {
 
     final painter2 = MorphingShapePainter(
       color: Colors.blue,
-      currentShape: ShapeType.burst,
+      currentShape: ShapeType.softBurst,
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
