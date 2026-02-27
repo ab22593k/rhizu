@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/src/components/buttons/split_button.dart';
+import 'package:rhizu/src/components/indicators/progress.dart' as rhizu;
+import 'package:rhizu/src/styles/shapes/tokens.dart';
 
 /// The type of [Toolbar].
 enum ToolbarType {
@@ -36,7 +38,7 @@ enum ToolbarStyle {
 ///
 /// See also:
 /// * [M3 Toolbars Overview](https://m3.material.io/components/toolbars/overview)
-class Toolbar extends StatelessWidget {
+class Toolbar extends StatefulWidget {
   const Toolbar({
     required this.children,
     super.key,
@@ -52,6 +54,7 @@ class Toolbar extends StatelessWidget {
     this.elevation,
     this.padding,
     this.borderRadius,
+    this.shape,
   });
 
   /// The widgets below this widget in the tree.
@@ -95,6 +98,51 @@ class Toolbar extends StatelessWidget {
   /// Custom border radius.
   final BorderRadiusGeometry? borderRadius;
 
+  /// Custom shape. If null, determined by [type] and [borderRadius].
+  final ShapeBorder? shape;
+
+  @override
+  State<Toolbar> createState() => _ToolbarState();
+}
+
+class _ToolbarState extends State<Toolbar> {
+  late ScrollController _scrollController;
+  double _scrollProgress = 0.0;
+  bool _showIndicator = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController();
+    _scrollController.addListener(_handleScroll);
+  }
+
+  @override
+  void dispose() {
+    _scrollController.removeListener(_handleScroll);
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _handleScroll() {
+    if (!_scrollController.hasClients) return;
+
+    final maxScroll = _scrollController.position.maxScrollExtent;
+    if (maxScroll <= 0) {
+      if (_showIndicator) setState(() => _showIndicator = false);
+      return;
+    }
+
+    if (!_showIndicator) setState(() => _showIndicator = true);
+
+    final currentScroll = _scrollController.offset;
+    final progress = (currentScroll / maxScroll).clamp(0.0, 1.0);
+
+    if (progress != _scrollProgress) {
+      setState(() => _scrollProgress = progress);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -104,15 +152,15 @@ class Toolbar extends StatelessWidget {
     Color effectiveBackgroundColor;
     Color effectiveOnBackgroundColor;
 
-    if (backgroundColor != null) {
-      effectiveBackgroundColor = backgroundColor!;
+    if (widget.backgroundColor != null) {
+      effectiveBackgroundColor = widget.backgroundColor!;
       effectiveOnBackgroundColor =
           ThemeData.estimateBrightnessForColor(effectiveBackgroundColor) ==
               Brightness.dark
           ? Colors.white
           : Colors.black;
     } else {
-      switch (style) {
+      switch (widget.style) {
         case ToolbarStyle.standard:
           effectiveBackgroundColor = colorScheme.surfaceContainer;
           effectiveOnBackgroundColor = colorScheme.onSurface;
@@ -124,92 +172,118 @@ class Toolbar extends StatelessWidget {
 
     // 2. Determine Shape & Elevation
     ShapeBorder effectiveShape;
-    var effectiveElevation = elevation ?? 0;
+    var effectiveElevation = widget.elevation ?? 0;
 
-    if (type == ToolbarType.docked) {
-      // Docked: Rectangular (maybe slight top corners if bottom sheet style, but spec says "docked")
+    if (widget.shape != null) {
+      effectiveShape = widget.shape!;
+      effectiveElevation =
+          widget.elevation ?? (widget.type == ToolbarType.docked ? 0.0 : 2.0);
+    } else if (widget.type == ToolbarType.docked) {
+      // Docked: Rectangular
       // M3 Spec: "No shadow" for docked.
       effectiveShape = const RoundedRectangleBorder();
-      effectiveElevation = elevation ?? 0.0;
+      effectiveElevation = widget.elevation ?? 0.0;
     } else {
-      // Floating: High border radius (Stadium or large rounded rect)
+      // Floating: High border radius (Extra Large token)
       // M3 Spec: "Low elevation"
       effectiveShape = RoundedRectangleBorder(
-        borderRadius: borderRadius ?? BorderRadius.circular(28.0),
+        borderRadius: widget.borderRadius ?? ShapeTokens.borderRadiusExtraLarge,
       );
-      effectiveElevation = elevation ?? 2.0; // Floating default
+      effectiveElevation = widget.elevation ?? 2.0; // Floating default
     }
 
     // 3. Layout Children
-    Widget content;
     final items = <Widget>[];
 
-    if (leading != null) {
-      items.add(leading!);
+    if (widget.leading != null) {
+      items.add(widget.leading!);
       items.add(const SizedBox(width: 8, height: 8)); // Gap
     }
 
     items.addAll(
-      children
+      widget.children
           .expand((child) => [child, const SizedBox(width: 8, height: 8)])
-          .take(children.length * 2 - 1),
+          .take(widget.children.length * 2 - 1),
     );
 
-    if (trailing != null) {
+    if (widget.trailing != null) {
       items.add(const SizedBox(width: 8, height: 8)); // Gap
-      items.add(const Spacer()); // Push trailing to end if space allows?
-      // Actually, for a flexible toolbar, we might not want Spacer unless it expands.
-      // Let's use MainAxisAlignment.spaceBetween if appropriate, or just pack them.
-      // For now, let's just append.
-      if (type == ToolbarType.docked) {
-        // Docked usually has leading...actions...trailing
-        // If we want spacer, we should insert it.
-        // Let's remove the Spacer from above for generic implementation
-        // and handle specific layout logic below.
-        items.removeLast(); // Remove Spacer
+      if (widget.type == ToolbarType.docked) {
+        items.add(const Spacer());
       }
-      items.add(trailing!);
+      items.add(widget.trailing!);
     }
 
     // FAB Handling
-    if (fab != null) {
+    if (widget.fab != null) {
       items.add(const SizedBox(width: 16, height: 16));
-      items.add(fab!);
+      items.add(widget.fab!);
     }
 
-    // Orientation
-    if (layout == ToolbarLayout.horizontal) {
-      content = Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: centerTitle
-            ? MainAxisAlignment.center
-            : MainAxisAlignment.start,
-        children: items,
+    // Orientation & Wrapping
+    Widget content;
+    if (widget.layout == ToolbarLayout.horizontal) {
+      content = NotificationListener<ScrollMetricsNotification>(
+        onNotification: (notification) {
+          _handleScroll();
+          return true;
+        },
+        child: SingleChildScrollView(
+          controller: _scrollController,
+          scrollDirection: Axis.horizontal,
+          physics: widget.scrollable
+              ? null
+              : const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
+                ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: widget.centerTitle
+                ? MainAxisAlignment.center
+                : MainAxisAlignment.start,
+            children: items,
+          ),
+        ),
       );
     } else {
-      content = Column(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: centerTitle
-            ? MainAxisAlignment.center
-            : MainAxisAlignment.start,
-        children: items,
+      content = SingleChildScrollView(
+        controller: _scrollController,
+        physics: widget.scrollable
+            ? null
+            : const BouncingScrollPhysics(
+                parent: AlwaysScrollableScrollPhysics(),
+              ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: widget.centerTitle
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.start,
+          children: items,
+        ),
       );
     }
 
-    // Scrolling
-    if (scrollable) {
-      content = SingleChildScrollView(
-        scrollDirection: layout == ToolbarLayout.horizontal
-            ? Axis.horizontal
-            : Axis.vertical,
-        child: content,
+    // Indicator
+    Widget? indicator;
+    if (_showIndicator && widget.layout == ToolbarLayout.horizontal) {
+      indicator = Positioned(
+        left: 24,
+        right: 24,
+        bottom: 4,
+        child: rhizu.LinearProgressIndicator(
+          value: _scrollProgress,
+          size: rhizu.LinearProgressIndicatorSize.s,
+          shape: rhizu.ProgressIndicatorShape.flat,
+          activeColor: effectiveOnBackgroundColor.withValues(alpha: 0.5),
+          trackColor: effectiveOnBackgroundColor.withValues(alpha: 0.1),
+        ),
       );
     }
 
     // 4. Container Padding
     final effectivePadding =
-        padding ??
-        (type == ToolbarType.docked
+        widget.padding ??
+        (widget.type == ToolbarType.docked
             ? const EdgeInsets.symmetric(
                 horizontal: 16.0,
                 vertical: 12.0,
@@ -222,12 +296,17 @@ class Toolbar extends StatelessWidget {
       color: effectiveBackgroundColor,
       elevation: effectiveElevation,
       shape: effectiveShape,
-      child: Padding(
-        padding: effectivePadding,
-        child: IconTheme(
-          data: IconThemeData(color: effectiveOnBackgroundColor),
-          child: content,
-        ),
+      child: Stack(
+        children: [
+          Padding(
+            padding: effectivePadding,
+            child: IconTheme(
+              data: IconThemeData(color: effectiveOnBackgroundColor),
+              child: content,
+            ),
+          ),
+          ?indicator,
+        ],
       ),
     );
   }
