@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/components/buttons/split_button.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
 
 Finder findToolbarMaterial() {
   return find.byWidgetPredicate(
@@ -17,7 +17,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -26,7 +26,7 @@ void main() {
         ),
       );
 
-      expect(find.byType(Toolbar), findsOneWidget);
+      expect(find.byType(RZToolbar), findsOneWidget);
       expect(find.byType(Icon), findsOneWidget);
     });
 
@@ -34,7 +34,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               type: ToolbarType.docked,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -57,7 +57,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -78,7 +78,7 @@ void main() {
         MaterialApp(
           theme: ThemeData.light(useMaterial3: true),
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               style: ToolbarStyle.vibrant,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -101,7 +101,7 @@ void main() {
         MaterialApp(
           theme: ThemeData.light(useMaterial3: true),
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -124,7 +124,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               backgroundColor: customColor,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -145,7 +145,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               type: ToolbarType.docked,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -168,7 +168,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -189,7 +189,7 @@ void main() {
         MaterialApp(
           theme: ThemeData.light(useMaterial3: true),
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               style: ToolbarStyle.vibrant,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -212,7 +212,7 @@ void main() {
         MaterialApp(
           theme: ThemeData.light(useMaterial3: true),
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -235,7 +235,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               backgroundColor: customColor,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -256,7 +256,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               leading: const Icon(Icons.menu),
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -274,7 +274,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               trailing: IconButton(
                 onPressed: () {},
                 icon: const Icon(Icons.more_vert),
@@ -295,7 +295,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               fab: FloatingActionButton(
                 onPressed: () {},
                 child: const Icon(Icons.add),
@@ -316,7 +316,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               layout: ToolbarLayout.vertical,
               children: [
                 IconButton(
@@ -334,7 +334,7 @@ void main() {
       );
 
       final toolbarColumn = find.descendant(
-        of: find.byType(Toolbar),
+        of: find.byType(RZToolbar),
         matching: find.byType(Column),
       );
       expect(toolbarColumn, findsOneWidget);
@@ -344,7 +344,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(
                   onPressed: () {},
@@ -361,7 +361,7 @@ void main() {
       );
 
       final toolbarRow = find.descendant(
-        of: find.byType(Toolbar),
+        of: find.byType(RZToolbar),
         matching: find.byType(Row),
       );
       expect(toolbarRow, findsOneWidget);
@@ -371,7 +371,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 SplitButton<String>(
                   label: 'Action',
@@ -396,7 +396,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
                 IconButton(onPressed: () {}, icon: const Icon(Icons.delete)),
@@ -416,7 +416,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               padding: customPadding,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -446,7 +446,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               borderRadius: customRadius,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
@@ -470,7 +470,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               ],
@@ -494,7 +494,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: Toolbar(
+            body: RZToolbar(
               type: ToolbarType.docked,
               children: [
                 IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/supporting_pane_layout.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/layout/supporting_pane.dart';
 
 void main() {
   group('SupportingPaneLayout', () {
@@ -17,7 +17,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: SupportingPaneLayout(
+          home: RZSupportingPaneLayout(
             main: mainWidget,
             supporting: supportingWidget,
           ),
@@ -36,7 +36,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: SupportingPaneLayout(
+          home: RZSupportingPaneLayout(
             main: mainWidget,
             supporting: supportingWidget,
           ),
@@ -56,19 +56,19 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SupportingPaneLayout(
+            body: RZSupportingPaneLayout(
               main: mainWidget,
               supporting: supportingWidget,
-              mainToolbar: const Toolbar(children: [Icon(Icons.menu)]),
+              mainToolbar: const RZToolbar(children: [Icon(Icons.menu)]),
             ),
           ),
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsOneWidget);
 
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.type, ToolbarType.floating);
 
       addTearDown(tester.view.resetPhysicalSize);
@@ -81,11 +81,11 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SupportingPaneLayout(
+            body: RZSupportingPaneLayout(
               main: mainWidget,
               supporting: supportingWidget,
-              mainToolbar: const Toolbar(children: [Icon(Icons.menu)]),
-              supportingToolbar: const Toolbar(
+              mainToolbar: const RZToolbar(children: [Icon(Icons.menu)]),
+              supportingToolbar: const RZToolbar(
                 children: [Icon(Icons.settings)],
               ),
             ),
@@ -93,10 +93,10 @@ void main() {
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsNWidgets(2));
 
-      final toolbars = tester.widgetList<Toolbar>(toolbarFinder);
+      final toolbars = tester.widgetList<RZToolbar>(toolbarFinder);
       for (final toolbar in toolbars) {
         expect(toolbar.type, ToolbarType.floating);
       }

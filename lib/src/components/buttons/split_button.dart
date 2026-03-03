@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-/// Sizes for the Material 3 Expressive Split Button.
+/// Sizes for the Expressive Split Button.
 enum SplitButtonSize {
   xs,
   sm,
@@ -101,10 +101,10 @@ enum SplitButtonSize {
   }
 }
 
-/// Shapes for the Material 3 Expressive Split Button.
+/// Shapes for the Expressive Split Button.
 enum SplitButtonShape { round, square }
 
-/// Emphasis levels for the Material 3 Expressive Split Button.
+/// Emphasis levels for the Expressive Split Button.
 enum SplitButtonEmphasis { filled, tonal, elevated, outlined, text }
 
 /// Alignment for the trailing segment's content.
@@ -123,7 +123,7 @@ class SplitButtonItem<T> {
   final bool enabled;
 }
 
-/// Material 3 Expressive Split Button.
+/// Expressive Split Button.
 class SplitButton<T> extends StatefulWidget {
   const SplitButton({
     super.key,
@@ -541,52 +541,6 @@ Widget previewSplitButtonSizes() {
             SplitButton(
               size: SplitButtonSize.xl,
               label: 'Extra Large',
-              onPressed: () {},
-              items: const [],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}
-
-@Preview(name: 'Split Button - Emphasis')
-Widget previewSplitButtonEmphasis() {
-  return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(
-      body: Center(
-        child: Wrap(
-          spacing: 16,
-          runSpacing: 16,
-          children: [
-            SplitButton(
-              emphasis: SplitButtonEmphasis.filled,
-              label: 'Filled',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              label: 'Tonal',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              emphasis: SplitButtonEmphasis.elevated,
-              label: 'Elevated',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              emphasis: SplitButtonEmphasis.outlined,
-              label: 'Outlined',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              emphasis: SplitButtonEmphasis.text,
-              label: 'Text',
               onPressed: () {},
               items: const [],
             ),

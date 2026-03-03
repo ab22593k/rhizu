@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/feed_layout.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/layout/feed.dart';
 
 void main() {
   group('FeedLayout', () {
@@ -36,16 +36,16 @@ void main() {
             body: FeedLayout(
               itemCount: 10,
               itemBuilder: (context, index) => Text('Item $index'),
-              toolbar: const Toolbar(children: [Icon(Icons.add)]),
+              toolbar: const RZToolbar(children: [Icon(Icons.add)]),
             ),
           ),
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsOneWidget);
 
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.type, ToolbarType.floating);
 
       addTearDown(tester.view.resetPhysicalSize);
@@ -61,16 +61,16 @@ void main() {
             body: FeedLayout(
               itemCount: 10,
               itemBuilder: (context, index) => Text('Item $index'),
-              toolbar: const Toolbar(children: [Icon(Icons.add)]),
+              toolbar: const RZToolbar(children: [Icon(Icons.add)]),
             ),
           ),
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsOneWidget);
 
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.type, ToolbarType.floating);
 
       addTearDown(tester.view.resetPhysicalSize);

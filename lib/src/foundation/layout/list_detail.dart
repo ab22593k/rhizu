@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/adaptive_toolbar.dart';
-import 'package:rhizu/src/foundations/layout/layout_nav.dart';
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/components/toolbar/items.dart';
+import 'package:rhizu/src/components/toolbar/placement.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
 /// A list-detail layout that shows either single or dual pane based on window size.
 ///
-/// Integrated with [Toolbar] to handle navigation and contextual actions.
-class ListDetailLayout extends StatefulWidget {
-  const ListDetailLayout({
+/// Integrated with [RZToolbar] to handle navigation and contextual actions.
+class RZListDetailLayout extends StatefulWidget {
+  const RZListDetailLayout({
     required this.list,
     required this.detail,
     super.key,
@@ -28,11 +28,11 @@ class ListDetailLayout extends StatefulWidget {
   final int listFlex;
   final int detailFlex;
 
-  /// Optional [Toolbar] for the list pane.
-  final Toolbar? listToolbar;
+  /// Optional [RZToolbar] for the list pane.
+  final RZToolbar? listToolbar;
 
-  /// Optional [Toolbar] for the detail pane.
-  final Toolbar? detailToolbar;
+  /// Optional [RZToolbar] for the detail pane.
+  final RZToolbar? detailToolbar;
 
   /// Optional navigation destinations to be integrated into the toolbar.
   final List<NavigationDestination>? destinations;
@@ -44,10 +44,10 @@ class ListDetailLayout extends StatefulWidget {
   final ValueChanged<int>? onDestinationSelected;
 
   @override
-  State<ListDetailLayout> createState() => _ListDetailLayoutState();
+  State<RZListDetailLayout> createState() => _RZListDetailLayoutState();
 }
 
-class _ListDetailLayoutState extends State<ListDetailLayout> {
+class _RZListDetailLayoutState extends State<RZListDetailLayout> {
   late bool? _cachedIsCompact;
   double? _cachedWidth;
 
@@ -82,7 +82,7 @@ class _ListDetailLayoutState extends State<ListDetailLayout> {
 
           final effectiveToolbar =
               toolbar != null || widget.destinations != null
-              ? Toolbar(
+              ? RZToolbar(
                   style: toolbar?.style ?? ToolbarStyle.standard,
                   leading: toolbar?.leading,
                   trailing: toolbar?.trailing,
@@ -160,7 +160,7 @@ class _PaneWithToolbar extends StatelessWidget {
   });
 
   final Widget content;
-  final Toolbar? toolbar;
+  final RZToolbar? toolbar;
   final WindowSizeClass sizeClass;
   final List<NavigationDestination>? destinations;
   final int? selectedIndex;
@@ -169,7 +169,7 @@ class _PaneWithToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveToolbar = toolbar != null || destinations != null
-        ? Toolbar(
+        ? RZToolbar(
             style: toolbar?.style ?? ToolbarStyle.standard,
             leading: toolbar?.leading,
             trailing: toolbar?.trailing,

@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/adaptive_toolbar.dart';
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/components/toolbar/placement.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
 void main() {
   group('AdaptiveToolbarPlacement', () {
@@ -18,7 +18,7 @@ void main() {
               children: [
                 AdaptiveToolbarPlacement(
                   sizeClass: WindowSizeClass.compact,
-                  toolbar: Toolbar(children: [Text('Action')]),
+                  toolbar: RZToolbar(children: [Text('Action')]),
                 ),
               ],
             ),
@@ -26,10 +26,10 @@ void main() {
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsOneWidget);
 
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.type, ToolbarType.floating);
     });
 
@@ -43,7 +43,7 @@ void main() {
                 children: [
                   AdaptiveToolbarPlacement(
                     sizeClass: WindowSizeClass.expanded,
-                    toolbar: Toolbar(children: [Text('Action')]),
+                    toolbar: RZToolbar(children: [Text('Action')]),
                     isDocked: true,
                   ),
                 ],
@@ -52,10 +52,10 @@ void main() {
           ),
         );
 
-        final toolbarFinder = find.byType(Toolbar);
+        final toolbarFinder = find.byType(RZToolbar);
         expect(toolbarFinder, findsOneWidget);
 
-        final toolbar = tester.widget<Toolbar>(toolbarFinder);
+        final toolbar = tester.widget<RZToolbar>(toolbarFinder);
         expect(toolbar.type, ToolbarType.floating);
 
         // Verify placement (floating at bottom)
@@ -74,7 +74,7 @@ void main() {
               children: [
                 AdaptiveToolbarPlacement(
                   sizeClass: WindowSizeClass.expanded,
-                  toolbar: Toolbar(children: [Text('Action')]),
+                  toolbar: RZToolbar(children: [Text('Action')]),
                   isVertical: true,
                 ),
               ],
@@ -83,8 +83,8 @@ void main() {
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbarFinder = find.byType(RZToolbar);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.layout, ToolbarLayout.vertical);
 
       // Verify placement (on the right)

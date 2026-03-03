@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
-/// A wrapper that reconfigures a [Toolbar] based on the current layout context.
+/// A wrapper that reconfigures a [RZToolbar] based on the current layout context.
 class AdaptiveToolbarPlacement extends StatelessWidget {
   const AdaptiveToolbarPlacement({
     required this.sizeClass,
@@ -13,7 +13,7 @@ class AdaptiveToolbarPlacement extends StatelessWidget {
   });
 
   final WindowSizeClass sizeClass;
-  final Toolbar toolbar;
+  final RZToolbar toolbar;
   final bool isDocked;
   final bool isVertical;
 
@@ -22,7 +22,7 @@ class AdaptiveToolbarPlacement extends StatelessWidget {
     // Reconfigure toolbar for placement
     final actuallyDocked = isDocked && sizeClass == WindowSizeClass.compact;
 
-    final adaptiveToolbar = Toolbar(
+    final adaptiveToolbar = RZToolbar(
       type: actuallyDocked ? ToolbarType.docked : ToolbarType.floating,
       layout: isVertical ? ToolbarLayout.vertical : ToolbarLayout.horizontal,
       style: toolbar.style,

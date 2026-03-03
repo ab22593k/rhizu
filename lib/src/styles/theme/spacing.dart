@@ -1,4 +1,4 @@
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
 class ExpressiveSpacing {
   static double margin(WindowSizeClass sizeClass) {

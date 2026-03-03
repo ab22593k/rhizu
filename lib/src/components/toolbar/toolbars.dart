@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:rhizu/src/components/buttons/split_button.dart';
+import 'package:rhizu/src/components/fab_menu.dart';
 import 'package:rhizu/src/components/indicators/progress.dart' as rhizu;
 import 'package:rhizu/src/styles/shapes/tokens.dart';
 
-/// The type of [Toolbar].
+/// The type of [RZToolbar].
 enum ToolbarType {
   /// A toolbar docked at the bottom of the screen (replaces BottomAppBar).
   /// Typically full width.
@@ -15,13 +17,13 @@ enum ToolbarType {
   floating,
 }
 
-/// The layout direction of the [Toolbar].
+/// The layout direction of the [RZToolbar].
 enum ToolbarLayout {
   horizontal,
   vertical,
 }
 
-/// The color style of the [Toolbar].
+/// The color style of the [RZToolbar].
 enum ToolbarStyle {
   /// Uses standard surface container colors (subtle).
   standard,
@@ -38,8 +40,8 @@ enum ToolbarStyle {
 ///
 /// See also:
 /// * [M3 Toolbars Overview](https://m3.material.io/components/toolbars/overview)
-class Toolbar extends StatefulWidget {
-  const Toolbar({
+class RZToolbar extends StatefulWidget {
+  const RZToolbar({
     required this.children,
     super.key,
     this.type = ToolbarType.floating,
@@ -102,10 +104,10 @@ class Toolbar extends StatefulWidget {
   final ShapeBorder? shape;
 
   @override
-  State<Toolbar> createState() => _ToolbarState();
+  State<RZToolbar> createState() => _RZToolbarState();
 }
 
-class _ToolbarState extends State<Toolbar> {
+class _RZToolbarState extends State<RZToolbar> {
   late ScrollController _scrollController;
   double _scrollProgress = 0.0;
   bool _showIndicator = false;
@@ -193,59 +195,95 @@ class _ToolbarState extends State<Toolbar> {
     }
 
     // 3. Layout Children
-    final items = <Widget>[];
+    //
+    // Docked toolbars must NOT use Spacer inside a SingleChildScrollView,
+    // because horizontal scroll views give the Row unbounded width, making
+    // Expanded/Spacer impossible to resolve (throws RenderFlex unbounded
+    // constraint error). Instead, docked toolbars use a plain Row with
+    // MainAxisSize.max so that Spacer works correctly.
+    final itemsLeading = <Widget>[];
+    final itemsTrailing = <Widget>[];
+    final itemsMain = <Widget>[];
 
     if (widget.leading != null) {
-      items.add(widget.leading!);
-      items.add(const SizedBox(width: 8, height: 8)); // Gap
+      itemsLeading.add(widget.leading!);
+      itemsLeading.add(const SizedBox(width: 8, height: 8)); // Gap
     }
 
-    items.addAll(
+    itemsMain.addAll(
       widget.children
           .expand((child) => [child, const SizedBox(width: 8, height: 8)])
           .take(widget.children.length * 2 - 1),
     );
 
     if (widget.trailing != null) {
-      items.add(const SizedBox(width: 8, height: 8)); // Gap
-      if (widget.type == ToolbarType.docked) {
-        items.add(const Spacer());
-      }
-      items.add(widget.trailing!);
+      itemsTrailing.add(const SizedBox(width: 8, height: 8)); // Gap
+      itemsTrailing.add(widget.trailing!);
     }
 
-    // FAB Handling
+    // FAB Handling (always treated as trailing-side)
     if (widget.fab != null) {
-      items.add(const SizedBox(width: 16, height: 16));
-      items.add(widget.fab!);
+      itemsTrailing.add(const SizedBox(width: 16, height: 16));
+      itemsTrailing.add(widget.fab!);
     }
 
     // Orientation & Wrapping
     Widget content;
     if (widget.layout == ToolbarLayout.horizontal) {
-      content = NotificationListener<ScrollMetricsNotification>(
-        onNotification: (notification) {
-          _handleScroll();
-          return true;
-        },
-        child: SingleChildScrollView(
-          controller: _scrollController,
-          scrollDirection: Axis.horizontal,
-          physics: widget.scrollable
-              ? null
-              : const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: widget.centerTitle
-                ? MainAxisAlignment.center
-                : MainAxisAlignment.start,
-            children: items,
+      if (widget.type == ToolbarType.docked) {
+        // Docked: use a plain Row with MainAxisSize.max so Spacer works.
+        // The parent (BottomAppBar / full-width container) provides finite
+        // width constraints, so Spacer/Expanded are safe here.
+        content = Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: widget.centerTitle
+              ? MainAxisAlignment.center
+              : MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            ...itemsLeading,
+            ...itemsMain,
+            if (itemsTrailing.isNotEmpty) const Spacer(),
+            ...itemsTrailing,
+          ],
+        );
+      } else {
+        // Floating / scrollable: use SingleChildScrollView. No Spacer here
+        // because the Row has unbounded width inside the scroll view.
+        final allItems = [
+          ...itemsLeading,
+          ...itemsMain,
+          ...itemsTrailing,
+        ];
+        content = NotificationListener<ScrollMetricsNotification>(
+          onNotification: (notification) {
+            _handleScroll();
+            return true;
+          },
+          child: SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            physics: widget.scrollable
+                ? null
+                : const BouncingScrollPhysics(
+                    parent: AlwaysScrollableScrollPhysics(),
+                  ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: widget.centerTitle
+                  ? MainAxisAlignment.center
+                  : MainAxisAlignment.start,
+              children: allItems,
+            ),
           ),
-        ),
-      );
+        );
+      }
     } else {
+      final allItems = [
+        ...itemsLeading,
+        ...itemsMain,
+        ...itemsTrailing,
+      ];
       content = SingleChildScrollView(
         controller: _scrollController,
         physics: widget.scrollable
@@ -258,7 +296,7 @@ class _ToolbarState extends State<Toolbar> {
           mainAxisAlignment: widget.centerTitle
               ? MainAxisAlignment.center
               : MainAxisAlignment.start,
-          children: items,
+          children: allItems,
         ),
       );
     }
@@ -336,7 +374,7 @@ class ExpressiveToolbarPreview extends StatelessWidget {
         children: [
           const Text('Floating - Standard - Horizontal'),
           const SizedBox(height: 16),
-          Toolbar(
+          RZToolbar(
             children: [
               IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
               IconButton(onPressed: () {}, icon: const Icon(Icons.delete)),
@@ -347,7 +385,7 @@ class ExpressiveToolbarPreview extends StatelessWidget {
 
           const Text('Floating - Vibrant - Horizontal with Split Button'),
           const SizedBox(height: 16),
-          Toolbar(
+          RZToolbar(
             style: ToolbarStyle.vibrant,
             children: [
               IconButton(onPressed: () {}, icon: const Icon(Icons.add)),
@@ -370,7 +408,7 @@ class ExpressiveToolbarPreview extends StatelessWidget {
           Row(
             mainAxisAlignment: .spaceBetween,
             children: [
-              Toolbar(
+              RZToolbar(
                 layout: ToolbarLayout.vertical,
                 children: [
                   IconButton(
@@ -387,32 +425,47 @@ class ExpressiveToolbarPreview extends StatelessWidget {
                   ),
                 ],
               ),
-              Toolbar(
-                type: ToolbarType.docked,
-                leading: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.menu),
-                ),
-                fab: FloatingActionButton(
-                  onPressed: () {},
-                  elevation:
-                      0, // Docked often has flat FAB or low elevation if inside
-                  child: const Icon(Icons.add),
-                ),
-                trailing: IconButton(
-                  onPressed: () {},
-                  icon: const Icon(Icons.more_vert),
-                ),
-                children: [
-                  IconButton(
+              const SizedBox(width: 30),
+              Expanded(
+                child: RZToolbar(
+                  type: ToolbarType.docked,
+                  leading: IconButton(
                     onPressed: () {},
-                    icon: const Icon(Icons.search),
+                    icon: const Icon(Icons.menu),
                   ),
-                  IconButton(
+                  fab: RZFabMenu(
+                    children: [
+                      RZFabMenuItem(
+                        label: 'Copy',
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedCopy01,
+                        ),
+                        onPressed: () {},
+                      ),
+                      RZFabMenuItem(
+                        label: 'Paste',
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedFilePaste,
+                        ),
+                        onPressed: () {},
+                      ),
+                    ],
+                  ),
+                  trailing: IconButton(
                     onPressed: () {},
-                    icon: const Icon(Icons.favorite),
+                    icon: const Icon(Icons.more_vert),
                   ),
-                ],
+                  children: [
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.search),
+                    ),
+                    IconButton(
+                      onPressed: () {},
+                      icon: const Icon(Icons.favorite),
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
@@ -420,7 +473,7 @@ class ExpressiveToolbarPreview extends StatelessWidget {
 
           const Text('Floating - Vibrant - Mixed Content'),
           const SizedBox(height: 16),
-          Toolbar(
+          RZToolbar(
             style: ToolbarStyle.vibrant,
             children: [
               const Text('Selection: 3'),

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 /// Internal navigation item for toolbars in foundations.
-class FoundationNavigationItem extends StatelessWidget {
-  const FoundationNavigationItem({
+class RZNavigationItem extends StatelessWidget {
+  const RZNavigationItem({
     required this.destination,
     required this.isSelected,
     required this.onTap,
@@ -35,7 +35,7 @@ List<Widget> mergeNavAndActions(
   if (destinations != null) {
     for (var i = 0; i < destinations.length; i++) {
       items.add(
-        FoundationNavigationItem(
+        RZNavigationItem(
           destination: destinations[i],
           isSelected: selectedIndex == i,
           onTap: () => onDestinationSelected?.call(i),

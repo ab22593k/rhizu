@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/adaptive_toolbar.dart';
-import 'package:rhizu/src/foundations/layout/layout_nav.dart';
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/components/toolbar/items.dart';
+import 'package:rhizu/src/components/toolbar/placement.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
 /// A feed layout that adapts column count based on window size.
 ///
-/// Integrated with [Toolbar] to handle both actions and navigation
+/// Integrated with [RZToolbar] to handle both actions and navigation
 /// on mobile and desktop.
 class FeedLayout extends StatefulWidget {
   const FeedLayout({
@@ -24,8 +24,8 @@ class FeedLayout extends StatefulWidget {
   final IndexedWidgetBuilder itemBuilder;
   final double childAspectRatio;
 
-  /// An optional [Toolbar] to display with the feed.
-  final Toolbar? toolbar;
+  /// An optional [RZToolbar] to display with the feed.
+  final RZToolbar? toolbar;
 
   /// Optional navigation destinations to be integrated into the toolbar.
   final List<NavigationDestination>? destinations;
@@ -104,7 +104,7 @@ class _FeedLayoutState extends State<FeedLayout> {
 
         if (toolbar == null && destinations == null) return grid;
 
-        final effectiveToolbar = Toolbar(
+        final effectiveToolbar = RZToolbar(
           style: toolbar?.style ?? ToolbarStyle.standard,
           leading: toolbar?.leading,
           trailing: toolbar?.trailing,

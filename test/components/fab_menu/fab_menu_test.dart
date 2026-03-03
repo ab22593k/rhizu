@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/fab_menu/fab_menu.dart';
+import 'package:rhizu/src/components/fab_menu.dart';
 
 // Helper to create test app with proper theme
 Widget createTestApp({required Widget body}) {
@@ -17,9 +17,9 @@ void main() {
     testWidgets('renders FAB in collapsed state initially', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {},
@@ -37,9 +37,9 @@ void main() {
     testWidgets('expands menu on tap', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {},
@@ -58,9 +58,9 @@ void main() {
     testWidgets('collapses menu on second tap', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {},
@@ -86,9 +86,9 @@ void main() {
       var itemPressed = false;
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {
@@ -106,7 +106,7 @@ void main() {
 
       // Tap the item's FAB (not the text label)
       final itemFab = find.descendant(
-        of: find.byType(FabMenuItemWidget),
+        of: find.byType(RZFabMenuItemWidget),
         matching: find.byType(FloatingActionButton),
       );
       expect(itemFab, findsOneWidget);
@@ -121,19 +121,19 @@ void main() {
     testWidgets('renders correct number of items', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: '1',
                 icon: const Icon(Icons.looks_one),
                 onPressed: () {},
               ),
-              FabMenuItem(
+              RZFabMenuItem(
                 label: '2',
                 icon: const Icon(Icons.looks_two),
                 onPressed: () {},
               ),
-              FabMenuItem(
+              RZFabMenuItem(
                 label: '3',
                 icon: const Icon(Icons.looks_3),
                 onPressed: () {},
@@ -146,15 +146,15 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
       await tester.pumpAndSettle();
 
-      expect(find.byType(FabMenuItemWidget), findsNWidgets(3));
+      expect(find.byType(RZFabMenuItemWidget), findsNWidgets(3));
     });
 
     testWidgets('FAB icon rotates when menu opens', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {},
@@ -182,9 +182,9 @@ void main() {
     testWidgets('menu items are animated', (tester) async {
       await tester.pumpWidget(
         createTestApp(
-          body: FabMenu(
+          body: RZFabMenu(
             children: [
-              FabMenuItem(
+              RZFabMenuItem(
                 label: 'Item 1',
                 icon: const Icon(Icons.add),
                 onPressed: () {},
@@ -195,7 +195,7 @@ void main() {
       );
 
       // Find the item widget which uses animations
-      final itemFinder = find.byType(FabMenuItemWidget);
+      final itemFinder = find.byType(RZFabMenuItemWidget);
       expect(itemFinder, findsOneWidget);
 
       // Open menu

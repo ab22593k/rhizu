@@ -1,11 +1,10 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 
 /// Data class for a menu item in the FAB Menu.
-class FabMenuItem {
-  const FabMenuItem({
+class RZFabMenuItem {
+  const RZFabMenuItem({
     required this.label,
     required this.icon,
     required this.onPressed,
@@ -17,8 +16,8 @@ class FabMenuItem {
 }
 
 /// A widget that renders a single menu item.
-class FabMenuItemWidget extends StatelessWidget {
-  const FabMenuItemWidget({
+class RZFabMenuItemWidget extends StatelessWidget {
+  const RZFabMenuItemWidget({
     required this.item,
     required this.animation,
     required this.onItemPressed,
@@ -26,7 +25,7 @@ class FabMenuItemWidget extends StatelessWidget {
     super.key,
   });
 
-  final FabMenuItem item;
+  final RZFabMenuItem item;
   final Animation<double> animation;
   final VoidCallback onItemPressed;
   final int index;
@@ -69,24 +68,25 @@ class FabMenuItemWidget extends StatelessWidget {
   }
 }
 
-/// Material 3 Expressive FAB Menu.
+/// Expressive FAB Menu.
 ///
 /// Displays a floating action button that toggles a menu of related actions.
-class FabMenu extends StatefulWidget {
-  const FabMenu({
+class RZFabMenu extends StatefulWidget {
+  const RZFabMenu({
     required this.children,
     super.key,
     this.alignment = Alignment.bottomRight,
   });
 
-  final List<FabMenuItem> children;
+  final List<RZFabMenuItem> children;
   final Alignment alignment;
 
   @override
-  State<FabMenu> createState() => _FabMenuState();
+  State<RZFabMenu> createState() => _RZFabMenuState();
 }
 
-class _FabMenuState extends State<FabMenu> with SingleTickerProviderStateMixin {
+class _RZFabMenuState extends State<RZFabMenu>
+    with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _rotateAnimation;
   bool _isExpanded = false;
@@ -168,7 +168,7 @@ class _FabMenuState extends State<FabMenu> with SingleTickerProviderStateMixin {
 
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12), // Spacing
-                  child: FabMenuItemWidget(
+                  child: RZFabMenuItemWidget(
                     item: widget.children[index], // Pass item
                     animation: itemAnimation,
                     onItemPressed: _toggleMenu,
@@ -193,34 +193,4 @@ class _FabMenuState extends State<FabMenu> with SingleTickerProviderStateMixin {
       ],
     );
   }
-}
-
-// --- Preview ---
-
-@Preview(name: 'FabMenus', size: Size.fromHeight(280))
-Widget fabMenuPreview() {
-  return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(
-      floatingActionButton: FabMenu(
-        children: [
-          FabMenuItem(
-            label: 'Copy',
-            icon: const Icon(Icons.content_copy),
-            onPressed: () {},
-          ),
-          FabMenuItem(
-            label: 'Paste',
-            icon: const Icon(Icons.content_paste),
-            onPressed: () {},
-          ),
-          FabMenuItem(
-            label: 'Cut',
-            icon: const Icon(Icons.content_cut),
-            onPressed: () {},
-          ),
-        ],
-      ),
-    ),
-  );
 }

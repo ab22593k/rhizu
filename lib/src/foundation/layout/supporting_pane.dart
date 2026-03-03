@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/adaptive_toolbar.dart';
-import 'package:rhizu/src/foundations/layout/layout_nav.dart';
-import 'package:rhizu/src/foundations/window_size_class.dart';
+import 'package:rhizu/src/components/toolbar/items.dart';
+import 'package:rhizu/src/components/toolbar/placement.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/window_size_class.dart';
 
 /// A supporting pane layout that shows supporting content based on window size.
 ///
-/// Integrated with [Toolbar] to handle navigation and contextual actions.
-class SupportingPaneLayout extends StatefulWidget {
-  const SupportingPaneLayout({
+/// Integrated with [RZToolbar] to handle navigation and contextual actions.
+class RZSupportingPaneLayout extends StatefulWidget {
+  const RZSupportingPaneLayout({
     required this.main,
     required this.supporting,
     super.key,
@@ -26,11 +26,11 @@ class SupportingPaneLayout extends StatefulWidget {
   final int mainFlex;
   final int supportingFlex;
 
-  /// Optional [Toolbar] for the main pane.
-  final Toolbar? mainToolbar;
+  /// Optional [RZToolbar] for the main pane.
+  final RZToolbar? mainToolbar;
 
-  /// Optional [Toolbar] for the supporting pane.
-  final Toolbar? supportingToolbar;
+  /// Optional [RZToolbar] for the supporting pane.
+  final RZToolbar? supportingToolbar;
 
   /// Optional navigation destinations to be integrated into the toolbar.
   final List<NavigationDestination>? destinations;
@@ -42,10 +42,10 @@ class SupportingPaneLayout extends StatefulWidget {
   final ValueChanged<int>? onDestinationSelected;
 
   @override
-  State<SupportingPaneLayout> createState() => _SupportingPaneLayoutState();
+  State<RZSupportingPaneLayout> createState() => _RZSupportingPaneLayoutState();
 }
 
-class _SupportingPaneLayoutState extends State<SupportingPaneLayout> {
+class _RZSupportingPaneLayoutState extends State<RZSupportingPaneLayout> {
   late bool? _cachedIsCompact;
   double? _cachedWidth;
 
@@ -75,7 +75,7 @@ class _SupportingPaneLayoutState extends State<SupportingPaneLayout> {
         if (isCompact) {
           final effectiveToolbar =
               widget.mainToolbar != null || widget.destinations != null
-              ? Toolbar(
+              ? RZToolbar(
                   style: widget.mainToolbar?.style ?? ToolbarStyle.standard,
                   leading: widget.mainToolbar?.leading,
                   trailing: widget.mainToolbar?.trailing,
@@ -153,7 +153,7 @@ class _PaneWithToolbar extends StatelessWidget {
   });
 
   final Widget content;
-  final Toolbar? toolbar;
+  final RZToolbar? toolbar;
   final WindowSizeClass sizeClass;
   final List<NavigationDestination>? destinations;
   final int? selectedIndex;
@@ -162,7 +162,7 @@ class _PaneWithToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final effectiveToolbar = toolbar != null || destinations != null
-        ? Toolbar(
+        ? RZToolbar(
             style: toolbar?.style ?? ToolbarStyle.standard,
             leading: toolbar?.leading,
             trailing: toolbar?.trailing,

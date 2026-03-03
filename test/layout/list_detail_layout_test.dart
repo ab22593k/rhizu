@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbars/toolbars.dart';
-import 'package:rhizu/src/foundations/layout/list_detail_layout.dart';
+import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/foundation/layout/list_detail.dart';
 
 void main() {
   group('ListDetailLayout', () {
@@ -19,7 +19,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ListDetailLayout(
+          home: RZListDetailLayout(
             list: listWidget,
             detail: detailWidget,
           ),
@@ -40,7 +40,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ListDetailLayout(
+          home: RZListDetailLayout(
             list: listWidget,
             detail: detailWidget,
             isDetailVisible: true,
@@ -60,7 +60,7 @@ void main() {
 
       await tester.pumpWidget(
         MaterialApp(
-          home: ListDetailLayout(
+          home: RZListDetailLayout(
             list: listWidget,
             detail: detailWidget,
           ),
@@ -80,19 +80,19 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ListDetailLayout(
+            body: RZListDetailLayout(
               list: listWidget,
               detail: detailWidget,
-              listToolbar: const Toolbar(children: [Icon(Icons.list)]),
+              listToolbar: const RZToolbar(children: [Icon(Icons.list)]),
             ),
           ),
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsOneWidget);
 
-      final toolbar = tester.widget<Toolbar>(toolbarFinder);
+      final toolbar = tester.widget<RZToolbar>(toolbarFinder);
       expect(toolbar.type, ToolbarType.floating);
 
       addTearDown(tester.view.resetPhysicalSize);
@@ -105,20 +105,20 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: ListDetailLayout(
+            body: RZListDetailLayout(
               list: listWidget,
               detail: detailWidget,
-              listToolbar: const Toolbar(children: [Icon(Icons.list)]),
-              detailToolbar: const Toolbar(children: [Icon(Icons.details)]),
+              listToolbar: const RZToolbar(children: [Icon(Icons.list)]),
+              detailToolbar: const RZToolbar(children: [Icon(Icons.details)]),
             ),
           ),
         ),
       );
 
-      final toolbarFinder = find.byType(Toolbar);
+      final toolbarFinder = find.byType(RZToolbar);
       expect(toolbarFinder, findsNWidgets(2));
 
-      final toolbars = tester.widgetList<Toolbar>(toolbarFinder);
+      final toolbars = tester.widgetList<RZToolbar>(toolbarFinder);
       for (final toolbar in toolbars) {
         expect(toolbar.type, ToolbarType.floating);
       }
