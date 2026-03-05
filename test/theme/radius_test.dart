@@ -5,29 +5,29 @@ import 'package:rhizu/rhizu.dart';
 void main() {
   group('ExpressiveRadius', () {
     test('provides correct corner radii', () {
-      expect(ExpressiveRadius.none, BorderRadius.zero);
+      expect(RZRadius.none, BorderRadius.zero);
       expect(
-        ExpressiveRadius.extraSmall,
+        RZRadius.extraSmall,
         const BorderRadius.all(Radius.circular(4)),
       );
       expect(
-        ExpressiveRadius.small,
+        RZRadius.small,
         const BorderRadius.all(Radius.circular(8)),
       );
       expect(
-        ExpressiveRadius.medium,
+        RZRadius.medium,
         const BorderRadius.all(Radius.circular(12)),
       );
       expect(
-        ExpressiveRadius.large,
+        RZRadius.large,
         const BorderRadius.all(Radius.circular(16)),
       );
       expect(
-        ExpressiveRadius.extraLarge,
+        RZRadius.extraLarge,
         const BorderRadius.all(Radius.circular(28)),
       );
       expect(
-        ExpressiveRadius.full,
+        RZRadius.full,
         const BorderRadius.all(Radius.circular(9999)),
       );
     });

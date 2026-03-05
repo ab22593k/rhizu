@@ -4,7 +4,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:rhizu/src/components/buttons/split_button.dart';
 import 'package:rhizu/src/components/fab_menu.dart';
 import 'package:rhizu/src/components/indicators/progress.dart' as rhizu;
-import 'package:rhizu/src/styles/shapes/tokens.dart';
+import 'package:rhizu/src/styles/theme/extension.dart';
 
 /// The type of [RZToolbar].
 enum ToolbarType {
@@ -212,8 +212,12 @@ class _RZToolbarState extends State<RZToolbar> {
     } else {
       // Floating: High border radius (Extra Large token)
       // M3 Spec: "Low elevation"
+      final shapeTheme =
+          theme.extension<RZTheme>()?.shape ?? RZShape.fallback();
       effectiveShape = RoundedRectangleBorder(
-        borderRadius: widget.borderRadius ?? ShapeTokens.borderRadiusExtraLarge,
+        borderRadius:
+            widget.borderRadius ??
+            BorderRadius.all(Radius.circular(shapeTheme.cornerExtraLarge)),
       );
       effectiveElevation = widget.elevation ?? 2.0; // Floating default
     }

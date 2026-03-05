@@ -66,10 +66,10 @@ void main() {
     });
 
     test('Expressive Shape Paths are correct', () {
-      expect(ExpressiveShapes.arch, 'assets/shapes/material_shape_arch.svg');
-      expect(ExpressiveShapes.boom, 'assets/shapes/material_shape_boom.svg');
+      expect(RZShapes.arch, 'assets/shapes/material_shape_arch.svg');
+      expect(RZShapes.boom, 'assets/shapes/material_shape_boom.svg');
       expect(
-        ExpressiveShapes.flower,
+        RZShapes.flower,
         'assets/shapes/material_shape_flower.svg',
       );
     });

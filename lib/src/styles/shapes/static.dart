@@ -1,6 +1,6 @@
 import 'package:rhizu/src/styles/shapes/tokens.dart';
 
-/// Expressive Shape System.
+/// Shape System.
 class ShapeScale {
   const ShapeScale._();
 
@@ -19,9 +19,8 @@ class ShapeScale {
   static const double full = ShapeTokens.cornerFull;
 }
 
-/// Expressive Shapes.
-class ExpressiveShapes {
-  const ExpressiveShapes._();
+class RZShapes {
+  const RZShapes._();
 
   static const String _basePath = 'assets/shapes';
 

@@ -3,6 +3,7 @@ export 'package:flutter_animate/flutter_animate.dart';
 export 'package:google_fonts/google_fonts.dart';
 // External packages
 export 'package:hugeicons/hugeicons.dart';
+
 // Components
 export 'src/components/buttons/split_button.dart';
 export 'src/components/fab_menu.dart';
@@ -15,6 +16,7 @@ export 'src/foundation/layout/feed.dart';
 export 'src/foundation/layout/list_detail.dart';
 export 'src/foundation/layout/supporting_pane.dart';
 export 'src/foundation/window_size_class.dart';
+export 'src/styles/indicators/palette.dart';
 // Styles
 export 'src/styles/motion/fallbacks.dart';
 export 'src/styles/motion/physics.dart';
@@ -22,5 +24,6 @@ export 'src/styles/motion/tokens.dart';
 export 'src/styles/shapes/static.dart';
 export 'src/styles/shapes/tokens.dart';
 // Theme
+export 'src/styles/theme/extension.dart';
 export 'src/styles/theme/radius.dart';
 export 'src/styles/theme/spacing.dart';

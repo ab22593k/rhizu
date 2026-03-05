@@ -1,4 +1,4 @@
-/// Material 3 Elevation System Tokens.
+/// Elevation System Tokens.
 ///
 /// These tokens follow the Design System Package (DSP) naming convention
 /// and provide elevation levels (z-axis distance) in density-independent pixels (dp).

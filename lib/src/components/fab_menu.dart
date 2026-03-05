@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/styles/shapes/tokens.dart';
+import 'package:rhizu/src/styles/theme/extension.dart';
 
 /// Data class for a menu item in the FAB Menu.
 class RZFabMenuItem {
@@ -66,7 +66,14 @@ class RZFabMenuItemWidget extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
                 color: Theme.of(context).colorScheme.surfaceContainerHigh,
-                borderRadius: ShapeTokens.borderRadiusMedium,
+                borderRadius: BorderRadius.all(
+                  Radius.circular(
+                    Theme.of(
+                          context,
+                        ).extension<RZTheme>()?.shape.cornerMedium ??
+                        12.0,
+                  ),
+                ),
               ),
               child: Text(
                 item.label,

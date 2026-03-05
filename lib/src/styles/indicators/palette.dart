@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
 @immutable
-class Palette {
-  const Palette(this.cs);
+class ProgressIndicatorPalette {
+  const ProgressIndicatorPalette(this.cs);
   final ColorScheme cs;
 
   // Use theme roles; callers can override colors if needed.

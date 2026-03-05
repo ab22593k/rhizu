@@ -1,6 +1,6 @@
 import 'package:flutter/painting.dart';
 
-class ExpressiveRadius {
+class RZRadius {
   static const BorderRadius none = BorderRadius.zero;
   static const BorderRadius extraSmall = BorderRadius.all(Radius.circular(4));
   static const BorderRadius small = BorderRadius.all(Radius.circular(8));

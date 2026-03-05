@@ -1,6 +1,6 @@
 import 'package:rhizu/src/foundation/window_size_class.dart';
 
-class ExpressiveSpacing {
+class RZSpacing {
   static double margin(WindowSizeClass sizeClass) {
     switch (sizeClass) {
       case WindowSizeClass.compact:
