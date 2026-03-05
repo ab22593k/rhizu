@@ -330,9 +330,9 @@ class _RZToolbarState extends State<RZToolbar> {
         left: 24,
         right: 24,
         bottom: 4,
-        child: rhizu.LinearProgressIndicator(
+        child: rhizu.ProgressIndicator(
+          variant: rhizu.ProgressIndicatorVariant.linear,
           value: _scrollProgress,
-          size: rhizu.LinearProgressIndicatorSize.s,
           shape: rhizu.ProgressIndicatorShape.flat,
           activeColor: effectiveOnBackgroundColor.withValues(alpha: 0.5),
           trackColor: effectiveOnBackgroundColor.withValues(alpha: 0.1),

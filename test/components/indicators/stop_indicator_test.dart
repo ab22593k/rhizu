@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart'
-    hide CircularProgressIndicator, LinearProgressIndicator;
+    hide CircularProgressIndicator, LinearProgressIndicator, ProgressIndicator;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/rhizu.dart';
 
@@ -10,7 +10,8 @@ void main() {
       await tester.pumpWidget(
         const Directionality(
           textDirection: TextDirection.ltr,
-          child: LinearProgressIndicator(
+          child: ProgressIndicator(
+            variant: ProgressIndicatorVariant.linear,
             value: 0.5,
             shape: ProgressIndicatorShape.flat,
           ),
