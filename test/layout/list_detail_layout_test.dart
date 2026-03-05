@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/components/toolbar/toolbar.dart';
 import 'package:rhizu/src/foundation/layout/list_detail.dart';
 
 void main() {

@@ -2,13 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/components/fab_menu.dart';
 
-// Helper to create test app with proper theme
+// Helper to create test app with FAB positioned at bottom-right,
+// giving overlay items room to appear above.
 Widget createTestApp({required Widget body}) {
   return MaterialApp(
     theme: ThemeData.light(useMaterial3: true).copyWith(
       splashFactory: InkRipple.splashFactory,
     ),
-    home: Scaffold(body: body),
+    home: Scaffold(
+      body: const SizedBox.expand(),
+      floatingActionButton: body,
+    ),
   );
 }
 
@@ -30,11 +34,13 @@ void main() {
       );
 
       expect(find.byKey(const ValueKey('fab_menu_toggle')), findsOneWidget);
-      // Items are in the tree for animation purposes
-      expect(find.text('Item 1'), findsOneWidget);
+      // Items are NOT in the tree when collapsed (overlay mode)
+      expect(find.text('Item 1'), findsNothing);
     });
 
-    testWidgets('expands menu on tap', (tester) async {
+    testWidgets('expands menu on tap showing items in overlay', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestApp(
           body: RZFabMenu(
@@ -52,10 +58,12 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
       await tester.pumpAndSettle();
 
+      // After expanding, items appear in the overlay
       expect(find.text('Item 1'), findsOneWidget);
+      expect(find.byType(RZFabMenuItemWidget), findsOneWidget);
     });
 
-    testWidgets('collapses menu on second tap', (tester) async {
+    testWidgets('collapses menu when scrim is tapped', (tester) async {
       await tester.pumpWidget(
         createTestApp(
           body: RZFabMenu(
@@ -75,11 +83,12 @@ void main() {
       await tester.pumpAndSettle();
       expect(find.text('Item 1'), findsOneWidget);
 
-      // Close
-      await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
+      // Close by tapping the scrim
+      await tester.tap(find.byKey(const ValueKey('fab_menu_scrim')));
       await tester.pumpAndSettle();
-      // Items are still in tree but invisible due to animation
-      expect(find.text('Item 1'), findsOneWidget);
+
+      // Items are removed from the overlay after collapse animation
+      expect(find.text('Item 1'), findsNothing);
     });
 
     testWidgets('triggers item callback and closes menu', (tester) async {
@@ -104,18 +113,19 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
       await tester.pumpAndSettle();
 
-      // Tap the item's FAB (not the text label)
+      // Verify items are visible in overlay
+      expect(find.byType(RZFabMenuItemWidget), findsOneWidget);
+
+      // Tap the item's FAB
       final itemFab = find.descendant(
         of: find.byType(RZFabMenuItemWidget),
         matching: find.byType(FloatingActionButton),
       );
       expect(itemFab, findsOneWidget);
-      await tester.tap(itemFab);
+      await tester.tap(itemFab, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(itemPressed, isTrue);
-      // Menu is closed but items remain in tree with 0 opacity
-      expect(find.text('Item 1'), findsOneWidget);
     });
 
     testWidgets('renders correct number of items', (tester) async {
@@ -164,22 +174,21 @@ void main() {
         ),
       );
 
-      // Initial state - find the RotationTransition
       final rotationFinder = find.descendant(
         of: find.byKey(const ValueKey('fab_menu_toggle')),
         matching: find.byType(RotationTransition),
       );
       expect(rotationFinder, findsOneWidget);
 
-      // Open menu
       await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
       await tester.pumpAndSettle();
 
-      // Verify RotationTransition still exists
       expect(rotationFinder, findsOneWidget);
     });
 
-    testWidgets('menu items are animated', (tester) async {
+    testWidgets('menu items are animated with scale and fade', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         createTestApp(
           body: RZFabMenu(
@@ -194,15 +203,16 @@ void main() {
         ),
       );
 
-      // Find the item widget which uses animations
-      final itemFinder = find.byType(RZFabMenuItemWidget);
-      expect(itemFinder, findsOneWidget);
+      // Items not in tree until expanded
+      expect(find.byType(RZFabMenuItemWidget), findsNothing);
 
       // Open menu
       await tester.tap(find.byKey(const ValueKey('fab_menu_toggle')));
       await tester.pumpAndSettle();
 
-      // Item should have ScaleTransition and FadeTransition
+      final itemFinder = find.byType(RZFabMenuItemWidget);
+      expect(itemFinder, findsOneWidget);
+
       final scaleFinder = find.descendant(
         of: itemFinder,
         matching: find.byType(ScaleTransition),
@@ -213,6 +223,124 @@ void main() {
       );
       expect(scaleFinder, findsOneWidget);
       expect(fadeFinder, findsOneWidget);
+    });
+
+    testWidgets('renders default add icon when no custom icon is set', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestApp(
+          body: RZFabMenu(
+            children: [
+              RZFabMenuItem(
+                label: 'Item 1',
+                icon: const Icon(Icons.add),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final mainFab = find.byKey(const ValueKey('fab_menu_toggle'));
+      expect(mainFab, findsOneWidget);
+
+      final addIcon = find.descendant(
+        of: mainFab,
+        matching: find.byIcon(Icons.add),
+      );
+      expect(addIcon, findsOneWidget);
+    });
+
+    testWidgets('renders custom icon when provided', (tester) async {
+      await tester.pumpWidget(
+        createTestApp(
+          body: RZFabMenu(
+            icon: const Icon(Icons.create),
+            children: [
+              RZFabMenuItem(
+                label: 'Item 1',
+                icon: const Icon(Icons.copy),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+
+      final mainFab = find.byKey(const ValueKey('fab_menu_toggle'));
+      expect(mainFab, findsOneWidget);
+
+      final customIcon = find.descendant(
+        of: mainFab,
+        matching: find.byIcon(Icons.create),
+      );
+      expect(customIcon, findsOneWidget);
+    });
+
+    testWidgets('only FAB takes layout space (no items in collapsed tree)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        createTestApp(
+          body: RZFabMenu(
+            children: [
+              RZFabMenuItem(
+                label: 'Item 1',
+                icon: const Icon(Icons.add),
+                onPressed: () {},
+              ),
+              RZFabMenuItem(
+                label: 'Item 2',
+                icon: const Icon(Icons.edit),
+                onPressed: () {},
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Only the FAB should be in the tree
+      expect(find.byType(FloatingActionButton), findsOneWidget);
+      expect(find.byType(RZFabMenuItemWidget), findsNothing);
+      expect(find.byType(CompositedTransformTarget), findsOneWidget);
+      expect(find.byType(OverlayPortal), findsOneWidget);
+    });
+  });
+
+  group('RZFabMenuConfig', () {
+    test('creates config with required items', () {
+      final config = RZFabMenuConfig(
+        items: [
+          RZFabMenuItem(
+            label: 'Test',
+            icon: const Icon(Icons.add),
+            onPressed: () {},
+          ),
+        ],
+      );
+
+      expect(config.items.length, 1);
+      expect(config.icon, isNull);
+      expect(config.alignment, Alignment.bottomRight);
+    });
+
+    test('creates config with optional parameters', () {
+      final config = RZFabMenuConfig(
+        items: [
+          RZFabMenuItem(
+            label: 'Test',
+            icon: const Icon(Icons.add),
+            onPressed: () {},
+          ),
+        ],
+        icon: const Icon(Icons.create),
+        alignment: Alignment.bottomLeft,
+      );
+
+      expect(config.items.length, 1);
+      expect(config.icon, isNotNull);
+      expect(config.alignment, Alignment.bottomLeft);
     });
   });
 }

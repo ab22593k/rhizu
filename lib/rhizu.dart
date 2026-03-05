@@ -9,7 +9,7 @@ export 'src/components/fab_menu.dart';
 export 'src/components/indicators/morphing.dart';
 export 'src/components/indicators/progress.dart';
 export 'src/components/scroll_physics.dart';
-export 'src/components/toolbar/toolbars.dart';
+export 'src/components/toolbar/toolbar.dart';
 // Foundations
 export 'src/foundation/layout/feed.dart';
 export 'src/foundation/layout/list_detail.dart';

@@ -51,13 +51,18 @@ class RZToolbar extends StatefulWidget {
     this.leading,
     this.trailing,
     this.fab,
+    this.fabMenu,
     this.scrollable = false,
     this.backgroundColor,
     this.elevation,
     this.padding,
     this.borderRadius,
     this.shape,
-  });
+  }) : assert(
+         fab == null || fabMenu == null,
+         'Cannot provide both fab and fabMenu. Use fab for a custom widget '
+         'or fabMenu for the built-in RZFabMenu.',
+       );
 
   /// The widgets below this widget in the tree.
   /// Typically [IconButton], [SplitButton], or other actions.
@@ -83,7 +88,15 @@ class RZToolbar extends StatefulWidget {
   final Widget? trailing;
 
   /// A Floating Action Button to embed or pair with the toolbar.
+  ///
+  /// Mutually exclusive with [fabMenu]. Use this for a fully custom FAB widget.
   final Widget? fab;
+
+  /// Optional built-in FAB menu configuration.
+  ///
+  /// When provided, the toolbar automatically creates an [RZFabMenu] from this
+  /// configuration. Mutually exclusive with [fab].
+  final RZFabMenuConfig? fabMenu;
 
   /// Whether the content is scrollable (useful for many actions).
   final bool scrollable;
@@ -149,6 +162,17 @@ class _RZToolbarState extends State<RZToolbar> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
+
+    // 0. Resolve effective FAB (fab slot vs. built-in fabMenu)
+    final effectiveFab =
+        widget.fab ??
+        (widget.fabMenu != null
+            ? RZFabMenu(
+                children: widget.fabMenu!.items,
+                alignment: widget.fabMenu!.alignment,
+                icon: widget.fabMenu!.icon,
+              )
+            : null);
 
     // 1. Determine Colors
     Color effectiveBackgroundColor;
@@ -222,9 +246,9 @@ class _RZToolbarState extends State<RZToolbar> {
     }
 
     // FAB Handling (always treated as trailing-side)
-    if (widget.fab != null) {
+    if (effectiveFab != null) {
       itemsTrailing.add(const SizedBox(width: 16, height: 16));
-      itemsTrailing.add(widget.fab!);
+      itemsTrailing.add(effectiveFab);
     }
 
     // Orientation & Wrapping
@@ -235,11 +259,9 @@ class _RZToolbarState extends State<RZToolbar> {
         // The parent (BottomAppBar / full-width container) provides finite
         // width constraints, so Spacer/Expanded are safe here.
         content = Row(
-          mainAxisSize: MainAxisSize.max,
           mainAxisAlignment: widget.centerTitle
               ? MainAxisAlignment.center
               : MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             ...itemsLeading,
             ...itemsMain,

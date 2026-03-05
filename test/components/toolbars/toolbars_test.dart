@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/components/buttons/split_button.dart';
-import 'package:rhizu/src/components/toolbar/toolbars.dart';
+import 'package:rhizu/src/components/fab_menu.dart';
+import 'package:rhizu/src/components/toolbar/toolbar.dart';
 
 Finder findToolbarMaterial() {
   return find.byWidgetPredicate(
@@ -28,117 +29,6 @@ void main() {
 
       expect(find.byType(RZToolbar), findsOneWidget);
       expect(find.byType(Icon), findsOneWidget);
-    });
-
-    testWidgets('renders docked toolbar with no elevation', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RZToolbar(
-              type: ToolbarType.docked,
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      final finder = findToolbarMaterial();
-      expect(finder, findsOneWidget);
-
-      final material = tester.widget<Material>(finder);
-      expect(material.elevation, 0.0);
-    });
-
-    testWidgets('renders floating toolbar with default elevation', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RZToolbar(
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      final finder = findToolbarMaterial();
-      expect(finder, findsOneWidget);
-
-      final material = tester.widget<Material>(finder);
-      expect(material.elevation, 2.0);
-    });
-
-    testWidgets('applies vibrant color style', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.light(useMaterial3: true),
-          home: Scaffold(
-            body: RZToolbar(
-              style: ToolbarStyle.vibrant,
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      final finder = findToolbarMaterial();
-      expect(finder, findsOneWidget);
-
-      final material = tester.widget<Material>(finder);
-      final colorScheme = Theme.of(tester.element(finder)).colorScheme;
-      expect(material.color, colorScheme.primaryContainer);
-    });
-
-    testWidgets('applies standard color style', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData.light(useMaterial3: true),
-          home: Scaffold(
-            body: RZToolbar(
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      final finder = findToolbarMaterial();
-      expect(finder, findsOneWidget);
-
-      final material = tester.widget<Material>(finder);
-      final colorScheme = Theme.of(tester.element(finder)).colorScheme;
-      expect(material.color, colorScheme.surfaceContainer);
-    });
-
-    testWidgets('renders with custom background color', (tester) async {
-      const customColor = Colors.purple;
-
-      await tester.pumpWidget(
-        MaterialApp(
-          home: Scaffold(
-            body: RZToolbar(
-              backgroundColor: customColor,
-              children: [
-                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
-              ],
-            ),
-          ),
-        ),
-      );
-
-      final finder = findToolbarMaterial();
-      expect(finder, findsOneWidget);
-
-      final material = tester.widget<Material>(finder);
-      expect(material.color, customColor);
     });
 
     testWidgets('renders docked toolbar with no elevation', (tester) async {
@@ -426,11 +316,9 @@ void main() {
         ),
       );
 
-      // Verify custom padding is applied by checking widget hierarchy
       final materialFinder = findToolbarMaterial();
       expect(materialFinder, findsOneWidget);
 
-      // Find Padding that is a direct child of Material
       final paddingFinder = find.descendant(
         of: materialFinder,
         matching: find.byWidgetPredicate(
@@ -513,6 +401,103 @@ void main() {
         (shape.borderRadius as BorderRadius).topLeft.x,
         closeTo(0.0, 0.1),
       );
+    });
+  });
+
+  group('RZToolbar.fabMenu (built-in)', () {
+    testWidgets('fabMenu creates built-in RZFabMenu', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RZToolbar(
+              fabMenu: RZFabMenuConfig(
+                items: [
+                  RZFabMenuItem(
+                    label: 'Copy',
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+              children: [
+                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      // The toolbar should internally create an RZFabMenu
+      expect(find.byType(RZFabMenu), findsOneWidget);
+    });
+
+    testWidgets('fabMenu is null by default (no FAB rendered)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RZToolbar(
+              children: [
+                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byType(RZFabMenu), findsNothing);
+      expect(find.byType(FloatingActionButton), findsNothing);
+    });
+
+    testWidgets('fab and fabMenu are mutually exclusive', (tester) async {
+      expect(
+        () => RZToolbar(
+          fab: FloatingActionButton(onPressed: () {}),
+          fabMenu: RZFabMenuConfig(
+            items: [
+              RZFabMenuItem(
+                label: 'Copy',
+                icon: const Icon(Icons.copy),
+                onPressed: () {},
+              ),
+            ],
+          ),
+          children: [
+            IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+          ],
+        ),
+        throwsAssertionError,
+      );
+    });
+
+    testWidgets('fabMenu with custom icon passes icon to RZFabMenu', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: RZToolbar(
+              fabMenu: RZFabMenuConfig(
+                items: [
+                  RZFabMenuItem(
+                    label: 'Copy',
+                    icon: const Icon(Icons.copy),
+                    onPressed: () {},
+                  ),
+                ],
+                icon: const Icon(Icons.create),
+              ),
+              children: [
+                IconButton(onPressed: () {}, icon: const Icon(Icons.edit)),
+              ],
+            ),
+          ),
+        ),
+      );
+
+      final fabMenu = tester.widget<RZFabMenu>(find.byType(RZFabMenu));
+      expect(fabMenu.icon, isNotNull);
     });
   });
 }
