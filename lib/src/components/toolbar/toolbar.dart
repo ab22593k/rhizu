@@ -122,8 +122,8 @@ class RZToolbar extends StatefulWidget {
 
 class _RZToolbarState extends State<RZToolbar> {
   late ScrollController _scrollController;
-  double _scrollProgress = 0.0;
-  bool _showIndicator = false;
+  final ValueNotifier<double> _scrollProgress = ValueNotifier(0.0);
+  final ValueNotifier<bool> _showIndicator = ValueNotifier(false);
 
   @override
   void initState() {
@@ -136,6 +136,8 @@ class _RZToolbarState extends State<RZToolbar> {
   void dispose() {
     _scrollController.removeListener(_handleScroll);
     _scrollController.dispose();
+    _scrollProgress.dispose();
+    _showIndicator.dispose();
     super.dispose();
   }
 
@@ -144,17 +146,17 @@ class _RZToolbarState extends State<RZToolbar> {
 
     final maxScroll = _scrollController.position.maxScrollExtent;
     if (maxScroll <= 0) {
-      if (_showIndicator) setState(() => _showIndicator = false);
+      if (_showIndicator.value) _showIndicator.value = false;
       return;
     }
 
-    if (!_showIndicator) setState(() => _showIndicator = true);
+    if (!_showIndicator.value) _showIndicator.value = true;
 
     final currentScroll = _scrollController.offset;
     final progress = (currentScroll / maxScroll).clamp(0.0, 1.0);
 
-    if (progress != _scrollProgress) {
-      setState(() => _scrollProgress = progress);
+    if (progress != _scrollProgress.value) {
+      _scrollProgress.value = progress;
     }
   }
 
@@ -327,23 +329,6 @@ class _RZToolbarState extends State<RZToolbar> {
       );
     }
 
-    // Indicator
-    Widget? indicator;
-    if (_showIndicator && widget.layout == ToolbarLayout.horizontal) {
-      indicator = Positioned(
-        left: 24,
-        right: 24,
-        bottom: 4,
-        child: rhizu.ProgressIndicator(
-          variant: rhizu.ProgressIndicatorVariant.linear,
-          value: _scrollProgress,
-          shape: rhizu.ProgressIndicatorShape.flat,
-          activeColor: effectiveOnBackgroundColor.withValues(alpha: 0.5),
-          trackColor: effectiveOnBackgroundColor.withValues(alpha: 0.1),
-        ),
-      );
-    }
-
     // 4. Container Padding
     final effectivePadding =
         widget.padding ??
@@ -369,7 +354,35 @@ class _RZToolbarState extends State<RZToolbar> {
               child: content,
             ),
           ),
-          ?indicator,
+          ValueListenableBuilder<bool>(
+            valueListenable: _showIndicator,
+            builder: (context, show, _) {
+              if (!show || widget.layout != ToolbarLayout.horizontal) {
+                return const SizedBox.shrink();
+              }
+              return Positioned(
+                left: 24,
+                right: 24,
+                bottom: 4,
+                child: ValueListenableBuilder<double>(
+                  valueListenable: _scrollProgress,
+                  builder: (context, progress, _) {
+                    return rhizu.ProgressIndicator(
+                      variant: rhizu.ProgressIndicatorVariant.linear,
+                      value: progress,
+                      shape: rhizu.ProgressIndicatorShape.flat,
+                      activeColor: effectiveOnBackgroundColor.withValues(
+                        alpha: 0.5,
+                      ),
+                      trackColor: effectiveOnBackgroundColor.withValues(
+                        alpha: 0.1,
+                      ),
+                    );
+                  },
+                ),
+              );
+            },
+          ),
         ],
       ),
     );

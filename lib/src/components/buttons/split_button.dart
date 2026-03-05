@@ -317,6 +317,10 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
         widget.size == SplitButtonSize.xl;
     final canMorph = isRound && isLarge;
 
+    final textStyle = widget.size
+        .textStyle(context)
+        ?.copyWith(color: foregroundColor);
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
@@ -364,12 +368,7 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
                             SizedBox(width: _getIconLabelGap(widget.size)),
                         ],
                         if (widget.label != null)
-                          Text(
-                            widget.label!,
-                            style: widget.size
-                                .textStyle(context)
-                                ?.copyWith(color: foregroundColor),
-                          ),
+                          Text(widget.label!, style: textStyle),
                       ],
                     ),
                   ),

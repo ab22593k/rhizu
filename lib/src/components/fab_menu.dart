@@ -54,6 +54,10 @@ class RZFabMenuItemWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final rzTheme = theme.extension<RZTheme>();
+
     return ScaleTransition(
       scale: animation,
       child: FadeTransition(
@@ -65,20 +69,12 @@ class RZFabMenuItemWidget extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.surfaceContainerHigh,
+                color: colorScheme.surfaceContainerHigh,
                 borderRadius: BorderRadius.all(
-                  Radius.circular(
-                    Theme.of(
-                          context,
-                        ).extension<RZTheme>()?.shape.cornerMedium ??
-                        12.0,
-                  ),
+                  Radius.circular(rzTheme?.shape.cornerMedium ?? 12.0),
                 ),
               ),
-              child: Text(
-                item.label,
-                style: Theme.of(context).textTheme.labelLarge,
-              ),
+              child: Text(item.label, style: theme.textTheme.labelLarge),
             ),
             const SizedBox(width: 12),
             FloatingActionButton.small(

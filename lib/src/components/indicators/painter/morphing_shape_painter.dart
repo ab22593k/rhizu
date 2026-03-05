@@ -25,17 +25,14 @@ class MorphingShapePainter extends CustomPainter {
     required this.nextShape,
     required this.progress,
     required this.rotation,
+    required Path path,
+    required List<Offset> points,
     this.scale = 1.0,
-  });
+  }) : _path = path,
+       _points = points;
 
-  /// Pooled Path object to avoid allocation on every frame.
-  final Path _path = Path();
-
-  /// Pooled list of points to avoid allocation on every frame.
-  final List<Offset> _points = List<Offset>.filled(
-    LoadingIndicatorConstants.shapeResolution + 1,
-    Offset.zero,
-  );
+  final Path _path;
+  final List<Offset> _points;
 
   /// The color to fill the shape with.
   final Color color;

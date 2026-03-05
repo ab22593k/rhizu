@@ -102,12 +102,25 @@ class MorphingLI extends StatefulWidget {
 class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
   late final LoadingAnimationController _animationController;
 
+  /// Pooled Path object to avoid allocation on every frame.
+  late final Path _path;
+
+  /// Pooled list of points to avoid allocation on every frame.
+  late final List<Offset> _points;
+
   @override
   void initState() {
     super.initState();
+    _path = Path();
+    _points = List<Offset>.filled(
+      LoadingIndicatorConstants.shapeResolution + 1,
+      Offset.zero,
+    );
     _animationController = LoadingAnimationController(
       vsync: this,
-      onShapeChange: () => setState(() {}),
+      // No longer need setState here as AnimatedBuilder handles frame updates
+      // and currentIndex change is picked up automatically by the painter
+      // accessing the controller during its paint phase.
     );
   }
 
@@ -119,7 +132,8 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     final isContained = widget.containment == Containment.contained;
     final indicatorColor = isContained
@@ -170,6 +184,8 @@ class _MorphingLIState extends State<MorphingLI> with TickerProviderStateMixin {
                 nextShape: _animationController.nextShape,
                 progress: morphProgress,
                 rotation: globalRotation + stepRotation,
+                path: _path,
+                points: _points,
                 scale:
                     clampedSize /
                     LoadingIndicatorConstants.defaultContainerSize,

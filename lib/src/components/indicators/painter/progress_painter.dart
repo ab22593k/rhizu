@@ -104,14 +104,16 @@ class CircularWavyPainter extends CustomPainter {
     required this.track,
     required this.rotation,
     required this.size,
+    required Path path,
     this.wavePhase = 0.0,
-  });
+  }) : _path = path;
 
   final double? value;
   final Color active;
   final Color track;
   final double rotation;
   final ProgressIndicatorSize size;
+  final Path _path;
 
   /// Phase offset applied to the wave sin function.
   ///
@@ -182,7 +184,7 @@ class CircularWavyPainter extends CustomPainter {
 
     // Active squiggle path.
     final steps = math.max(48, (s.width * 1.2).round());
-    final path = Path();
+    _path.reset();
     for (var i = 0; i <= steps; i++) {
       final t = i / steps;
       final ang = start + (end - start) * t;
@@ -205,9 +207,9 @@ class CircularWavyPainter extends CustomPainter {
         center.dy + r * math.sin(ang),
       );
       if (i == 0) {
-        path.moveTo(p.dx, p.dy);
+        _path.moveTo(p.dx, p.dy);
       } else {
-        path.lineTo(p.dx, p.dy);
+        _path.lineTo(p.dx, p.dy);
       }
     }
 
@@ -217,7 +219,7 @@ class CircularWavyPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..isAntiAlias = true
       ..color = active;
-    canvas.drawPath(path, activePaint);
+    canvas.drawPath(_path, activePaint);
   }
 
   @override
@@ -239,7 +241,8 @@ class LinearPainter extends CustomPainter {
     required this.track,
     required this.phase,
     required this.inset,
-  });
+    required Path path,
+  }) : _path = path;
 
   final double? value;
   final LinearSpecs spec;
@@ -247,6 +250,7 @@ class LinearPainter extends CustomPainter {
   final Color track;
   final double phase;
   final double inset;
+  final Path _path;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -336,22 +340,22 @@ class LinearPainter extends CustomPainter {
       final end = activeEndX;
 
       if (end > start) {
-        final path = Path();
+        _path.reset();
         const step = 1.5;
         final k = 2 * math.pi / spec.wavePeriod;
 
         var x = start;
         var y = activeCy + currentAmp * math.sin(phase + (x - left) * k);
-        path.moveTo(x, y);
+        _path.moveTo(x, y);
         for (x = start + step; x <= end; x += step) {
           y = activeCy + currentAmp * math.sin(phase + (x - left) * k);
-          path.lineTo(x, y);
+          _path.lineTo(x, y);
         }
         y = activeCy + currentAmp * math.sin(phase + (end - left) * k);
-        path.lineTo(end, y);
+        _path.lineTo(end, y);
 
         canvas.drawPath(
-          path,
+          _path,
           base
             ..color = active
             ..strokeWidth = spec.trackHeight,

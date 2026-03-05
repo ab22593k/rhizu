@@ -11,7 +11,9 @@ void main() {
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
-      scale: 2,
+      path: Path(),
+      points: List<Offset>.filled(121, Offset.zero),
+      scale: 2.0,
     );
 
     expect(painter.scale, equals(2.0));
@@ -24,6 +26,8 @@ void main() {
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
+      path: Path(),
+      points: List<Offset>.filled(121, Offset.zero),
     );
 
     final painter2 = MorphingShapePainter(
@@ -32,7 +36,9 @@ void main() {
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
-      scale: 2, // Different scale
+      path: Path(),
+      points: List<Offset>.filled(121, Offset.zero),
+      scale: 2.0,
     );
 
     expect(painter1.shouldRepaint(painter2), isTrue);
@@ -46,6 +52,8 @@ void main() {
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
+      path: Path(),
+      points: List<Offset>.filled(121, Offset.zero),
     );
 
     final painter2 = MorphingShapePainter(
@@ -54,6 +62,8 @@ void main() {
       nextShape: ShapeType.cookie9,
       progress: 0.5,
       rotation: 0,
+      path: Path(),
+      points: List<Offset>.filled(121, Offset.zero),
     );
 
     expect(painter1.shouldRepaint(painter2), isFalse);

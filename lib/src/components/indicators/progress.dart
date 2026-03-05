@@ -220,7 +220,7 @@ class ProgressIndicator extends StatelessWidget {
   }
 }
 
-class _CircularProgressIndicator extends StatelessWidget {
+class _CircularProgressIndicator extends StatefulWidget {
   const _CircularProgressIndicator({
     required this.size,
     required this.shape,
@@ -237,29 +237,39 @@ class _CircularProgressIndicator extends StatelessWidget {
   final Color? trackColor;
   final double rotation;
 
-  /// Whether the indicator should run a continuous animation.
-  ///
-  /// Returns `true` when:
-  ///  • **Indeterminate** (`value == null`) — regardless of shape.
-  ///  • **Wavy shape** — the wave always travels, even for determinate.
-  ///
-  /// An explicit non-zero [rotation] overrides animation (the caller is
-  /// driving it manually).
+  @override
+  State<_CircularProgressIndicator> createState() =>
+      _CircularProgressIndicatorState();
+}
+
+class _CircularProgressIndicatorState
+    extends State<_CircularProgressIndicator> {
+  late final Path _path;
+
+  @override
+  void initState() {
+    super.initState();
+    _path = Path();
+  }
+
   bool get _shouldAnimate {
-    if (rotation != 0.0) return false;
-    final v = value;
+    if (widget.rotation != 0.0) return false;
+    final v = widget.value;
     if (v == null) return true;
-    // Wavy always animates (traveling wave for determinate + completed).
-    return shape == ProgressIndicatorShape.wavy;
+    return widget.shape == ProgressIndicatorShape.wavy;
   }
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
-    final active = activeColor ?? cs.primary;
-    final track = trackColor ?? cs.onSurfaceVariant.withValues(alpha: 0.24);
-    final wantsWavy = shape == ProgressIndicatorShape.wavy;
-    final diameter = wantsWavy ? size.diameterWavy : size.diameterFlat;
+    final theme = Theme.of(context);
+    final cs = theme.colorScheme;
+    final active = widget.activeColor ?? cs.primary;
+    final track =
+        widget.trackColor ?? cs.onSurfaceVariant.withValues(alpha: 0.24);
+    final wantsWavy = widget.shape == ProgressIndicatorShape.wavy;
+    final diameter = wantsWavy
+        ? widget.size.diameterWavy
+        : widget.size.diameterFlat;
 
     return RepaintBoundary(
       child: SizedBox(
@@ -273,25 +283,24 @@ class _CircularProgressIndicator extends StatelessWidget {
                 animatable: Tween(begin: 0.0, end: 1.0),
                 builder: (context, animValue, child) {
                   final animRad = animValue * 2 * math.pi;
-                  // Indeterminate: spin the whole arc + traveling wave.
-                  // Determinate wavy: keep arc fixed, animate wave phase.
-                  final isIndeterminate = value == null;
+                  final isIndeterminate = widget.value == null;
                   return CustomPaint(
                     painter: wantsWavy
                         ? CircularWavyPainter(
-                            value: value,
+                            value: widget.value,
                             active: active,
                             track: track,
                             rotation: isIndeterminate ? animRad : 0.0,
-                            size: size,
+                            size: widget.size,
+                            path: _path,
                             wavePhase: animRad,
                           )
                         : CircularFlatPainter(
-                            value: value,
+                            value: widget.value,
                             active: active,
                             track: track,
                             rotation: animRad,
-                            size: size,
+                            size: widget.size,
                           ),
                   );
                 },
@@ -299,18 +308,19 @@ class _CircularProgressIndicator extends StatelessWidget {
             : CustomPaint(
                 painter: wantsWavy
                     ? CircularWavyPainter(
-                        value: value,
+                        value: widget.value,
                         active: active,
                         track: track,
-                        rotation: rotation,
-                        size: size,
+                        rotation: widget.rotation,
+                        size: widget.size,
+                        path: _path,
                       )
                     : CircularFlatPainter(
-                        value: value,
+                        value: widget.value,
                         active: active,
                         track: track,
-                        rotation: rotation,
-                        size: size,
+                        rotation: widget.rotation,
+                        size: widget.size,
                       ),
               ),
       ),
@@ -318,7 +328,7 @@ class _CircularProgressIndicator extends StatelessWidget {
   }
 }
 
-class _LinearProgressIndicator extends StatelessWidget {
+class _LinearProgressIndicator extends StatefulWidget {
   const _LinearProgressIndicator({
     required this.size,
     required this.shape,
@@ -337,26 +347,35 @@ class _LinearProgressIndicator extends StatelessWidget {
   final double phase;
   final double inset;
 
-  /// Whether the indicator should run a continuous animation.
-  ///
-  /// Returns `true` when:
-  ///  • **Indeterminate** (`value == null`) — regardless of shape.
-  ///  • **Wavy shape** — the wave always travels, even for determinate.
-  ///
-  /// An explicit non-zero [phase] overrides animation.
+  @override
+  State<_LinearProgressIndicator> createState() =>
+      _LinearProgressIndicatorState();
+}
+
+class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
+  late final Path _path;
+
+  @override
+  void initState() {
+    super.initState();
+    _path = Path();
+  }
+
   bool get _shouldAnimate {
-    if (phase != 0.0) return false;
-    final v = value;
+    if (widget.phase != 0.0) return false;
+    final v = widget.value;
     if (v == null) return true;
-    return shape == ProgressIndicatorShape.wavy;
+    return widget.shape == ProgressIndicatorShape.wavy;
   }
 
   @override
   Widget build(BuildContext context) {
-    final active = ColorScheme.of(context).primary;
-    final track = ColorScheme.of(context).surfaceContainerHighest;
+    final theme = Theme.of(context);
+    final active = widget.activeColor ?? theme.colorScheme.primary;
+    final track =
+        widget.trackColor ?? theme.colorScheme.surfaceContainerHighest;
 
-    final spec = specForLinear(size: size, shape: shape);
+    final spec = specForLinear(size: widget.size, shape: widget.shape);
 
     final activeHeight = spec.isWavy
         ? (spec.trackHeight + 2 * spec.waveAmplitude)
@@ -377,24 +396,26 @@ class _LinearProgressIndicator extends StatelessWidget {
                   final phaseValue = animValue * 2 * math.pi;
                   return CustomPaint(
                     painter: LinearPainter(
-                      value: value,
+                      value: widget.value,
                       spec: spec,
-                      active: activeColor ?? active,
-                      track: trackColor ?? track,
+                      active: active,
+                      track: track,
                       phase: phaseValue,
-                      inset: inset,
+                      inset: widget.inset,
+                      path: _path,
                     ),
                   );
                 },
               )
             : CustomPaint(
                 painter: LinearPainter(
-                  value: value,
+                  value: widget.value,
                   spec: spec,
-                  active: activeColor ?? active,
-                  track: trackColor ?? track,
-                  phase: phase,
-                  inset: inset,
+                  active: active,
+                  track: track,
+                  phase: widget.phase,
+                  inset: widget.inset,
+                  path: _path,
                 ),
               ),
       ),
