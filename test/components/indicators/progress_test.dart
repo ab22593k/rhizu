@@ -26,7 +26,7 @@ void main() {
             .widget<RepeatingAnimationBuilder<double>>(repeatingBuilderFinder);
         expect(
           repeatingBuilder.duration,
-          equals(const Duration(milliseconds: 1000)),
+          equals(const Duration(milliseconds: 1800)),
         );
       },
     );
