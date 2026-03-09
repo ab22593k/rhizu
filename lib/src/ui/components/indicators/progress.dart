@@ -130,6 +130,7 @@ class ProgressIndicator extends StatefulWidget {
     this.phase = 0.0,
     this.inset = 4.0,
     this.showLabel = false,
+    this.showInlineLabel = false,
     this.textStyle,
     this.onComplete,
     this.enableHapticFeedback = false,
@@ -171,6 +172,14 @@ class ProgressIndicator extends StatefulWidget {
 
   /// Whether to show the percentage label in the center (only applies when `variant == circular`).
   final bool showLabel;
+
+  /// Whether to show a floating inline percentage label above the linear
+  /// indicator's active endpoint.
+  ///
+  /// Only applies when [variant] is [ProgressIndicatorVariant.linear] and
+  /// [value] is non-null (determinate mode). The label slides along the
+  /// track as the progress animates.
+  final bool showInlineLabel;
 
   /// Optional style for the percentage text shown in the center.
   final TextStyle? textStyle;
@@ -244,6 +253,8 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
         phase: widget.phase,
         inset: widget.inset,
         scale: scale,
+        showInlineLabel: widget.showInlineLabel,
+        textStyle: widget.textStyle,
       );
     }
 
@@ -394,6 +405,8 @@ class _LinearProgressIndicator extends StatefulWidget {
     this.value,
     this.activeColor,
     this.trackColor,
+    this.showInlineLabel = false,
+    this.textStyle,
   });
 
   final double? value;
@@ -404,6 +417,8 @@ class _LinearProgressIndicator extends StatefulWidget {
   final double phase;
   final double inset;
   final double scale;
+  final bool showInlineLabel;
+  final TextStyle? textStyle;
 
   @override
   State<_LinearProgressIndicator> createState() =>
@@ -444,42 +459,100 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
         : spec.trackHeight;
     final totalHeight = activeHeight;
 
-    return RepaintBoundary(
-      child: SizedBox(
-        height: totalHeight,
-        width: double.infinity,
-        child: _shouldAnimate
-            ? RepeatingAnimationBuilder<double>(
-                duration: spec.isWavy
-                    ? const Duration(milliseconds: 1800)
-                    : const Duration(milliseconds: 2600),
-                animatable: Tween(begin: 0.0, end: 1.0),
-                builder: (context, animValue, child) {
-                  final phaseValue = animValue * 2 * math.pi;
-                  return CustomPaint(
-                    painter: LinearPainter(
-                      value: widget.value,
-                      spec: spec,
-                      active: active,
-                      track: track,
-                      phase: phaseValue,
-                      inset: widget.inset,
-                      path: _path,
-                    ),
-                  );
-                },
-              )
-            : CustomPaint(
-                painter: LinearPainter(
-                  value: widget.value,
-                  spec: spec,
-                  active: active,
-                  track: track,
-                  phase: widget.phase,
-                  inset: widget.inset,
-                  path: _path,
-                ),
+    final trackWidget = SizedBox(
+      height: totalHeight,
+      width: double.infinity,
+      child: _shouldAnimate
+          ? RepeatingAnimationBuilder<double>(
+              duration: spec.isWavy
+                  ? const Duration(milliseconds: 1800)
+                  : const Duration(milliseconds: 2600),
+              animatable: Tween(begin: 0.0, end: 1.0),
+              builder: (context, animValue, child) {
+                final phaseValue = animValue * 2 * math.pi;
+                return CustomPaint(
+                  painter: LinearPainter(
+                    value: widget.value,
+                    spec: spec,
+                    active: active,
+                    track: track,
+                    phase: phaseValue,
+                    inset: widget.inset,
+                    path: _path,
+                  ),
+                );
+              },
+            )
+          : CustomPaint(
+              painter: LinearPainter(
+                value: widget.value,
+                spec: spec,
+                active: active,
+                track: track,
+                phase: widget.phase,
+                inset: widget.inset,
+                path: _path,
               ),
+            ),
+    );
+
+    // Only show inline label for determinate mode
+    if (!widget.showInlineLabel || widget.value == null) {
+      return RepaintBoundary(child: trackWidget);
+    }
+
+    final pct = (widget.value!.clamp(0.0, 1.0) * 100).round();
+    final labelStyle =
+        widget.textStyle ?? theme.textTheme.labelSmall ?? const TextStyle();
+    final progress = widget.value!.clamp(0.0, 1.0);
+
+    return RepaintBoundary(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Position the label pill centered over the progress endpoint.
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final totalWidth = constraints.maxWidth;
+              // Offset to center the label over the active endpoint.
+              final targetX = totalWidth * progress;
+
+              return Stack(
+                clipBehavior: Clip.none,
+                children: [
+                  // Invisible spacer to give the Stack height
+                  const SizedBox(height: 20),
+                  Positioned(
+                    left: targetX,
+                    top: 0,
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, 0),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: active,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text(
+                          '$pct%',
+                          style: labelStyle.copyWith(
+                            color: theme.colorScheme.onPrimary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+          trackWidget,
+        ],
       ),
     );
   }
@@ -593,6 +666,8 @@ Widget previewProgressDeterminate() {
               child: ProgressIndicator(
                 value: 0.3,
                 variant: ProgressIndicatorVariant.linear,
+                showInlineLabel: true,
+                showLabel: true,
               ),
             ),
             // Linear flat 50 %

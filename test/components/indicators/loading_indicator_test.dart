@@ -4,7 +4,7 @@ import 'package:rhizu/src/ui/components/indicators/constants.dart';
 import 'package:rhizu/src/ui/components/indicators/morphing.dart';
 
 void main() {
-  group('MorphingLI', () {
+  group('MorphingLoadingIndicator', () {
     testWidgets('renders without error', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
@@ -147,7 +147,7 @@ void main() {
       expect(find.byType(MorphingLoadingindicator), findsNothing);
     });
 
-    testWidgets('MorphingLI respects size parameter', (
+    testWidgets('MorphingLoadingIndicator respects size parameter', (
       tester,
     ) async {
       // Default size
@@ -179,7 +179,9 @@ void main() {
       expect(container2.constraints?.minHeight, equals(customSize));
     });
 
-    testWidgets('MorphingLI respects text scale factor', (tester) async {
+    testWidgets('MorphingLoadingIndicator respects text scale factor', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         const MediaQuery(
           data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
@@ -201,7 +203,7 @@ void main() {
       expect(container.constraints?.minHeight, equals(96.0));
     });
 
-    testWidgets('MorphingLI clamps size to constraints', (
+    testWidgets('MorphingLoadingIndicator clamps size to constraints', (
       tester,
     ) async {
       // Too small -> clamped to min (24.0)
@@ -229,53 +231,56 @@ void main() {
       );
     });
 
-    testWidgets('MorphingLI named constructors set correct sizes', (
-      tester,
-    ) async {
-      // Small
-      await tester.pumpWidget(
-        const MaterialApp(home: MorphingLoadingindicator.small()),
-      );
-      expect(
-        (tester.widget(find.byType(Container).first) as Container)
-            .constraints
-            ?.minWidth,
-        equals(LoadingIndicatorConstants.minContainerSize),
-      );
+    testWidgets(
+      'MorphingLoadingIndicator named constructors set correct sizes',
+      (
+        tester,
+      ) async {
+        // Small
+        await tester.pumpWidget(
+          const MaterialApp(home: MorphingLoadingindicator.small()),
+        );
+        expect(
+          (tester.widget(find.byType(Container).first) as Container)
+              .constraints
+              ?.minWidth,
+          equals(LoadingIndicatorConstants.minContainerSize),
+        );
 
-      // Medium
-      await tester.pumpWidget(
-        const MaterialApp(home: MorphingLoadingindicator.medium()),
-      );
-      expect(
-        (tester.widget(find.byType(Container).first) as Container)
-            .constraints
-            ?.minWidth,
-        equals(LoadingIndicatorConstants.defaultContainerSize),
-      );
+        // Medium
+        await tester.pumpWidget(
+          const MaterialApp(home: MorphingLoadingindicator.medium()),
+        );
+        expect(
+          (tester.widget(find.byType(Container).first) as Container)
+              .constraints
+              ?.minWidth,
+          equals(LoadingIndicatorConstants.defaultContainerSize),
+        );
 
-      // Large
-      await tester.pumpWidget(
-        const MaterialApp(home: MorphingLoadingindicator.large()),
-      );
-      expect(
-        (tester.widget(find.byType(Container).first) as Container)
-            .constraints
-            ?.minWidth,
-        equals(96.0),
-      );
+        // Large
+        await tester.pumpWidget(
+          const MaterialApp(home: MorphingLoadingindicator.large()),
+        );
+        expect(
+          (tester.widget(find.byType(Container).first) as Container)
+              .constraints
+              ?.minWidth,
+          equals(96.0),
+        );
 
-      // Extra Large
-      await tester.pumpWidget(
-        const MaterialApp(home: MorphingLoadingindicator.extraLarge()),
-      );
-      expect(
-        (tester.widget(find.byType(Container).first) as Container)
-            .constraints
-            ?.minWidth,
-        equals(144.0),
-      );
-    });
+        // Extra Large
+        await tester.pumpWidget(
+          const MaterialApp(home: MorphingLoadingindicator.extraLarge()),
+        );
+        expect(
+          (tester.widget(find.byType(Container).first) as Container)
+              .constraints
+              ?.minWidth,
+          equals(144.0),
+        );
+      },
+    );
   });
 
   group('Containment', () {

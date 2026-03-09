@@ -115,4 +115,122 @@ void main() {
       },
     );
   });
+
+  group('Inline Value Label (linear)', () {
+    testWidgets('no label shown by default', (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 200,
+            child: ProgressIndicator(
+              value: 0.5,
+              variant: ProgressIndicatorVariant.linear,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 1600));
+
+      // No Text widget showing a percentage
+      expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets('shows percentage text when showInlineLabel is true', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 200,
+            child: ProgressIndicator(
+              value: 0.5,
+              variant: ProgressIndicatorVariant.linear,
+              showInlineLabel: true,
+            ),
+          ),
+        ),
+      );
+
+      // Let the spring animation settle
+      await tester.pump(const Duration(milliseconds: 1600));
+
+      expect(find.textContaining('50%'), findsOneWidget);
+    });
+
+    testWidgets('label is hidden in indeterminate mode', (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 200,
+            child: ProgressIndicator(
+              variant: ProgressIndicatorVariant.linear,
+              showInlineLabel: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // No label in indeterminate mode
+      expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets('label shows 100% at full progress', (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 200,
+            child: ProgressIndicator(
+              value: 1.0,
+              variant: ProgressIndicatorVariant.linear,
+              showInlineLabel: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 1600));
+
+      expect(find.textContaining('100%'), findsOneWidget);
+    });
+
+    testWidgets('label tracks progress position horizontally', (tester) async {
+      await tester.pumpWidget(
+        const Directionality(
+          textDirection: TextDirection.ltr,
+          child: SizedBox(
+            width: 300,
+            child: ProgressIndicator(
+              value: 0.5,
+              variant: ProgressIndicatorVariant.linear,
+              showInlineLabel: true,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 1600));
+
+      // The label widget should exist
+      final labelFinder = find.textContaining('50%');
+      expect(labelFinder, findsOneWidget);
+
+      // The label's horizontal center should be roughly at 50% of the width
+      final labelBox = tester.getRect(labelFinder);
+      final containerBox = tester.getRect(
+        find.byType(ProgressIndicator),
+      );
+      final labelCenter = labelBox.center.dx;
+      final expectedCenter = containerBox.left + containerBox.width * 0.5;
+
+      // Allow some tolerance for padding/inset
+      expect(labelCenter, closeTo(expectedCenter, 30));
+    });
+  });
 }
