@@ -1,7 +1,7 @@
-// Styles
-export 'package:flutter_animate/flutter_animate.dart';
-export 'package:google_fonts/google_fonts.dart';
 // External packages
+export 'package:flutter_animate/flutter_animate.dart';
+export 'package:go_router/go_router.dart';
+export 'package:google_fonts/google_fonts.dart';
 export 'package:hugeicons/hugeicons.dart';
 
 // Components
@@ -15,6 +15,8 @@ export 'src/ui/components/toolbar/toolbar.dart';
 export 'src/ui/foundation/layout/feed.dart';
 export 'src/ui/foundation/layout/list_detail.dart';
 export 'src/ui/foundation/layout/supporting_pane.dart';
+export 'src/ui/foundation/navigation/adaptive_navigation_shell.dart';
+export 'src/ui/foundation/navigation/destination.dart';
 export 'src/ui/foundation/window_size_class.dart';
 export 'src/ui/styles/indicators/palette.dart';
 // Styles
