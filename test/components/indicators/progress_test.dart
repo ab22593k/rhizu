@@ -43,5 +43,76 @@ void main() {
         equals(const Duration(milliseconds: 1000)),
       );
     });
+
+    testWidgets('ProgressIndicator respects text scale factor', (tester) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: ProgressIndicator(),
+          ),
+        ),
+      );
+
+      final sizedBoxFinder = find
+          .descendant(
+            of: find.byType(ProgressIndicator),
+            matching: find.byType(SizedBox),
+          )
+          .first;
+
+      final sizedBox = tester.widget<SizedBox>(sizedBoxFinder);
+
+      // Default circular wavy size is 48.0 + scale 2.0 = 96.0
+      expect(sizedBox.width, equals(96.0));
+      expect(sizedBox.height, equals(96.0));
+    });
+
+    testWidgets('ProgressIndicator invokes onComplete when value reaches 1.0', (
+      tester,
+    ) async {
+      var completedCalled = false;
+
+      await tester.pumpWidget(
+        Directionality(
+          textDirection: TextDirection.ltr,
+          child: ProgressIndicator(
+            value: 1.0,
+            onComplete: () {
+              completedCalled = true;
+            },
+          ),
+        ),
+      );
+
+      // Pump to allow the TweenAnimationBuilder to run and trigger the callback
+      await tester.pump(const Duration(milliseconds: 1600));
+
+      expect(completedCalled, isTrue);
+    });
+
+    testWidgets(
+      'ProgressIndicator does not invoke onComplete when value is below 1.0',
+      (tester) async {
+        var completedCalled = false;
+
+        await tester.pumpWidget(
+          Directionality(
+            textDirection: TextDirection.ltr,
+            child: ProgressIndicator(
+              value: 0.5,
+              onComplete: () {
+                completedCalled = true;
+              },
+            ),
+          ),
+        );
+
+        await tester.pump(const Duration(milliseconds: 1600));
+
+        expect(completedCalled, isFalse);
+      },
+    );
   });
 }

@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/rhizu.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
@@ -59,6 +60,16 @@ class ProgressIndicatorSize {
   /// Alias for backward compatibility (equivalent to [s]).
   static const ProgressIndicatorSize fixed = s;
 
+  /// Returns a scaled copy of this size.
+  ProgressIndicatorSize scaled(double scale) {
+    if (scale == 1.0) return this;
+    return ProgressIndicatorSize(
+      thickness: thickness * scale,
+      diameterFlat: diameterFlat * scale,
+      diameterWavy: diameterWavy * scale,
+    );
+  }
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -106,7 +117,7 @@ enum ProgressIndicatorVariant { linear, circular }
 ///
 /// Use [variant] to choose between [ProgressIndicatorVariant.linear] and
 /// [ProgressIndicatorVariant.circular] presentation.
-class ProgressIndicator extends StatelessWidget {
+class ProgressIndicator extends StatefulWidget {
   const ProgressIndicator({
     super.key,
     this.value,
@@ -120,6 +131,8 @@ class ProgressIndicator extends StatelessWidget {
     this.inset = 4.0,
     this.showLabel = false,
     this.textStyle,
+    this.onComplete,
+    this.enableHapticFeedback = false,
   });
 
   /// Progress value between 0.0 and 1.0 (determinate), or `null` for
@@ -162,47 +175,90 @@ class ProgressIndicator extends StatelessWidget {
   /// Optional style for the percentage text shown in the center.
   final TextStyle? textStyle;
 
+  /// Called when the animated progress value reaches 1.0 (completion).
+  ///
+  /// This is triggered once per completion event. If the value drops below
+  /// 1.0 and reaches it again, the callback fires again.
+  final VoidCallback? onComplete;
+
+  /// Whether to trigger a haptic feedback buzz on completion.
+  ///
+  /// Defaults to `false`. When `true`, [HapticFeedback.mediumImpact] is
+  /// triggered alongside [onComplete] when the value reaches 1.0.
+  final bool enableHapticFeedback;
+
+  @override
+  State<ProgressIndicator> createState() => _ProgressIndicatorState();
+}
+
+class _ProgressIndicatorState extends State<ProgressIndicator> {
+  bool _hasCompleted = false;
+
+  void _checkCompletion(double animatedValue) {
+    if (animatedValue >= 1.0 && !_hasCompleted) {
+      _hasCompleted = true;
+      widget.onComplete?.call();
+      if (widget.enableHapticFeedback) {
+        HapticFeedback.mediumImpact();
+      }
+    } else if (animatedValue < 1.0) {
+      _hasCompleted = false;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (value == null) {
-      return _buildVariant(context, null);
+    final scale = MediaQuery.textScalerOf(context).scale(1.0);
+    final scaledSize = widget.size.scaled(scale);
+
+    if (widget.value == null) {
+      return _buildVariant(context, null, scaledSize, scale);
     }
 
     // We animate the determinate value implicitly with motion physics.
     return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: value),
+      tween: Tween<double>(begin: 0.0, end: widget.value),
       // Note: SpringCurve overrides standard translation, so this duration simply guarantees the animation lives long enough for the spring to settle.
       duration: const Duration(milliseconds: 1500),
       curve: SpringCurve(MotionTokens.expressiveSlowSpatial),
-      builder: (context, animValue, child) => _buildVariant(context, animValue),
+      builder: (context, animValue, child) {
+        _checkCompletion(animValue);
+        return _buildVariant(context, animValue, scaledSize, scale);
+      },
     );
   }
 
-  Widget _buildVariant(BuildContext context, double? animatedValue) {
-    if (variant == ProgressIndicatorVariant.linear) {
+  Widget _buildVariant(
+    BuildContext context,
+    double? animatedValue,
+    ProgressIndicatorSize scaledSize,
+    double scale,
+  ) {
+    if (widget.variant == ProgressIndicatorVariant.linear) {
       return _LinearProgressIndicator(
         value: animatedValue,
-        size: size,
-        shape: shape,
-        activeColor: activeColor,
-        trackColor: trackColor,
-        phase: phase,
-        inset: inset,
+        size: scaledSize,
+        shape: widget.shape,
+        activeColor: widget.activeColor,
+        trackColor: widget.trackColor,
+        phase: widget.phase,
+        inset: widget.inset,
+        scale: scale,
       );
     }
 
     final circular = _CircularProgressIndicator(
       value: animatedValue,
-      size: size,
-      shape: shape,
-      activeColor: activeColor,
-      trackColor: trackColor,
-      rotation: rotation,
+      size: scaledSize,
+      shape: widget.shape,
+      activeColor: widget.activeColor,
+      trackColor: widget.trackColor,
+      rotation: widget.rotation,
     );
 
-    if (!showLabel || animatedValue == null) return circular;
+    if (!widget.showLabel || animatedValue == null) return circular;
 
-    final d = size.diameterWavy;
+    final d = scaledSize.diameterWavy;
     return SizedBox(
       width: d,
       height: d,
@@ -212,7 +268,7 @@ class ProgressIndicator extends StatelessWidget {
           circular,
           Text(
             '${(animatedValue * 100).round()}%',
-            style: textStyle ?? Theme.of(context).textTheme.labelMedium,
+            style: widget.textStyle ?? Theme.of(context).textTheme.labelMedium,
           ),
         ],
       ),
@@ -334,6 +390,7 @@ class _LinearProgressIndicator extends StatefulWidget {
     required this.shape,
     required this.phase,
     required this.inset,
+    required this.scale,
     this.value,
     this.activeColor,
     this.trackColor,
@@ -346,6 +403,7 @@ class _LinearProgressIndicator extends StatefulWidget {
   final Color? trackColor;
   final double phase;
   final double inset;
+  final double scale;
 
   @override
   State<_LinearProgressIndicator> createState() =>
@@ -375,7 +433,11 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
     final track =
         widget.trackColor ?? theme.colorScheme.surfaceContainerHighest;
 
-    final spec = specForLinear(size: widget.size, shape: widget.shape);
+    final spec = specForLinear(
+      size: widget.size,
+      shape: widget.shape,
+      scale: widget.scale,
+    );
 
     final activeHeight = spec.isWavy
         ? (spec.trackHeight + 2 * spec.waveAmplitude)
@@ -476,10 +538,11 @@ class LinearSpecs {
 LinearSpecs specForLinear({
   required ProgressIndicatorSize size,
   required ProgressIndicatorShape shape,
+  double scale = 1.0,
 }) {
   final thickness = size.thickness;
   // Shared derived measurements.
-  const dotDiameter = 4.0;
+  final dotDiameter = 4.0 * scale;
   final gap = thickness; // spec: gap equals track height
   final dotVerticalOffset =
       (thickness - dotDiameter) / 2; // 0 for 4dp, 2 for 8dp
@@ -502,8 +565,8 @@ LinearSpecs specForLinear({
         dotVerticalOffset: dotVerticalOffset,
         trailingMargin: gap + dotDiameter,
         isWavy: true,
-        waveAmplitude: 3,
-        wavePeriod: 40,
+        waveAmplitude: 3 * scale,
+        wavePeriod: 40 * scale,
       );
   }
 }

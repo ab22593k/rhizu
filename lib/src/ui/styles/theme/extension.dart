@@ -5,6 +5,109 @@ import 'package:rhizu/src/ui/styles/elevation/tokens.dart';
 import 'package:rhizu/src/ui/styles/motion/tokens.dart';
 import 'package:rhizu/src/ui/styles/shapes/tokens.dart';
 
+/// A collection of structural design tokens used by widgets to obtain
+/// standardized elevations, shapes and motion parameters.
+///
+/// Usage examples:
+///
+/// Providing the extension at the app level:
+/// ```dart
+/// final theme = ThemeData.light().copyWith(
+///   extensions: <ThemeExtension<dynamic>>[
+///     RZTheme.fallback(),
+///   ],
+/// );
+///
+/// MaterialApp(
+///   theme: theme,
+///   home: MyHome(),
+/// );
+/// ```
+///
+/// Reading values from the current theme in a widget:
+/// ```dart
+/// Widget build(BuildContext context) {
+///   final expressive = Theme.of(context).extension<RZTheme>()!;
+///
+///   // Use shape/elevation/motion tokens:
+///   final radius = expressive.shape.cornerMedium;
+///   final elevation = expressive.elevation.level2;
+///   final spring = expressive.motion.defaultSpatial;
+///
+///   return Container(
+///     decoration: BoxDecoration(
+///       borderRadius: BorderRadius.circular(radius),
+///       // ...
+///     ),
+///     child: Material(
+///       elevation: elevation,
+///       // ...
+///     ),
+///   );
+/// }
+/// ```
+///
+/// Creating a modified copy of the extension and installing it back into the
+/// app theme:
+/// ```dart
+/// final expressive = Theme.of(context).extension<RZTheme>()!;
+/// final updatedExpressive = expressive.copyWith(
+///   shape: expressive.shape.copyWith(cornerMedium: 12.0),
+/// );
+///
+/// final newTheme = Theme.of(context).copyWith(
+///   extensions: <ThemeExtension<dynamic>>[
+///     updatedExpressive,
+///   ],
+/// );
+///
+/// // Rebuild the app or provide newTheme to MaterialApp to apply changes.
+/// ```
+@immutable
+class RZTheme extends ThemeExtension<RZTheme> {
+  const RZTheme({
+    required this.elevation,
+    required this.shape,
+    required this.motion,
+  });
+
+  /// Creates an RZTheme with default structural values.
+  factory RZTheme.fallback() {
+    return RZTheme(
+      elevation: RZElevation.fallback(),
+      shape: RZShape.fallback(),
+      motion: RZMotion.fallback(),
+    );
+  }
+
+  final RZElevation elevation;
+  final RZShape shape;
+  final RZMotion motion;
+
+  @override
+  RZTheme copyWith({
+    RZElevation? elevation,
+    RZShape? shape,
+    RZMotion? motion,
+  }) {
+    return RZTheme(
+      elevation: elevation ?? this.elevation,
+      shape: shape ?? this.shape,
+      motion: motion ?? this.motion,
+    );
+  }
+
+  @override
+  RZTheme lerp(RZTheme? other, double t) {
+    if (other == null) return this;
+    return RZTheme(
+      elevation: elevation.lerp(other.elevation, t),
+      shape: shape.lerp(other.shape, t),
+      motion: motion.lerp(other.motion, t),
+    );
+  }
+}
+
 @immutable
 class RZElevation extends ThemeExtension<RZElevation> {
   const RZElevation({
@@ -252,109 +355,6 @@ class RZMotion extends ThemeExtension<RZMotion> {
       defaultEffects: _lerpSpring(defaultEffects, other.defaultEffects, t),
       slowSpatial: _lerpSpring(slowSpatial, other.slowSpatial, t),
       slowEffects: _lerpSpring(slowEffects, other.slowEffects, t),
-    );
-  }
-}
-
-/// A collection of structural design tokens used by widgets to obtain
-/// standardized elevations, shapes and motion parameters.
-///
-/// Usage examples:
-///
-/// Providing the extension at the app level:
-/// ```dart
-/// final theme = ThemeData.light().copyWith(
-///   extensions: <ThemeExtension<dynamic>>[
-///     RZTheme.fallback(),
-///   ],
-/// );
-///
-/// MaterialApp(
-///   theme: theme,
-///   home: MyHome(),
-/// );
-/// ```
-///
-/// Reading values from the current theme in a widget:
-/// ```dart
-/// Widget build(BuildContext context) {
-///   final expressive = Theme.of(context).extension<RZTheme>()!;
-///
-///   // Use shape/elevation/motion tokens:
-///   final radius = expressive.shape.cornerMedium;
-///   final elevation = expressive.elevation.level2;
-///   final spring = expressive.motion.defaultSpatial;
-///
-///   return Container(
-///     decoration: BoxDecoration(
-///       borderRadius: BorderRadius.circular(radius),
-///       // ...
-///     ),
-///     child: Material(
-///       elevation: elevation,
-///       // ...
-///     ),
-///   );
-/// }
-/// ```
-///
-/// Creating a modified copy of the extension and installing it back into the
-/// app theme:
-/// ```dart
-/// final expressive = Theme.of(context).extension<RZTheme>()!;
-/// final updatedExpressive = expressive.copyWith(
-///   shape: expressive.shape.copyWith(cornerMedium: 12.0),
-/// );
-///
-/// final newTheme = Theme.of(context).copyWith(
-///   extensions: <ThemeExtension<dynamic>>[
-///     updatedExpressive,
-///   ],
-/// );
-///
-/// // Rebuild the app or provide newTheme to MaterialApp to apply changes.
-/// ```
-@immutable
-class RZTheme extends ThemeExtension<RZTheme> {
-  const RZTheme({
-    required this.elevation,
-    required this.shape,
-    required this.motion,
-  });
-
-  /// Creates an RZTheme with default structural values.
-  factory RZTheme.fallback() {
-    return RZTheme(
-      elevation: RZElevation.fallback(),
-      shape: RZShape.fallback(),
-      motion: RZMotion.fallback(),
-    );
-  }
-
-  final RZElevation elevation;
-  final RZShape shape;
-  final RZMotion motion;
-
-  @override
-  RZTheme copyWith({
-    RZElevation? elevation,
-    RZShape? shape,
-    RZMotion? motion,
-  }) {
-    return RZTheme(
-      elevation: elevation ?? this.elevation,
-      shape: shape ?? this.shape,
-      motion: motion ?? this.motion,
-    );
-  }
-
-  @override
-  RZTheme lerp(RZTheme? other, double t) {
-    if (other == null) return this;
-    return RZTheme(
-      elevation: elevation.lerp(other.elevation, t),
-      shape: shape.lerp(other.shape, t),
-      motion: motion.lerp(other.motion, t),
     );
   }
 }

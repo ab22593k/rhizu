@@ -1,7 +1,7 @@
-/// Material 3 Motion Physics with Flutter Animate.
+/// Material Motion Physics with Flutter Animate.
 ///
 /// This package provides [SpringDescription] tokens and examples matching
-/// the Material 3 Expressive Motion specifications, now powered by `flutter_animate`.
+/// the Material Expressive Motion specifications, now powered by `flutter_animate`.
 library;
 
 import 'package:flutter/material.dart';

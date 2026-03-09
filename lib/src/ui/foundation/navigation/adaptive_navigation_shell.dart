@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:rhizu/src/ui/foundation/navigation/destination.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
+import 'package:rhizu/src/ui/styles/motion/fallbacks.dart';
 
-class RZANavigationShell extends StatelessWidget {
-  const RZANavigationShell({
+class RZAdaptiveNavigationShell extends StatelessWidget {
+  const RZAdaptiveNavigationShell({
     required this.navigationShell,
     required this.destinations,
     super.key,
@@ -20,6 +22,17 @@ class RZANavigationShell extends StatelessWidget {
       index,
       initialLocation: index == navigationShell.currentIndex,
     );
+  }
+
+  Widget _buildAnimatedBody() {
+    return navigationShell
+        .animate(key: ValueKey(navigationShell.currentIndex))
+        .fadeIn(duration: MotionFallbacks.expressiveFastSpatialDuration)
+        .scale(
+          begin: const Offset(0.98, 0.98),
+          curve: MotionFallbacks.expressiveFastSpatial,
+          duration: MotionFallbacks.expressiveFastSpatialDuration,
+        );
   }
 
   @override
@@ -59,7 +72,7 @@ class RZANavigationShell extends StatelessWidget {
             leading: floatingActionButton,
           ),
           const VerticalDivider(thickness: 1, width: 1),
-          Expanded(child: navigationShell),
+          Expanded(child: _buildAnimatedBody()),
         ],
       ),
     );
@@ -70,7 +83,7 @@ class RZANavigationShell extends StatelessWidget {
     // Expressive adjustments: Use Label Medium for typography and 80dp height
 
     return Scaffold(
-      body: navigationShell,
+      body: _buildAnimatedBody(),
       floatingActionButton: floatingActionButton,
       bottomNavigationBar: NavigationBar(
         height: 80,

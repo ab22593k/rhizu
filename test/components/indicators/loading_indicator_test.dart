@@ -7,23 +7,23 @@ void main() {
   group('MorphingLI', () {
     testWidgets('renders without error', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: MorphingLI())),
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
       );
 
-      expect(find.byType(MorphingLI), findsOneWidget);
+      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
     });
 
     testWidgets('renders in simple mode by default', (
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: MorphingLI())),
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
       );
 
       final container = tester.widget<Container>(
         find
             .descendant(
-              of: find.byType(MorphingLI),
+              of: find.byType(MorphingLoadingindicator),
               matching: find.byType(Container),
             )
             .first,
@@ -45,7 +45,7 @@ void main() {
             ),
           ),
           home: const Scaffold(
-            body: MorphingLI(containment: Containment.contained),
+            body: MorphingLoadingindicator(containment: Containment.contained),
           ),
         ),
       );
@@ -53,7 +53,7 @@ void main() {
       final container = tester.widget<Container>(
         find
             .descendant(
-              of: find.byType(MorphingLI),
+              of: find.byType(MorphingLoadingindicator),
               matching: find.byType(Container),
             )
             .first,
@@ -61,7 +61,7 @@ void main() {
 
       final decoration = container.decoration! as BoxDecoration;
       final colorScheme = Theme.of(
-        tester.element(find.byType(MorphingLI)),
+        tester.element(find.byType(MorphingLoadingindicator)),
       ).colorScheme;
 
       // In contained mode, background should match primaryContainer
@@ -79,7 +79,7 @@ void main() {
             ),
           ),
           home: const Scaffold(
-            body: MorphingLI(),
+            body: MorphingLoadingindicator(),
           ),
         ),
       );
@@ -90,7 +90,7 @@ void main() {
       // Verify the CustomPaint is rendered
       expect(
         find.descendant(
-          of: find.byType(MorphingLI),
+          of: find.byType(MorphingLoadingindicator),
           matching: find.byType(CustomPaint),
         ),
         findsOneWidget,
@@ -99,13 +99,13 @@ void main() {
 
     testWidgets('container has correct size', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: MorphingLI())),
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
       );
 
       final container = tester.widget<Container>(
         find
             .descendant(
-              of: find.byType(MorphingLI),
+              of: find.byType(MorphingLoadingindicator),
               matching: find.byType(Container),
             )
             .first,
@@ -117,7 +117,7 @@ void main() {
 
     testWidgets('animates when displayed', (tester) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: MorphingLI())),
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
       );
 
       // Initial frame
@@ -127,31 +127,33 @@ void main() {
       await tester.pump(const Duration(milliseconds: 100));
 
       // The indicator should still be present
-      expect(find.byType(MorphingLI), findsOneWidget);
+      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
     });
 
     testWidgets('disposes controllers when removed', (
       tester,
     ) async {
       await tester.pumpWidget(
-        const MaterialApp(home: Scaffold(body: MorphingLI())),
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
       );
 
-      expect(find.byType(MorphingLI), findsOneWidget);
+      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
 
       // Remove the widget
       await tester.pumpWidget(
         const MaterialApp(home: Scaffold(body: SizedBox.shrink())),
       );
 
-      expect(find.byType(MorphingLI), findsNothing);
+      expect(find.byType(MorphingLoadingindicator), findsNothing);
     });
 
     testWidgets('MorphingLI respects size parameter', (
       tester,
     ) async {
       // Default size
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI()));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator()),
+      );
       final containerFinder = find.byType(Container).first;
       final container = tester.widget<Container>(containerFinder);
 
@@ -168,7 +170,7 @@ void main() {
       // Custom size
       const customSize = 96.0;
       await tester.pumpWidget(
-        const MaterialApp(home: MorphingLI(size: customSize)),
+        const MaterialApp(home: MorphingLoadingindicator(size: customSize)),
       );
       final containerFinder2 = find.byType(Container).first;
       final container2 = tester.widget<Container>(containerFinder2);
@@ -177,11 +179,35 @@ void main() {
       expect(container2.constraints?.minHeight, equals(customSize));
     });
 
+    testWidgets('MorphingLI respects text scale factor', (tester) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
+          child: MaterialApp(home: MorphingLoadingindicator()),
+        ),
+      );
+
+      final container = tester.widget<Container>(
+        find
+            .descendant(
+              of: find.byType(MorphingLoadingindicator),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+
+      // Default size is 48.0, with scale 2.0 it should be 96.0
+      expect(container.constraints?.minWidth, equals(96.0));
+      expect(container.constraints?.minHeight, equals(96.0));
+    });
+
     testWidgets('MorphingLI clamps size to constraints', (
       tester,
     ) async {
       // Too small -> clamped to min (24.0)
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 10)));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator(size: 10)),
+      );
       final containerFinder = find.byType(Container).first;
       final container = tester.widget<Container>(containerFinder);
 
@@ -191,7 +217,9 @@ void main() {
       );
 
       // Too large -> clamped to max (240.0)
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI(size: 300)));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator(size: 300)),
+      );
       final containerFinder2 = find.byType(Container).first;
       final container2 = tester.widget<Container>(containerFinder2);
 
@@ -205,7 +233,9 @@ void main() {
       tester,
     ) async {
       // Small
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI.small()));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator.small()),
+      );
       expect(
         (tester.widget(find.byType(Container).first) as Container)
             .constraints
@@ -214,7 +244,9 @@ void main() {
       );
 
       // Medium
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI.medium()));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator.medium()),
+      );
       expect(
         (tester.widget(find.byType(Container).first) as Container)
             .constraints
@@ -223,7 +255,9 @@ void main() {
       );
 
       // Large
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI.large()));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator.large()),
+      );
       expect(
         (tester.widget(find.byType(Container).first) as Container)
             .constraints
@@ -232,7 +266,9 @@ void main() {
       );
 
       // Extra Large
-      await tester.pumpWidget(const MaterialApp(home: MorphingLI.extraLarge()));
+      await tester.pumpWidget(
+        const MaterialApp(home: MorphingLoadingindicator.extraLarge()),
+      );
       expect(
         (tester.widget(find.byType(Container).first) as Container)
             .constraints
@@ -247,6 +283,109 @@ void main() {
       expect(Containment.values, contains(Containment.simple));
       expect(Containment.values, contains(Containment.contained));
       expect(Containment.values.length, equals(2));
+    });
+  });
+
+  group('IndicatorState', () {
+    test('has correct values', () {
+      expect(IndicatorState.values, contains(IndicatorState.loading));
+      expect(IndicatorState.values, contains(IndicatorState.success));
+      expect(IndicatorState.values, contains(IndicatorState.error));
+      expect(IndicatorState.values.length, equals(3));
+    });
+
+    testWidgets('transitions from loading to success', (tester) async {
+      // Start in loading state
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(),
+          ),
+        ),
+      );
+
+      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
+      // Should still show CustomPaint for the morphing animation
+      expect(
+        find.descendant(
+          of: find.byType(MorphingLoadingindicator),
+          matching: find.byType(CustomPaint),
+        ),
+        findsOneWidget,
+      );
+
+      // Transition to success
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(state: IndicatorState.success),
+          ),
+        ),
+      );
+
+      // Pump through the transition animation
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // The success state should show an Icon (checkmark)
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+    });
+
+    testWidgets('transitions from loading to error', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(state: IndicatorState.error),
+          ),
+        ),
+      );
+
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // The error state should show an Icon (close/X)
+      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
+    });
+
+    testWidgets('success state uses correct color', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          ),
+          home: const Scaffold(
+            body: MorphingLoadingindicator(state: IndicatorState.success),
+          ),
+        ),
+      );
+
+      // Let the transition complete
+      await tester.pump(const Duration(milliseconds: 400));
+
+      // Verify the icon is present
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
+
+      // The icon should use onPrimaryContainer or a custom success color
+      final icon = tester.widget<Icon>(find.byIcon(Icons.check_rounded));
+      expect(icon.color, isNotNull);
+    });
+
+    testWidgets('default state is loading', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: MorphingLoadingindicator()),
+        ),
+      );
+
+      // The default should be the morphing animation (no icon visible)
+      expect(find.byIcon(Icons.check_rounded), findsNothing);
+      expect(find.byIcon(Icons.close_rounded), findsNothing);
     });
   });
 }

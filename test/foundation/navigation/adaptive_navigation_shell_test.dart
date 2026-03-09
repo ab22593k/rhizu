@@ -55,7 +55,7 @@ Future<void> _pumpRouter(
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           // Provide our adaptive shell
-          return RZANavigationShell(
+          return RZAdaptiveNavigationShell(
             navigationShell: navigationShell,
             destinations: const [
               RZNavigationDestination(

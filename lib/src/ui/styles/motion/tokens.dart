@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flutter/physics.dart';
 
-/// Material 3 Motion Physics Spring Tokens.
+/// Material Motion Physics Spring Tokens.
 ///
 /// See: https://m3.material.io/styles/motion/overview/specs
 class MotionTokens {
@@ -12,8 +12,6 @@ class MotionTokens {
   static double _damping(double dampingRatio, double stiffness) {
     return dampingRatio * 2 * sqrt(stiffness);
   }
-
-  // --- Expressive Motion Scheme (Default) ---
 
   /// Expressive Fast Spatial
   /// Damping Ratio: 0.9, Stiffness: 1400

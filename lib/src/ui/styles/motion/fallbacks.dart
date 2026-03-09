@@ -1,6 +1,6 @@
 import 'package:flutter/animation.dart';
 
-/// Material 3 Motion Physics Web Fallbacks (Cubic Bezier Curves).
+/// Material Motion Physics Web Fallbacks (Cubic Bezier Curves).
 ///
 /// These curves mimic the spring behavior for platforms/contexts where physics
 /// simulations are not feasible.
