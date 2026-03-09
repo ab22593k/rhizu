@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/components/toolbar/toolbar.dart';
-import 'package:rhizu/src/foundation/window_size_class.dart';
+import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 /// A wrapper that reconfigures a [RZToolbar] based on the current layout context.
 class AdaptiveToolbarPlacement extends StatelessWidget {

@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/buttons/split_button.dart';
-import 'package:rhizu/src/components/fab_menu.dart';
-import 'package:rhizu/src/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/components/buttons/split_button.dart';
+import 'package:rhizu/src/ui/components/fab_menu.dart';
+import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
 
 Finder findToolbarMaterial() {
   return find.byWidgetPredicate(

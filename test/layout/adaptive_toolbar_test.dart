@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbar/placement.dart';
-import 'package:rhizu/src/components/toolbar/toolbar.dart';
-import 'package:rhizu/src/foundation/window_size_class.dart';
+import 'package:rhizu/src/ui/components/toolbar/placement.dart';
+import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 void main() {
   group('AdaptiveToolbarPlacement', () {

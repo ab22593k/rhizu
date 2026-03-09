@@ -4,10 +4,10 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
-import 'package:rhizu/src/components/indicators/animation/loading_animation_controller.dart';
-import 'package:rhizu/src/components/indicators/animation/spring_curve.dart';
-import 'package:rhizu/src/components/indicators/constants.dart';
-import 'package:rhizu/src/components/indicators/painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/loading_animation_controller.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
 
 export 'shapes/shape_type.dart';
 

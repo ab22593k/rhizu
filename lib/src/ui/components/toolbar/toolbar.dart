@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:rhizu/src/components/buttons/split_button.dart';
-import 'package:rhizu/src/components/fab_menu.dart';
-import 'package:rhizu/src/components/indicators/progress.dart' as rhizu;
-import 'package:rhizu/src/styles/theme/extension.dart';
+import 'package:rhizu/src/ui/components/buttons/split_button.dart';
+import 'package:rhizu/src/ui/components/fab_menu.dart';
+import 'package:rhizu/src/ui/components/indicators/progress.dart' as rhizu;
+import 'package:rhizu/src/ui/styles/theme/extension.dart';
 
 /// The type of [RZToolbar].
 enum ToolbarType {

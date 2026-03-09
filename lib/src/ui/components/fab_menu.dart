@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/styles/theme/extension.dart';
+import 'package:rhizu/src/ui/styles/theme/extension.dart';
 
 /// Data class for a menu item in the FAB Menu.
 class RZFabMenuItem {

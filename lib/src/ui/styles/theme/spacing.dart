@@ -1,4 +1,4 @@
-import 'package:rhizu/src/foundation/window_size_class.dart';
+import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 class RZSpacing {
   static double margin(WindowSizeClass sizeClass) {

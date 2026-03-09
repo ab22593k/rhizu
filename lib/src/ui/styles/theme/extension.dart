@@ -1,9 +1,9 @@
 import 'dart:ui' show lerpDouble;
 
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/styles/elevation/tokens.dart';
-import 'package:rhizu/src/styles/motion/tokens.dart';
-import 'package:rhizu/src/styles/shapes/tokens.dart';
+import 'package:rhizu/src/ui/styles/elevation/tokens.dart';
+import 'package:rhizu/src/ui/styles/motion/tokens.dart';
+import 'package:rhizu/src/ui/styles/shapes/tokens.dart';
 
 @immutable
 class RZElevation extends ThemeExtension<RZElevation> {

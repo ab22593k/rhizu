@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/indicators/painter/morphing_shape_painter.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
+import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
 void main() {
   test('MorphingShapePainter accepts scale parameter', () {

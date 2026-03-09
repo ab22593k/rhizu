@@ -1,5 +1,5 @@
-import 'package:rhizu/src/components/indicators/shapes/polar_shape.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/polar_shape.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
 /// A registry of all available shapes for the loading indicator.
 ///

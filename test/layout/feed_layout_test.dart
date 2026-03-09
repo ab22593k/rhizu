@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/toolbar/toolbar.dart';
-import 'package:rhizu/src/foundation/layout/feed.dart';
+import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/layout/feed.dart';
 
 void main() {
   group('FeedLayout', () {

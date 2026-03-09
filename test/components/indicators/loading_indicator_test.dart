@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/indicators/constants.dart';
-import 'package:rhizu/src/components/indicators/morphing.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/morphing.dart';
 
 void main() {
   group('MorphingLI', () {

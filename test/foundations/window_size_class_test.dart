@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/foundation/window_size_class.dart';
+import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 void main() {
   group('WindowSizeClass', () {

@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/indicators/animation/spring_curve.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
 
 void main() {
   group('SpringCurve', () {

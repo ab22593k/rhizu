@@ -1,4 +1,4 @@
-import 'package:rhizu/src/styles/shapes/tokens.dart';
+import 'package:rhizu/src/ui/styles/shapes/tokens.dart';
 
 /// Shape System.
 class ShapeScale {

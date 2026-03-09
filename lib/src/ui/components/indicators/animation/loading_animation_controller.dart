@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import 'package:rhizu/src/components/indicators/constants.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
 /// Controller for the loading indicator animation.
 ///

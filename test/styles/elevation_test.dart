@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/styles/elevation/tokens.dart';
+import 'package:rhizu/src/ui/styles/elevation/tokens.dart';
 
 void main() {
   group('ElevationTokens', () {

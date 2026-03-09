@@ -3,7 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/rhizu.dart';
-import 'package:rhizu/src/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
 
 /// Re-exports the painters used by the progress indicator widgets.
 ///

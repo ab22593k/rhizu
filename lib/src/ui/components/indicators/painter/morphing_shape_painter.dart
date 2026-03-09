@@ -3,9 +3,9 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:rhizu/src/components/indicators/constants.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_registry.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
 /// A custom painter that renders a morphing shape animation.
 ///

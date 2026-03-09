@@ -1,9 +1,9 @@
 import 'dart:math' as math;
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:rhizu/src/components/indicators/shapes/polar_shape.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_registry.dart';
-import 'package:rhizu/src/components/indicators/shapes/shape_type.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/polar_shape.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
 void main() {
   group('ShapeType', () {
