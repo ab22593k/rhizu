@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:rhizu/rhizu.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
 
 /// Paints a flat (non-wavy) circular progress indicator.
 ///
@@ -18,6 +19,7 @@ class CircularFlatPainter extends CustomPainter {
     required this.track,
     required this.rotation,
     required this.size,
+    this.baseSpin = 0.0,
   });
 
   final double? value;
@@ -25,6 +27,7 @@ class CircularFlatPainter extends CustomPainter {
   final Color track;
   final double rotation;
   final ProgressIndicatorSize size;
+  final double baseSpin;
 
   @override
   void paint(Canvas canvas, Size s) {
@@ -39,18 +42,24 @@ class CircularFlatPainter extends CustomPainter {
 
     final isIndeterminate = value == null;
 
-    // Active sweep: grow and shrink for indeterminate
-    final sweep = isIndeterminate
-        ? math.pi * 2 * (0.1 + 0.7 * (math.sin(rotation * 2) + 1.0) / 2.0)
-        : (value!.clamp(0.0, 1.0) * math.pi * 2);
+    late final double activeStart;
+    late final double sweep;
 
-    final centerAngle = -math.pi / 2 + rotation;
-    final activeStart = isIndeterminate ? centerAngle - sweep / 2 : centerAngle;
-    final activeEnd = isIndeterminate
-        ? centerAngle + sweep / 2
-        : centerAngle + sweep;
+    if (isIndeterminate) {
+      // M3-spec two-arc asymmetric motion:
+      // rotation here represents the continuous count of elapsed arc cycles.
+      final (arcStart, arcSweep) = IndeterminateArcMotion.compute(rotation);
+      // Add baseSpin rotation as the continuous spinning offset.
+      activeStart = arcStart + baseSpin;
+      sweep = arcSweep;
+    } else {
+      sweep = value!.clamp(0.0, 1.0) * math.pi * 2;
+      activeStart = -math.pi / 2 + rotation;
+    }
 
-    // TRACK: full circle for indeterminate, gapped arc for determinate.
+    final activeEnd = activeStart + sweep;
+
+    // TRACK: gapped arc (hidden when active covers full circle).
     final trackPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = stroke
@@ -59,7 +68,6 @@ class CircularFlatPainter extends CustomPainter {
       ..color = track;
 
     const total = math.pi * 2;
-    // Hide track entirely if active stroke completely covers 100% (determinate)
     if (sweep < total * 0.999) {
       final a1 = activeEnd + gapAngle;
       final a2 = activeStart - gapAngle;
@@ -86,6 +94,7 @@ class CircularFlatPainter extends CustomPainter {
       active != old.active ||
       track != old.track ||
       rotation != old.rotation ||
+      baseSpin != old.baseSpin ||
       size != old.size;
 }
 
@@ -105,6 +114,7 @@ class CircularWavyPainter extends CustomPainter {
     required this.rotation,
     required this.size,
     required Path path,
+    this.baseSpin = 0.0,
     this.wavePhase = 0.0,
   }) : _path = path;
 
@@ -112,6 +122,7 @@ class CircularWavyPainter extends CustomPainter {
   final Color active;
   final Color track;
   final double rotation;
+  final double baseSpin;
   final ProgressIndicatorSize size;
   final Path _path;
 
@@ -146,15 +157,21 @@ class CircularWavyPainter extends CustomPainter {
 
     final isIndeterminate = value == null;
 
-    // Active sweep: grow and shrink for indeterminate.
-    final activeSweep = isIndeterminate
-        ? math.pi * 2 * (0.1 + 0.7 * (math.sin(rotation * 2) + 1.0) / 2.0)
-        : (value!.clamp(0.0, 1.0) * math.pi * 2);
-    final centerAngle = -math.pi / 2 + rotation;
-    final start = isIndeterminate ? centerAngle - activeSweep / 2 : centerAngle;
-    final end = isIndeterminate
-        ? centerAngle + activeSweep / 2
-        : centerAngle + activeSweep;
+    late final double start;
+    late final double end;
+    late final double activeSweep;
+
+    if (isIndeterminate) {
+      // M3-spec two-arc asymmetric motion.
+      final (arcStart, arcSweep) = IndeterminateArcMotion.compute(rotation);
+      start = arcStart + baseSpin;
+      activeSweep = arcSweep;
+      end = start + activeSweep;
+    } else {
+      activeSweep = value!.clamp(0.0, 1.0) * math.pi * 2;
+      start = -math.pi / 2 + rotation;
+      end = start + activeSweep;
+    }
 
     const total = math.pi * 2;
     if (activeSweep < total * 0.999) {
@@ -228,6 +245,7 @@ class CircularWavyPainter extends CustomPainter {
       active != old.active ||
       track != old.track ||
       rotation != old.rotation ||
+      baseSpin != old.baseSpin ||
       size != old.size ||
       wavePhase != old.wavePhase;
 }

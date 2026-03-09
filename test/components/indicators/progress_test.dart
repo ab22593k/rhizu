@@ -8,7 +8,7 @@ import 'package:rhizu/src/ui/components/indicators/progress.dart';
 void main() {
   group('Progress Indicators compliance tests', () {
     testWidgets(
-      'LinearProgressIndicator uses 1000ms animation duration for wavy',
+      'LinearProgressIndicator uses 2000ms animation duration for linear',
       (tester) async {
         await tester.pumpWidget(
           const Directionality(
@@ -26,7 +26,31 @@ void main() {
             .widget<RepeatingAnimationBuilder<double>>(repeatingBuilderFinder);
         expect(
           repeatingBuilder.duration,
-          equals(const Duration(milliseconds: 1800)),
+          equals(const Duration(milliseconds: 2000)),
+        );
+      },
+    );
+
+    testWidgets(
+      'CircularProgressIndicator uses (1333 * 2222)ms LCM animation duration for circular',
+      (tester) async {
+        await tester.pumpWidget(
+          const Directionality(
+            textDirection: TextDirection.ltr,
+            child: ProgressIndicator(),
+          ),
+        );
+
+        final repeatingBuilderFinder = find.byType(
+          RepeatingAnimationBuilder<double>,
+        );
+        expect(repeatingBuilderFinder, findsOneWidget);
+
+        final repeatingBuilder = tester
+            .widget<RepeatingAnimationBuilder<double>>(repeatingBuilderFinder);
+        expect(
+          repeatingBuilder.duration,
+          equals(const Duration(milliseconds: 1333 * 2222)),
         );
       },
     );

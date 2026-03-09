@@ -344,29 +344,42 @@ class _CircularProgressIndicatorState
         height: diameter,
         child: _shouldAnimate
             ? RepeatingAnimationBuilder<double>(
+                // 1333ms per arc cycle, 2222ms per rotation cycle.
+                // The LCM (1333 * 2222 = 2961926ms) ensures seamless wrapping.
                 duration: wantsWavy
-                    ? const Duration(milliseconds: 2800)
-                    : const Duration(milliseconds: 2400),
-                animatable: Tween(begin: 0.0, end: 1.0),
-                builder: (context, animValue, child) {
-                  final animRad = animValue * 2 * math.pi;
+                    ? const Duration(
+                        milliseconds: 1333 * 2222,
+                      ) // keep simple, same LCM for wavy? Or maybe standard 1333 is fine? Wavy actually usually isn't M3, but we can standardize.
+                    : const Duration(milliseconds: 1333 * 2222),
+                animatable: Tween(begin: 0.0, end: 1333.0 * 2222.0),
+                builder: (context, totalMs, child) {
                   final isIndeterminate = widget.value == null;
+
+                  final arcCycles = totalMs / 1333.0;
+                  final spinAngle = (totalMs / 2222.0) * 2 * math.pi;
+
                   return CustomPaint(
                     painter: wantsWavy
                         ? CircularWavyPainter(
                             value: widget.value,
                             active: active,
                             track: track,
-                            rotation: isIndeterminate ? animRad : 0.0,
+                            rotation: isIndeterminate
+                                ? arcCycles
+                                : widget.rotation,
+                            baseSpin: isIndeterminate ? spinAngle : 0.0,
                             size: widget.size,
                             path: _path,
-                            wavePhase: animRad,
+                            wavePhase: (totalMs / 1000.0) * 2 * math.pi,
                           )
                         : CircularFlatPainter(
                             value: widget.value,
                             active: active,
                             track: track,
-                            rotation: animRad,
+                            rotation: isIndeterminate
+                                ? arcCycles
+                                : widget.rotation,
+                            baseSpin: isIndeterminate ? spinAngle : 0.0,
                             size: widget.size,
                           ),
                   );
@@ -464,9 +477,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
       width: double.infinity,
       child: _shouldAnimate
           ? RepeatingAnimationBuilder<double>(
-              duration: spec.isWavy
-                  ? const Duration(milliseconds: 1800)
-                  : const Duration(milliseconds: 2600),
+              duration: const Duration(milliseconds: 2000),
               animatable: Tween(begin: 0.0, end: 1.0),
               builder: (context, animValue, child) {
                 final phaseValue = animValue * 2 * math.pi;

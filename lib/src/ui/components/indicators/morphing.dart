@@ -304,7 +304,7 @@ Widget previewExpressiveLoaderContained() => MaterialApp(
                 ),
                 builder: (context, snapshot) {
                   final state = snapshot.connectionState == ConnectionState.done
-                      ? IndicatorState.success
+                      ? IndicatorState.error
                       : IndicatorState.loading;
                   return MorphingLoadingindicator.large(state: state);
                 },
@@ -344,16 +344,6 @@ Widget previewExpressiveLoaderContained() => MaterialApp(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
           ),
-          // Row 4: Error state
-          // Row(
-          //   mainAxisAlignment: MainAxisAlignment.center,
-          //   spacing: 24,
-          //   children: [
-          //     MorphingLoadingindicator.small(state: IndicatorState.error),
-          //     MorphingLoadingindicator.medium(state: IndicatorState.error),
-          //     MorphingLoadingindicator.large(state: IndicatorState.error),
-          //   ],
-          // ),
         ],
       ),
     ),
