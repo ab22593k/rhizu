@@ -13,6 +13,7 @@ export 'src/ui/components/scroll_physics.dart';
 export 'src/ui/components/toolbar/toolbar.dart';
 // Foundations
 export 'src/ui/foundation/layout/feed.dart';
+export 'src/ui/foundation/layout/landing.dart';
 export 'src/ui/foundation/layout/list_detail.dart';
 export 'src/ui/foundation/layout/supporting_pane.dart';
 export 'src/ui/foundation/navigation/adaptive_navigation_shell.dart';

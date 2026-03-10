@@ -1,31 +1,36 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/src/ui/components/toolbar/items.dart';
 import 'package:rhizu/src/ui/components/toolbar/placement.dart';
 import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
-/// A feed layout that adapts column count based on window size.
+/// A landing layout that stacks children vertically with a max width constraint.
 ///
 /// Integrated with [RZToolbar] to handle both actions and navigation
 /// on mobile and desktop.
-class FeedLayout extends StatefulWidget {
-  const FeedLayout({
-    required this.itemCount,
-    required this.itemBuilder,
+class RZLandingLayout extends StatefulWidget {
+  const RZLandingLayout({
+    required this.children,
     super.key,
-    this.childAspectRatio = 0.8,
+    this.maxWidth = 800.0,
+    this.padding = const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     this.toolbar,
     this.destinations,
     this.selectedIndex,
     this.onDestinationSelected,
-    this.header,
   });
 
-  final int itemCount;
-  final IndexedWidgetBuilder itemBuilder;
-  final double childAspectRatio;
+  /// The vertical list of widgets to display.
+  final List<Widget> children;
 
-  /// An optional [RZToolbar] to display with the feed.
+  /// The maximum width of the content.
+  final double maxWidth;
+
+  /// The content padding.
+  final EdgeInsets padding;
+
+  /// An optional [RZToolbar] to display with the landing layout.
   final RZToolbar? toolbar;
 
   /// Optional navigation destinations to be integrated into the toolbar.
@@ -37,48 +42,17 @@ class FeedLayout extends StatefulWidget {
   /// Called when a navigation destination is selected.
   final ValueChanged<int>? onDestinationSelected;
 
-  /// An optional header widget displayed above the grid.
-  final Widget? header;
-
   @override
-  State<FeedLayout> createState() => _FeedLayoutState();
+  State<RZLandingLayout> createState() => _RZLandingLayoutState();
 }
 
-class _FeedLayoutState extends State<FeedLayout> {
-  late int? _cachedCrossAxisCount;
-  double? _cachedWidth;
-
-  int _getCrossAxisCount(double width) {
-    if (_cachedWidth != null && width == _cachedWidth) {
-      return _cachedCrossAxisCount!;
-    }
-
-    _cachedWidth = width;
-    final sizeClass = WindowSizeClass.fromWidth(width);
-
-    switch (sizeClass) {
-      case WindowSizeClass.compact:
-        _cachedCrossAxisCount = 1;
-      case WindowSizeClass.medium:
-        _cachedCrossAxisCount = 1;
-      case WindowSizeClass.expanded:
-        _cachedCrossAxisCount = 2;
-      case WindowSizeClass.large:
-        _cachedCrossAxisCount = 3;
-      case WindowSizeClass.extraLarge:
-        _cachedCrossAxisCount = 4;
-    }
-
-    return _cachedCrossAxisCount!;
-  }
-
+class _RZLandingLayoutState extends State<RZLandingLayout> {
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final width = constraints.maxWidth;
         final sizeClass = WindowSizeClass.fromWidth(width);
-        final crossAxisCount = _getCrossAxisCount(width);
 
         // Calculate bottom padding for toolbar avoidance
         final bottomPadding =
@@ -86,38 +60,28 @@ class _FeedLayoutState extends State<FeedLayout> {
             ? (sizeClass == WindowSizeClass.compact ? 80.0 : 100.0)
             : 16.0;
 
-        final grid = GridView.builder(
-          padding: EdgeInsets.only(
-            left: 16,
-            right: 16,
-            top: 16,
-            bottom: bottomPadding,
+        final list = SingleChildScrollView(
+          padding: widget.padding.copyWith(
+            bottom: widget.padding.bottom + bottomPadding,
           ),
-          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: widget.childAspectRatio,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
+          physics: const AlwaysScrollableScrollPhysics(
+            parent: BouncingScrollPhysics(),
           ),
-          itemCount: widget.itemCount,
-          itemBuilder: widget.itemBuilder,
+          child: Center(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(maxWidth: widget.maxWidth),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: widget.children,
+              ),
+            ),
+          ),
         );
 
         final destinations = widget.destinations;
         final toolbar = widget.toolbar;
 
-        Widget content = grid;
-        if (widget.header != null) {
-          content = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              widget.header!,
-              Expanded(child: grid),
-            ],
-          );
-        }
-
-        if (toolbar == null && destinations == null) return content;
+        if (toolbar == null && destinations == null) return list;
 
         final effectiveToolbar = RZToolbar(
           style: toolbar?.style ?? ToolbarStyle.standard,
@@ -141,7 +105,7 @@ class _FeedLayoutState extends State<FeedLayout> {
 
         return Stack(
           children: [
-            content,
+            list,
             AdaptiveToolbarPlacement(
               sizeClass: sizeClass,
               toolbar: effectiveToolbar,
@@ -151,4 +115,30 @@ class _FeedLayoutState extends State<FeedLayout> {
       },
     );
   }
+}
+
+@Preview(name: 'Landing Layout - With Navigation')
+Widget rzLandingLayoutWithNav() {
+  return RZLandingLayout(
+    destinations: const [
+      NavigationDestination(icon: Icon(Icons.home), label: 'Home'),
+      NavigationDestination(icon: Icon(Icons.search), label: 'Search'),
+      NavigationDestination(icon: Icon(Icons.person), label: 'Profile'),
+    ],
+    selectedIndex: 0,
+    children: [
+      ...List.generate(
+        5,
+        (index) => Container(
+          height: 150,
+          margin: const EdgeInsets.only(bottom: 16),
+          decoration: BoxDecoration(
+            color: Colors.grey[200],
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: Center(child: Text('Feature $index')),
+        ),
+      ),
+    ],
+  );
 }
