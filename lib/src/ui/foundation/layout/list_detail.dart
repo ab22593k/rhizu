@@ -10,7 +10,7 @@ import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 class RZListDetailLayout extends StatefulWidget {
   const RZListDetailLayout({
     required this.list,
-    required this.detail,
+    this.detail,
     super.key,
     this.isDetailVisible = false,
     this.listFlex = 1,
@@ -23,7 +23,7 @@ class RZListDetailLayout extends StatefulWidget {
   });
 
   final Widget list;
-  final Widget detail;
+  final Widget? detail;
   final bool isDetailVisible;
   final int listFlex;
   final int detailFlex;
@@ -74,9 +74,10 @@ class _RZListDetailLayoutState extends State<RZListDetailLayout> {
         final sizeClass = WindowSizeClass.fromWidth(width);
         final isCompact = _isCompact(width);
 
-        if (isCompact) {
-          final content = widget.isDetailVisible ? widget.detail : widget.list;
-          final toolbar = widget.isDetailVisible
+        if (isCompact || widget.detail == null) {
+          final showDetail = widget.isDetailVisible && widget.detail != null;
+          final content = showDetail ? widget.detail! : widget.list;
+          final toolbar = showDetail
               ? widget.detailToolbar
               : widget.listToolbar;
 
@@ -105,7 +106,7 @@ class _RZListDetailLayoutState extends State<RZListDetailLayout> {
 
           final bottomPadding = effectiveToolbar != null ? 80.0 : 0.0;
 
-          return Stack(
+          final Widget body = Stack(
             children: [
               Padding(
                 padding: EdgeInsets.only(bottom: bottomPadding),
@@ -118,6 +119,17 @@ class _RZListDetailLayoutState extends State<RZListDetailLayout> {
                 ),
             ],
           );
+
+          if (!isCompact && widget.detail == null) {
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 840),
+                child: body,
+              ),
+            );
+          }
+          
+          return body;
         } else {
           return Row(
             children: [
@@ -136,7 +148,7 @@ class _RZListDetailLayoutState extends State<RZListDetailLayout> {
               Expanded(
                 flex: widget.detailFlex,
                 child: _PaneWithToolbar(
-                  content: widget.detail,
+                  content: widget.detail!,
                   toolbar: widget.detailToolbar,
                   sizeClass: sizeClass,
                 ),
