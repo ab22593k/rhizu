@@ -6,11 +6,11 @@ enum WindowSizeClass {
   extraLarge
   ;
 
-  static WindowSizeClass fromWidth(double width) {
-    if (width < 600) return WindowSizeClass.compact;
-    if (width < 840) return WindowSizeClass.medium;
-    if (width < 1200) return WindowSizeClass.expanded;
-    if (width < 1600) return WindowSizeClass.large;
-    return WindowSizeClass.extraLarge;
-  }
+  static WindowSizeClass fromWidth(double width) => switch (width) {
+    < 600 => WindowSizeClass.compact,
+    < 840 => WindowSizeClass.medium,
+    < 1200 => WindowSizeClass.expanded,
+    < 1600 => WindowSizeClass.large,
+    _ => WindowSizeClass.extraLarge,
+  };
 }

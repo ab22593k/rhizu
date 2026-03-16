@@ -384,17 +384,11 @@ Widget bentoGridDashboard() {
             ),
           );
         },
-        spanBuilder: (index) {
-          switch (index) {
-            case 0:
-              return const BentoSpan(crossAxis: 2, mainAxis: 2);
-            case 1:
-              return const BentoSpan(crossAxis: 2);
-            case 2:
-              return const BentoSpan(mainAxis: 2);
-            default:
-              return const BentoSpan();
-          }
+        spanBuilder: (index) => switch (index) {
+          0 => const BentoSpan(crossAxis: 2, mainAxis: 2),
+          1 => const BentoSpan(crossAxis: 2),
+          2 => const BentoSpan(mainAxis: 2),
+          _ => const BentoSpan(),
         },
       ),
     ),

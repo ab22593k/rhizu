@@ -128,7 +128,7 @@ class _RZListDetailLayoutState extends State<RZListDetailLayout> {
               ),
             );
           }
-          
+
           return body;
         } else {
           return Row(

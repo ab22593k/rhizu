@@ -46,16 +46,15 @@ class IndeterminateArcMotion {
     final cycleCount = cycles.floor();
     final cycleT = cycles - cycleCount;
 
-    // --- Head offset (ease-out) ---
-    // First half (0→0.5): head expands rapidly, decelerating.
-    // Second half (0.5→1): head holds at maximum.
-    final headRaw = cycleT < 0.5 ? cycleT * 2.0 : 1.0;
-    final headT = Curves.easeOut.transform(headRaw);
+    // --- Head and Tail offsets (Asymmetric motion) ---
+    // First half (0→0.5): head expands rapidly (ease-out), tail stationary.
+    // Second half (0.5→1.0): head holds, tail catches up rapidly (ease-in).
+    final (headRaw, tailRaw) = switch (cycleT) {
+      < 0.5 => (cycleT * 2.0, 0.0),
+      _ => (1.0, (cycleT - 0.5) * 2.0),
+    };
 
-    // --- Tail offset (ease-in, delayed) ---
-    // First half (0→0.5): tail stays at zero.
-    // Second half (0.5→1): tail catches up, accelerating.
-    final tailRaw = cycleT < 0.5 ? 0.0 : (cycleT - 0.5) * 2.0;
+    final headT = Curves.easeOut.transform(headRaw);
     final tailT = Curves.easeIn.transform(tailRaw);
 
     // Compute head and tail angular offsets from the cycle start.

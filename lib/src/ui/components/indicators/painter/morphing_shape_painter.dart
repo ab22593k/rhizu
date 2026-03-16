@@ -78,8 +78,10 @@ class MorphingShapePainter extends CustomPainter {
     const steps = LoadingIndicatorConstants.shapeResolution;
 
     // Get polar shape definitions from registry
-    final currentPolarShape = ShapeRegistry.get(currentShape);
-    final nextPolarShape = ShapeRegistry.get(nextShape);
+    final (currentPolarShape, nextPolarShape) = (
+      ShapeRegistry.get(currentShape),
+      ShapeRegistry.get(nextShape),
+    );
 
     // Calculate all points first (reusing pooled list)
     for (var i = 0; i <= steps; i++) {
@@ -94,9 +96,7 @@ class MorphingShapePainter extends CustomPainter {
       final r = lerpDouble(r1, r2, progress)!;
 
       // Convert polar to Cartesian coordinates
-      final x = r * math.cos(theta);
-      final y = r * math.sin(theta);
-      _points[i] = Offset(x, y);
+      _points[i] = Offset(r * math.cos(theta), r * math.sin(theta));
     }
 
     // Build the path from calculated points

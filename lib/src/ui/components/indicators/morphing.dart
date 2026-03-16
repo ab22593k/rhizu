@@ -144,6 +144,8 @@ class MorphingLoadingindicator extends StatefulWidget {
 
 class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     with TickerProviderStateMixin {
+  static const _springCurve = SpringCurve();
+
   late final LoadingAnimationController _animationController;
 
   /// Pooled Path object to avoid allocation on every frame.
@@ -176,13 +178,13 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    final isContained = widget.containment == Containment.contained;
-    final indicatorColor = isContained
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.primary;
-    final containerColor = isContained
-        ? colorScheme.primaryContainer
-        : Colors.transparent;
+    final (indicatorColor, containerColor) = switch (widget.containment) {
+      Containment.simple => (colorScheme.primary, Colors.transparent),
+      Containment.contained => (
+        colorScheme.onPrimaryContainer,
+        colorScheme.primaryContainer,
+      ),
+    };
 
     final scale = MediaQuery.textScalerOf(context).scale(1.0);
     final scaledSize = widget.size * scale;
@@ -231,7 +233,7 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
       key: const ValueKey(IndicatorState.loading),
       animation: _animationController.animation,
       builder: (context, child) {
-        final morphProgress = const SpringCurve().transform(
+        final morphProgress = _springCurve.transform(
           _animationController.morphValue,
         );
 
@@ -264,12 +266,19 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
 
   Widget _buildResultIcon(IndicatorState state, double clampedSize) {
     final colorScheme = Theme.of(context).colorScheme;
-    final iconData = state == IndicatorState.success
-        ? Icons.check_rounded
-        : Icons.close_rounded;
-    final iconColor = state == IndicatorState.success
-        ? colorScheme.onPrimaryContainer
-        : colorScheme.onErrorContainer;
+    final (iconData, iconColor) = switch (state) {
+      IndicatorState.success => (
+        Icons.check_rounded,
+        colorScheme.onPrimaryContainer,
+      ),
+      IndicatorState.error => (
+        Icons.close_rounded,
+        colorScheme.onErrorContainer,
+      ),
+      IndicatorState.loading => throw StateError(
+        'Cannot build result icon for loading state',
+      ),
+    };
 
     return Icon(
       key: ValueKey(state),

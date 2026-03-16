@@ -44,10 +44,10 @@ class RZAdaptiveNavigationShell extends StatelessWidget {
     // We delegate to expressive, adaptive implementations based on the class.
     return switch (windowClass) {
       WindowSizeClass.compact => _buildCompactNavigation(context),
-      WindowSizeClass.medium => _buildMediumNavigation(context, false),
-      WindowSizeClass.expanded => _buildMediumNavigation(context, true),
-      WindowSizeClass.large => _buildMediumNavigation(context, true),
-      WindowSizeClass.extraLarge => _buildMediumNavigation(context, true),
+      _ => _buildMediumNavigation(
+        context,
+        windowClass != WindowSizeClass.medium,
+      ),
     };
   }
 

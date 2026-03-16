@@ -45,24 +45,15 @@ class ShapeRegistry {
   /// Creates a polar shape from its type.
   ///
   /// This factory method parses the SVG path data for each shape type.
-  static PolarShape _createShape(ShapeType type) {
-    switch (type) {
-      case ShapeType.softBurst:
-        return PolarShape.fromSvgPath(_softBurstPath);
-      case ShapeType.cookie9:
-        return PolarShape.fromSvgPath(_cookie9Path);
-      case ShapeType.pentagon:
-        return PolarShape.fromSvgPath(_pentagonPath);
-      case ShapeType.pill:
-        return PolarShape.fromSvgPath(_pillPath);
-      case ShapeType.sunny:
-        return PolarShape.fromSvgPath(_sunnyPath);
-      case ShapeType.cookie4:
-        return PolarShape.fromSvgPath(_cookie4Path);
-      case ShapeType.oval:
-        return PolarShape.fromSvgPath(_ovalPath);
-    }
-  }
+  static PolarShape _createShape(ShapeType type) => switch (type) {
+    ShapeType.softBurst => PolarShape.fromSvgPath(_softBurstPath),
+    ShapeType.cookie9 => PolarShape.fromSvgPath(_cookie9Path),
+    ShapeType.pentagon => PolarShape.fromSvgPath(_pentagonPath),
+    ShapeType.pill => PolarShape.fromSvgPath(_pillPath),
+    ShapeType.sunny => PolarShape.fromSvgPath(_sunnyPath),
+    ShapeType.cookie4 => PolarShape.fromSvgPath(_cookie4Path),
+    ShapeType.oval => PolarShape.fromSvgPath(_ovalPath),
+  };
 }
 
 // ============================================================================

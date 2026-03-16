@@ -66,14 +66,14 @@ class PolarShape {
         // Transform coordinates: SVG (0..380) -> Local (-19..19)
         // Center is assumed to be at 190.0, 190.0 in SVG space
         // Scale factor: 19.0 / 190.0 = 0.1
-        final x = (tangent.position.dx - 190.0) * 0.1;
-        final y = (tangent.position.dy - 190.0) * 0.1;
+        final (x, y) = (
+          (tangent.position.dx - 190.0) * 0.1,
+          (tangent.position.dy - 190.0) * 0.1,
+        );
 
         final r = math.sqrt(x * x + y * y);
-        var theta = math.atan2(y, x);
-
         // Normalize theta to [0, 2*pi)
-        if (theta < 0) theta += 2 * math.pi;
+        final theta = math.atan2(y, x) % (2 * math.pi);
 
         final index = (theta / (2 * math.pi) * 360).round() % 360;
 
@@ -138,11 +138,7 @@ class PolarShape {
   /// The [scale] parameter allows resizing the shape. Defaults to 1.0.
   double getRadius(double theta, {double scale = 1.0}) {
     // Normalize angle to [0, 2*pi)
-    theta = theta % (2 * math.pi);
-    if (theta < 0) theta += 2 * math.pi;
-
-    // Convert angle to position in the radii array
-    final pos = theta / (2 * math.pi) * 360;
+    final pos = (theta % (2 * math.pi)) / (2 * math.pi) * 360;
     final index1 = pos.floor() % 360;
     final index2 = (index1 + 1) % 360;
     final t = pos - pos.floor();
