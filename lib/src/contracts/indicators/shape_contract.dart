@@ -62,8 +62,7 @@ enum ShapeType implements ShapeContract {
     id: 'oval',
     svgPath: '',
     displayName: 'Oval',
-  )
-  ;
+  );
 
   const ShapeType({
     required this.id,

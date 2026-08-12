@@ -16,13 +16,12 @@ class LoadingAnimationController {
   ///
   /// [vsync] provides the ticker for the animation controllers.
   /// [shapeSequence] defines the order of shape morphing (defaults to [defaultShapeSequence]).
-  /// [onShapeChange] is called when the shape sequence advances to the next shape.
+  /// [_onShapeChange] is called when the shape sequence advances to the next shape.
   LoadingAnimationController({
     required TickerProvider vsync,
     List<ShapeType>? shapeSequence,
-    VoidCallback? onShapeChange,
-  }) : _shapeSequence = shapeSequence ?? defaultShapeSequence,
-       _onShapeChange = onShapeChange {
+    this._onShapeChange,
+  }) : _shapeSequence = shapeSequence ?? defaultShapeSequence {
     // Global Rotation: 360 degrees every rotationDuration (Linear)
     _rotationController = AnimationController(
       vsync: vsync,

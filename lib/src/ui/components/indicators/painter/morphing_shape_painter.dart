@@ -25,11 +25,10 @@ class MorphingShapePainter extends CustomPainter {
     required this.nextShape,
     required this.progress,
     required this.rotation,
-    required Path path,
-    required List<Offset> points,
+    required this._path,
+    required this._points,
     this.scale = 1.0,
-  }) : _path = path,
-       _points = points;
+  });
 
   final Path _path;
   final List<Offset> _points;

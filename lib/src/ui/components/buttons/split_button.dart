@@ -9,8 +9,7 @@ enum SplitButtonSize {
   sm,
   md,
   lg,
-  xl
-  ;
+  xl;
 
   double get height {
     switch (this) {

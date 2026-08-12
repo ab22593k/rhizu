@@ -113,10 +113,10 @@ class CircularWavyPainter extends CustomPainter {
     required this.track,
     required this.rotation,
     required this.size,
-    required Path path,
+    required this._path,
     this.baseSpin = 0.0,
     this.wavePhase = 0.0,
-  }) : _path = path;
+  });
 
   final double? value;
   final Color active;
@@ -259,8 +259,8 @@ class LinearPainter extends CustomPainter {
     required this.track,
     required this.phase,
     required this.inset,
-    required Path path,
-  }) : _path = path;
+    required this._path,
+  });
 
   final double? value;
   final LinearSpecs spec;
