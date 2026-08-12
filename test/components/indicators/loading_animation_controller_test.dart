@@ -97,10 +97,13 @@ void main() {
       );
 
       expect(controller.currentShape, equals(ShapeType.circle));
-      expect(controller.nextShape, equals(ShapeType.triangle));
-
-      // The first frame only establishes the ticker start time; a second
-      // frame past the morph duration completes the transition.
+      expect(
+        controller.nextShape,
+        equals(ShapeType.triangle),
+      ); // The first frame only establishes the ticker start time; a second
+      // frame past the morph duration completes the transition. The extra
+      // 50ms is deliberate: under fake async the restart scheduled by the
+      // completed forward() starts from a fresh ticker start time.
       await tester.pump();
       await tester.pump(
         LoadingIndicatorConstants.morphDuration +

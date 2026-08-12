@@ -6,6 +6,8 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
+import 'package:rhizu/src/contracts/indicators/indicator_contract.dart'
+    show Containment;
 import 'package:rhizu/src/ui/components/indicators/animation/loading_animation_controller.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
@@ -14,46 +16,11 @@ import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
 import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 import 'package:rhizu/src/ui/styles/motion/fallbacks.dart';
 
+// Canonical definitions live in the contracts; re-exported so the public
+// barrel keeps exposing them through this widget file.
+export 'package:rhizu/src/contracts/indicators/indicator_contract.dart'
+    show Containment;
 export 'shapes/shape_type.dart';
-
-/// Defines how the loading indicator is visually contained.
-///
-/// This affects both the background styling and the color
-/// scheme applied to the indicator.
-enum Containment {
-  /// Simple loading indicator without a container.
-  ///
-  /// Uses the theme's primary color for the indicator.
-  /// No background container is shown.
-  simple,
-
-  /// Contained loading indicator with a circular container.
-  ///
-  /// Uses the theme's primaryContainer color for the background
-  /// and onPrimaryContainer color for the indicator.
-  contained,
-}
-
-/// The state of a morphing loading indicator.
-///
-/// Controls whether the indicator is actively loading, or has
-/// finished with a success or error result.
-enum IndicatorState {
-  /// The indicator is actively loading (morphing animation plays).
-  loading,
-
-  /// The operation completed successfully.
-  ///
-  /// The morphing shape crossfades into a checkmark icon with
-  /// an expressive spring animation.
-  success,
-
-  /// The operation failed.
-  ///
-  /// The morphing shape crossfades into an X/close icon with
-  /// an expressive spring animation.
-  error,
-}
 
 /// Loading indicators show the progress for a short wait time.
 ///
@@ -87,26 +54,17 @@ enum IndicatorState {
 ///     ShapeType.flower,
 ///   ],
 /// )
-///
-/// // Transition to success state
-/// MorphingLoadingindicator(state: IndicatorState.success)
-///
-/// // Transition to error state
-/// MorphingLoadingindicator(state: IndicatorState.error)
 /// ```
 class MorphingLoadingindicator extends StatefulWidget {
   /// Creates a loading indicator.
   ///
   /// The [containment] parameter controls the visual presentation.
-  /// The [state] parameter controls whether the indicator shows the
-  /// loading animation, a success checkmark, or an error X.
   /// The [shapeSequence] parameter controls which [ShapeType]s the indicator
   /// morphs through while loading.
   const MorphingLoadingindicator({
     super.key,
     this.containment = Containment.simple,
     this.size = LoadingIndicatorConstants.defaultContainerSize,
-    this.state = IndicatorState.loading,
     this.shapeSequence = defaultShapeSequence,
   });
 
@@ -114,7 +72,6 @@ class MorphingLoadingindicator extends StatefulWidget {
   const MorphingLoadingindicator.small({
     super.key,
     this.containment = Containment.simple,
-    this.state = IndicatorState.loading,
     this.shapeSequence = defaultShapeSequence,
   }) : size = LoadingIndicatorConstants.minContainerSize;
 
@@ -122,7 +79,6 @@ class MorphingLoadingindicator extends StatefulWidget {
   const MorphingLoadingindicator.medium({
     super.key,
     this.containment = Containment.simple,
-    this.state = IndicatorState.loading,
     this.shapeSequence = defaultShapeSequence,
   }) : size = LoadingIndicatorConstants.defaultContainerSize;
 
@@ -130,7 +86,6 @@ class MorphingLoadingindicator extends StatefulWidget {
   const MorphingLoadingindicator.large({
     super.key,
     this.containment = Containment.simple,
-    this.state = IndicatorState.loading,
     this.shapeSequence = defaultShapeSequence,
   }) : size = 96.0;
 
@@ -138,7 +93,6 @@ class MorphingLoadingindicator extends StatefulWidget {
   const MorphingLoadingindicator.extraLarge({
     super.key,
     this.containment = Containment.simple,
-    this.state = IndicatorState.loading,
     this.shapeSequence = defaultShapeSequence,
   }) : size = 144.0;
 
@@ -157,13 +111,6 @@ class MorphingLoadingindicator extends StatefulWidget {
   /// The size is independent of the ambient text scale factor; increasing
   /// the system font size does not grow the indicator.
   final double size;
-
-  /// The current state of the indicator.
-  ///
-  /// Defaults to [IndicatorState.loading].
-  /// When changed to [IndicatorState.success] or [IndicatorState.error],
-  /// the morphing animation will crossfade into the appropriate icon.
-  final IndicatorState state;
 
   /// The sequence of [ShapeType]s the indicator morphs through.
   ///
@@ -266,15 +213,8 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
       LoadingIndicatorConstants.maxContainerSize,
     );
 
-    // Determine the container color based on state
-    final effectiveContainerColor = switch (widget.state) {
-      IndicatorState.loading => containerColor,
-      IndicatorState.success => colorScheme.primaryContainer,
-      IndicatorState.error => colorScheme.errorContainer,
-    };
-
     // Respect the user's reduced-motion preference: keep the morphing shape
-    // static and swap result states instantly instead of animating.
+    // static instead of animating.
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     // RepaintBoundary isolates the animation from parent repaints,
@@ -284,9 +224,11 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
         width: clampedSize,
         height: clampedSize,
         decoration: BoxDecoration(
-          color: effectiveContainerColor,
+          color: containerColor,
           shape: BoxShape.circle,
         ),
+        // Crossfades the placeholder into the morphing shape once the SVG
+        // shape assets finish loading.
         child: AnimatedSwitcher(
           duration: disableAnimations
               ? Duration.zero
@@ -299,15 +241,13 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
               child: ScaleTransition(scale: animation, child: child),
             );
           },
-          child: widget.state == IndicatorState.loading
-              ? ShapeRegistry.isReady
-                    ? _buildMorphingAnimation(
-                        indicatorColor,
-                        clampedSize,
-                        staticShape: disableAnimations,
-                      )
-                    : _buildShapePlaceholder(indicatorColor, clampedSize)
-              : _buildResultIcon(widget.state, clampedSize),
+          child: ShapeRegistry.isReady
+              ? _buildMorphingAnimation(
+                  indicatorColor,
+                  clampedSize,
+                  staticShape: disableAnimations,
+                )
+              : _buildShapePlaceholder(indicatorColor, clampedSize),
         ),
       ),
     );
@@ -322,7 +262,8 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     // rotation or morphing so the indicator stays visually identifiable.
     if (staticShape) {
       return CustomPaint(
-        key: const ValueKey(IndicatorState.loading),
+        key: const ValueKey('loading'),
+        size: Size.square(clampedSize),
         painter: _buildShapePainter(
           indicatorColor,
           clampedSize,
@@ -335,7 +276,7 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     }
 
     return AnimatedBuilder(
-      key: const ValueKey(IndicatorState.loading),
+      key: const ValueKey('loading'),
       animation: _animationController.animation,
       builder: (context, child) {
         final morphProgress = _springCurve.transform(
@@ -354,6 +295,7 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
         )!;
 
         return CustomPaint(
+          size: Size.square(clampedSize),
           painter: _buildShapePainter(
             indicatorColor,
             clampedSize,
@@ -396,34 +338,11 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
         (clampedSize / LoadingIndicatorConstants.defaultContainerSize);
     return CustomPaint(
       key: const ValueKey('shape-placeholder'),
+      size: Size.square(clampedSize),
       painter: _ShapePlaceholderPainter(
         color: indicatorColor,
         radius: glyphRadius,
       ),
-    );
-  }
-
-  Widget _buildResultIcon(IndicatorState state, double clampedSize) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final (iconData, iconColor) = switch (state) {
-      IndicatorState.success => (
-        Icons.check_rounded,
-        colorScheme.onPrimaryContainer,
-      ),
-      IndicatorState.error => (
-        Icons.close_rounded,
-        colorScheme.onErrorContainer,
-      ),
-      IndicatorState.loading => throw StateError(
-        'Cannot build result icon for loading state',
-      ),
-    };
-
-    return Icon(
-      key: ValueKey(state),
-      iconData,
-      size: clampedSize * 0.5,
-      color: iconColor,
     );
   }
 }
@@ -453,7 +372,7 @@ class _ShapePlaceholderPainter extends CustomPainter {
 }
 
 @Preview(name: 'Morphing Loading indicator', size: Size.fromHeight(500))
-Widget previewExpressiveLoaderContained() => MaterialApp(
+Widget previewExpressiveLoaderContained() => const MaterialApp(
   debugShowCheckedModeBanner: false,
   home: Scaffold(
     body: Center(
@@ -466,21 +385,10 @@ Widget previewExpressiveLoaderContained() => MaterialApp(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
             children: [
-              const MorphingLoadingindicator.small(),
-              const MorphingLoadingindicator.medium(),
-              const MorphingLoadingindicator.large(),
-              FutureBuilder<IndicatorState>(
-                future: Future.delayed(
-                  const Duration(seconds: 3),
-                  () => IndicatorState.error,
-                ),
-                builder: (context, snapshot) {
-                  final state = snapshot.connectionState == ConnectionState.done
-                      ? IndicatorState.error
-                      : IndicatorState.loading;
-                  return MorphingLoadingindicator.large(state: state);
-                },
-              ),
+              MorphingLoadingindicator.small(),
+              MorphingLoadingindicator.medium(),
+              MorphingLoadingindicator.large(),
+              MorphingLoadingindicator.extraLarge(),
             ],
           ),
           // Row 2: Contained (different sizes)
@@ -488,31 +396,22 @@ Widget previewExpressiveLoaderContained() => MaterialApp(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
             children: [
-              const MorphingLoadingindicator.small(
+              MorphingLoadingindicator.small(
                 containment: Containment.contained,
               ),
-              const MorphingLoadingindicator.medium(
+              MorphingLoadingindicator.medium(
                 containment: Containment.contained,
               ),
-              const MorphingLoadingindicator.large(
+              MorphingLoadingindicator.large(
                 containment: Containment.contained,
               ),
-              FutureBuilder<IndicatorState>(
-                future: Future.delayed(
-                  const Duration(seconds: 3),
-                  () => IndicatorState.success,
-                ),
-                builder: (context, snapshot) {
-                  final state = snapshot.connectionState == ConnectionState.done
-                      ? IndicatorState.success
-                      : IndicatorState.loading;
-                  return MorphingLoadingindicator.large(state: state);
-                },
+              MorphingLoadingindicator.extraLarge(
+                containment: Containment.contained,
               ),
             ],
           ),
           // Row 3: Custom shape sequences
-          const Row(
+          Row(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
             children: [

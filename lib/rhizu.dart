@@ -9,6 +9,7 @@ export 'src/ui/components/buttons/split_button.dart';
 export 'src/ui/components/fab_menu.dart';
 export 'src/ui/components/indicators/morphing.dart';
 export 'src/ui/components/indicators/progress.dart';
+export 'src/ui/components/indicators/refresh.dart';
 export 'src/ui/components/scroll_physics.dart';
 export 'src/ui/components/toolbar/toolbar.dart';
 // Foundations

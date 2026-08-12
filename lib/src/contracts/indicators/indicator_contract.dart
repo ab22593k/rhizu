@@ -20,27 +20,6 @@ enum Containment {
   contained,
 }
 
-/// The state of a morphing loading indicator.
-///
-/// Controls whether the indicator is actively loading, or has
-/// finished with a success or error result.
-enum IndicatorState {
-  /// The indicator is actively loading (morphing animation plays).
-  loading,
-
-  /// The operation completed successfully.
-  ///
-  /// The morphing shape crossfades into a checkmark icon with
-  /// an expressive spring animation.
-  success,
-
-  /// The operation failed.
-  ///
-  /// The morphing shape crossfades into an X/close icon with
-  /// an expressive spring animation.
-  error,
-}
-
 /// Contract for loading indicator behavior.
 ///
 /// This defines the interface that all loading indicator
@@ -51,9 +30,6 @@ abstract class LoadingIndicatorContract {
 
   /// How the indicator should be visually contained.
   Containment get containment;
-
-  /// The current state of the indicator.
-  IndicatorState get state;
 
   /// The sequence of shapes to morph through.
   List<ShapeType> get shapeSequence;

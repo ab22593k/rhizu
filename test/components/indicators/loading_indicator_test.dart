@@ -215,6 +215,33 @@ void main() async {
       expect(painter.nextShape, equals(ShapeType.heart));
     });
 
+    testWidgets('falls back to the default sequence for an empty list', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(body: MorphingLoadingindicator(shapeSequence: [])),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      expect(painter.currentShape, equals(defaultShapeSequence.first));
+    });
+
     testWidgets('renders with the full 35-shape library', (tester) async {
       await tester.pumpWidget(
         const MaterialApp(
@@ -311,34 +338,6 @@ void main() async {
               as MorphingShapePainter;
       expect(painter.progress, equals(0.0));
       expect(painter.rotation, equals(0.0));
-    });
-
-    testWidgets('switches state instantly under reduced motion', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        const MediaQuery(
-          data: MediaQueryData(disableAnimations: true),
-          child: MaterialApp(
-            home: Scaffold(body: MorphingLoadingindicator()),
-          ),
-        ),
-      );
-
-      await tester.pumpWidget(
-        const MediaQuery(
-          data: MediaQueryData(disableAnimations: true),
-          child: MaterialApp(
-            home: Scaffold(
-              body: MorphingLoadingindicator(state: IndicatorState.success),
-            ),
-          ),
-        ),
-      );
-
-      // No transition duration: the success icon appears immediately.
-      await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     });
 
     testWidgets('MorphingLoadingIndicator respects size parameter', (
@@ -476,104 +475,44 @@ void main() async {
         );
       },
     );
-  });
 
-  group('Containment', () {
-    test('has correct values', () {
-      expect(Containment.values, contains(Containment.simple));
-      expect(Containment.values, contains(Containment.contained));
-      expect(Containment.values.length, equals(2));
-    });
-  });
+    testWidgets('the morphing shape is painted at the container size', (
+      tester,
+    ) async {
+      // Regression: the shape CustomPaint lives inside an AnimatedSwitcher
+      // (a Stack with loose constraints); without an explicit size it would
+      // collapse to 0x0 and nothing would render.
+      await tester.pumpWidget(
+        const MaterialApp(home: Scaffold(body: MorphingLoadingindicator())),
+      );
+      await tester.pump();
 
-  group('IndicatorState', () {
-    test('has correct values', () {
-      expect(IndicatorState.values, contains(IndicatorState.loading));
-      expect(IndicatorState.values, contains(IndicatorState.success));
-      expect(IndicatorState.values, contains(IndicatorState.error));
-      expect(IndicatorState.values.length, equals(3));
-    });
+      final paintBox = tester.renderObject<RenderBox>(
+        find
+            .descendant(
+              of: find.byType(MorphingLoadingindicator),
+              matching: find.byType(CustomPaint),
+            )
+            .last,
+      );
+      expect(paintBox.size, equals(const Size(48.0, 48.0)));
 
-    testWidgets('transitions from loading to success', (tester) async {
-      // Start in loading state
+      // The size follows the container: same wiring for other sizes.
       await tester.pumpWidget(
         const MaterialApp(
-          home: Scaffold(
-            body: MorphingLoadingindicator(),
-          ),
+          home: Scaffold(body: MorphingLoadingindicator.large()),
         ),
       );
-
-      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
-      // Should still show CustomPaint for the morphing animation
-      expect(
-        find.descendant(
-          of: find.byType(MorphingLoadingindicator),
-          matching: find.byType(CustomPaint),
-        ),
-        findsOneWidget,
+      await tester.pump();
+      final largePaintBox = tester.renderObject<RenderBox>(
+        find
+            .descendant(
+              of: find.byType(MorphingLoadingindicator),
+              matching: find.byType(CustomPaint),
+            )
+            .last,
       );
-
-      // Transition to success
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: MorphingLoadingindicator(state: IndicatorState.success),
-          ),
-        ),
-      );
-
-      // Pump through the transition animation
-      await tester.pump(const Duration(milliseconds: 400));
-
-      // The success state should show an Icon (checkmark)
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
-    });
-
-    testWidgets('transitions from loading to error', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: MorphingLoadingindicator(),
-          ),
-        ),
-      );
-
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(
-            body: MorphingLoadingindicator(state: IndicatorState.error),
-          ),
-        ),
-      );
-
-      await tester.pump(const Duration(milliseconds: 400));
-
-      // The error state should show an Icon (close/X)
-      expect(find.byIcon(Icons.close_rounded), findsOneWidget);
-    });
-
-    testWidgets('success state uses correct color', (tester) async {
-      await tester.pumpWidget(
-        MaterialApp(
-          theme: ThemeData(
-            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
-          ),
-          home: const Scaffold(
-            body: MorphingLoadingindicator(state: IndicatorState.success),
-          ),
-        ),
-      );
-
-      // Let the transition complete
-      await tester.pump(const Duration(milliseconds: 400));
-
-      // Verify the icon is present
-      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
-
-      // The icon should use onPrimaryContainer or a custom success color
-      final icon = tester.widget<Icon>(find.byIcon(Icons.check_rounded));
-      expect(icon.color, isNotNull);
+      expect(largePaintBox.size, equals(const Size(96.0, 96.0)));
     });
 
     testWidgets('active indicator uses primary in simple mode (spec token)', (
@@ -657,17 +596,13 @@ void main() async {
       final decoration = container.decoration! as BoxDecoration;
       expect(decoration.color, equals(cs.primaryContainer));
     });
+  });
 
-    testWidgets('default state is loading', (tester) async {
-      await tester.pumpWidget(
-        const MaterialApp(
-          home: Scaffold(body: MorphingLoadingindicator()),
-        ),
-      );
-
-      // The default should be the morphing animation (no icon visible)
-      expect(find.byIcon(Icons.check_rounded), findsNothing);
-      expect(find.byIcon(Icons.close_rounded), findsNothing);
+  group('Containment', () {
+    test('has correct values', () {
+      expect(Containment.values, contains(Containment.simple));
+      expect(Containment.values, contains(Containment.contained));
+      expect(Containment.values.length, equals(2));
     });
   });
 }

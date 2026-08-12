@@ -66,12 +66,12 @@ void main() {
     });
 
     test('Expressive Shape Paths are correct', () {
-      expect(RZShapes.arch, 'assets/shapes/material_shape_arch.svg');
-      expect(RZShapes.boom, 'assets/shapes/material_shape_boom.svg');
-      expect(
-        RZShapes.flower,
-        'assets/shapes/material_shape_flower.svg',
-      );
+      // Rhizu is a package: assets must use the packages/<pkg>/ prefix so
+      // they resolve when consumed by another app (plain paths 404 on web).
+      const prefix = 'packages/rhizu/assets/shapes/';
+      expect(RZShapes.arch, '${prefix}material_shape_arch.svg');
+      expect(RZShapes.boom, '${prefix}material_shape_boom.svg');
+      expect(RZShapes.flower, '${prefix}material_shape_flower.svg');
     });
   });
 }

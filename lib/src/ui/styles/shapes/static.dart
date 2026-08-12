@@ -22,7 +22,13 @@ class ShapeScale {
 class RZShapes {
   const RZShapes._();
 
-  static const String _basePath = 'assets/shapes';
+  /// Base asset path for the shape SVGs.
+  ///
+  /// Rhizu is a package, so its assets must be addressed with the
+  /// `packages/<package>/` prefix; plain `assets/...` paths only resolve when
+  /// the package is the root app (e.g. in its own tests) and 404 on web when
+  /// consumed by another app.
+  static const String _basePath = 'packages/rhizu/assets/shapes';
 
   static const String arch = '$_basePath/material_shape_arch.svg';
   static const String arrow = '$_basePath/material_shape_arrow.svg';

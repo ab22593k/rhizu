@@ -56,8 +56,9 @@ class LoadingAnimationController {
   /// Replaces the shape sequence used by the morphing animation.
   ///
   /// The current index is clamped so the indicator keeps morphing from the
-  /// shape it is currently on. Passing an empty list restores
-  /// [defaultShapeSequence].
+  /// shape it is currently on. If a morph transition is already in flight it
+  /// continues toward the new sequence's next shape rather than restarting.
+  /// Passing an empty list restores [defaultShapeSequence].
   void setShapeSequence(List<ShapeType> sequence) {
     _shapeSequence = sequence.isEmpty
         ? defaultShapeSequence
