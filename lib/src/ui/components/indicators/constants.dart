@@ -2,6 +2,13 @@
 ///
 /// This class centralizes all magic numbers and configuration values
 /// to make them easier to maintain and customize.
+///
+/// Values follow the M3 Expressive loading indicator token set
+/// (`md.comp.loading-indicator`):
+///
+/// - `container.height` / `container.width` = 48dp
+/// - `active-indicator.size` = 38dp
+/// - `container.shape` = `md.sys.shape.corner.full`
 class LoadingIndicatorConstants {
   const LoadingIndicatorConstants._();
 
@@ -9,12 +16,16 @@ class LoadingIndicatorConstants {
   ///
   /// The container provides space for the animated indicator and any
   /// background styling (e.g., for contained mode).
+  ///
+  /// Spec: `md.comp.loading-indicator.container.height` = 48dp
   static const double containerSize = 48;
 
   /// The radius of the active loading indicator in logical pixels.
   ///
   /// The indicator occupies 38dp within the 48dp container,
   /// so the radius is 38 / 2 = 19.0.
+  ///
+  /// Spec: `md.comp.loading-indicator.active-indicator.size` = 38dp
   static const double indicatorRadius = 19;
 
   /// Minimum container size in logical pixels.
@@ -101,13 +112,30 @@ class WavyProgressConstants {
   /// Higher values create more peaks and troughs in the wave pattern.
   static const int defaultWaves = 12;
 
-  /// Default amplitude (height) of the wave in logical pixels.
+  /// Linear active indicator wave amplitude in logical pixels.
   ///
-  /// This determines how far the wave deviates from the base radius.
-  static const double defaultAmplitude = 2;
+  /// Spec: `md.comp.progress-indicator.linear.active-indicator.wave.amplitude` = 3dp
+  static const double defaultAmplitude = 3;
 
-  /// Default wave period (wavelength) in logical pixels.
-  static const double defaultWavePeriod = 48;
+  /// Linear active indicator wave wavelength in logical pixels.
+  ///
+  /// Spec: `md.comp.progress-indicator.linear.active-indicator.wave.wavelength` = 40dp
+  static const double defaultWavePeriod = 40;
+
+  /// Indeterminate linear active indicator wave wavelength in logical pixels.
+  ///
+  /// Spec: `md.comp.progress-indicator.linear.indeterminate.active-indicator.wave.wavelength` = 20dp
+  static const double indeterminateWavePeriod = 20;
+
+  /// Circular active indicator wave amplitude in logical pixels.
+  ///
+  /// Spec: `md.comp.progress-indicator.circular.active-indicator.wave.amplitude` = 1.6dp
+  static const double circularWaveAmplitude = 1.6;
+
+  /// Circular active indicator wave wavelength in logical pixels.
+  ///
+  /// Spec: `md.comp.progress-indicator.circular.active-indicator.wave.wavelength` = 15dp
+  static const double circularWavePeriod = 15;
 
   /// Default gap between the active indicator and track in logical pixels.
   static const double defaultTrackGap = 4;

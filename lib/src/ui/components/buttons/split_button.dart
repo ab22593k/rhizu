@@ -1,7 +1,10 @@
 import 'dart:math' as math;
 
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    hide CircularProgressIndicator, LinearProgressIndicator, ProgressIndicator;
 import 'package:flutter/widget_previews.dart';
+
+import 'package:rhizu/src/ui/components/indicators/progress.dart';
 
 /// Sizes for the Expressive Split Button.
 enum SplitButtonSize {
@@ -139,6 +142,7 @@ class SplitButton<T> extends StatefulWidget {
     this.leadingTooltip,
     this.trailingTooltip,
     this.enabled = true,
+    this.isLoading = false,
   }) : assert(
          items != null || menuBuilder != null,
          'Either items or menuBuilder must be provided',
@@ -157,6 +161,22 @@ class SplitButton<T> extends StatefulWidget {
   final String? leadingTooltip;
   final String? trailingTooltip;
   final bool enabled;
+
+  /// Whether the button is busy executing its primary action.
+  ///
+  /// When `true`, the leading segment shows an indeterminate loading
+  /// indicator in place of its icon (the label, if any, stays visible so the
+  /// button keeps its width), and both segments are non-interactive
+  /// (pressing the label does nothing and the trailing menu cannot open).
+  /// Any open menu is dismissed.
+  ///
+  /// Follows the M3 guidance for progress indicators in buttons:
+  /// - The active indicator uses the button's foreground (icon/label) color
+  ///   to keep at least 3:1 contrast with the container.
+  /// - The track is removed.
+  /// - Small sizes (XS/SM) use the flat shape; larger sizes use the wavy
+  ///   shape since it reads better at larger dimensions.
+  final bool isLoading;
 
   @override
   State<SplitButton<T>> createState() => _SplitButtonState<T>();
@@ -189,6 +209,17 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
   }
 
   @override
+  void didUpdateWidget(covariant SplitButton<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // When the action starts loading, close any open menu so the button can
+    // settle into its busy state. A rebuild follows this callback anyway, so
+    // the menu state is mutated directly rather than via setState.
+    if (widget.isLoading && !oldWidget.isLoading && _isMenuOpen) {
+      _dismissMenu();
+    }
+  }
+
+  @override
   void dispose() {
     _controller.dispose();
     super.dispose();
@@ -217,6 +248,11 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
       _isMenuOpen = false;
       _controller.reverse();
     });
+    _dismissMenu();
+  }
+
+  /// Removes the open menu overlay without triggering a rebuild.
+  void _dismissMenu() {
     _overlayEntry?.remove();
     _overlayEntry = null;
   }
@@ -320,6 +356,9 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
         .textStyle(context)
         ?.copyWith(color: foregroundColor);
 
+    // While loading, both segments become non-interactive.
+    final interactive = widget.enabled && !widget.isLoading;
+
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
@@ -350,14 +389,16 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
               child: Tooltip(
                 message: widget.leadingTooltip ?? '',
                 child: InkWell(
-                  onTap: widget.enabled ? widget.onPressed : null,
+                  onTap: interactive ? widget.onPressed : null,
                   child: Container(
                     height: height,
                     padding: _getLeadingPadding(widget.size),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (widget.leadingIcon != null) ...[
+                        if (widget.isLoading)
+                          _buildLoadingIndicator(foregroundColor)
+                        else if (widget.leadingIcon != null) ...[
                           Icon(
                             widget.leadingIcon,
                             size: widget.size.iconSize,
@@ -426,7 +467,7 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
                   child: Tooltip(
                     message: widget.trailingTooltip ?? '',
                     child: InkWell(
-                      onTap: widget.enabled ? _toggleMenu : null,
+                      onTap: interactive ? _toggleMenu : null,
                       child: Container(
                         height: height,
                         width: canMorph ? null : 48.0, // Fixed width for small
@@ -468,6 +509,30 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
           ],
         ),
       ),
+    );
+  }
+
+  /// Builds the indeterminate loading indicator shown while [SplitButton.isLoading].
+  ///
+  /// Per the M3 progress-indicator-in-button guidance:
+  /// - The active indicator matches the button's foreground color so it keeps
+  ///   at least 3:1 contrast against the container.
+  /// - The track is removed.
+  /// - Very small buttons use the flat shape (the wavy shape isn't legible at
+  ///   small sizes); larger buttons use the wavy shape.
+  Widget _buildLoadingIndicator(Color foregroundColor) {
+    final isSmall =
+        widget.size == SplitButtonSize.xs || widget.size == SplitButtonSize.sm;
+
+    return ProgressIndicator(
+      size: ProgressIndicatorSize.from(
+        diameter: widget.size.iconSize,
+      ),
+      shape: isSmall
+          ? ProgressIndicatorShape.flat
+          : ProgressIndicatorShape.wavy,
+      activeColor: foregroundColor,
+      trackColor: Colors.transparent,
     );
   }
 

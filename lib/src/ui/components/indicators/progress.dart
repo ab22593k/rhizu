@@ -50,11 +50,16 @@ class ProgressIndicatorSize {
     diameterWavy: 48.0,
   );
 
-  /// Medium size — 8dp linear thickness, 44dp circular flat diameter.
+  /// Medium size — 8dp linear thickness, 52dp circular flat diameter.
+  ///
+  /// Matches the spec's "thick" sample configuration
+  /// (`md.comp.progress-indicator.circular.thick.size` = 52dp). The wavy
+  /// container is derived from the baseline +8dp offset (48 = 40 + 8), so
+  /// thick wavy = 52 + 8 = 60dp.
   static const ProgressIndicatorSize m = ProgressIndicatorSize(
     thickness: 8.0,
-    diameterFlat: 44.0,
-    diameterWavy: 52.0,
+    diameterFlat: 52.0,
+    diameterWavy: 60.0,
   );
 
   /// Alias for backward compatibility (equivalent to [s]).
@@ -219,9 +224,17 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
   Widget build(BuildContext context) {
     final scale = MediaQuery.textScalerOf(context).scale(1.0);
     final scaledSize = widget.size.scaled(scale);
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     if (widget.value == null) {
       return _buildVariant(context, null, scaledSize, scale);
+    }
+
+    // Respect the user's reduced-motion preference: render the final value
+    // directly instead of running the expressive spring.
+    if (disableAnimations) {
+      _checkCompletion(widget.value!);
+      return _buildVariant(context, widget.value, scaledSize, scale);
     }
 
     // We animate the determinate value implicitly with motion physics.
@@ -320,6 +333,7 @@ class _CircularProgressIndicatorState
   }
 
   bool get _shouldAnimate {
+    if (MediaQuery.disableAnimationsOf(context)) return false;
     if (widget.rotation != 0.0) return false;
     final v = widget.value;
     if (v == null) return true;
@@ -331,8 +345,7 @@ class _CircularProgressIndicatorState
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final active = widget.activeColor ?? cs.primary;
-    final track =
-        widget.trackColor ?? cs.onSurfaceVariant.withValues(alpha: 0.24);
+    final track = widget.trackColor ?? cs.secondaryContainer;
     final wantsWavy = widget.shape == ProgressIndicatorShape.wavy;
     final diameter = wantsWavy
         ? widget.size.diameterWavy
@@ -448,6 +461,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
   }
 
   bool get _shouldAnimate {
+    if (MediaQuery.disableAnimationsOf(context)) return false;
     if (widget.phase != 0.0) return false;
     final v = widget.value;
     if (v == null) return true;
@@ -458,8 +472,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final active = widget.activeColor ?? theme.colorScheme.primary;
-    final track =
-        widget.trackColor ?? theme.colorScheme.surfaceContainerHighest;
+    final track = widget.trackColor ?? theme.colorScheme.secondaryContainer;
 
     final spec = specForLinear(
       size: widget.size,
@@ -580,13 +593,15 @@ class LinearSpecs {
     required this.isWavy,
     this.waveAmplitude = 0,
     this.wavePeriod = WavyProgressConstants.defaultWavePeriod,
+    this.indeterminateWavePeriod =
+        WavyProgressConstants.indeterminateWavePeriod,
   });
 
   /// Stroke height of active / track lines.
   final double trackHeight;
 
   /// Horizontal gap between active track end and inactive track start.
-  /// Spec: gap = thickness (4dp small, 8dp medium).
+  /// Spec: track-active-indicator-space = 4dp (fixed).
   final double gap;
 
   /// Diameter of the stop indicator dot (always 4dp).
@@ -607,18 +622,22 @@ class LinearSpecs {
 
   /// Wavelength of the wave (spec: 40dp).
   final double wavePeriod;
+
+  /// Wavelength of the wave in indeterminate mode (spec: 20dp).
+  final double indeterminateWavePeriod;
 }
 
 /// Builds [LinearSpecs] from the unified [ProgressIndicatorSize] and shape.
 ///
-/// Measurements taken from the M3 linear progress indicator spec:
+/// Measurements from the merged M3 progress indicator token set
+/// (`md.comp.progress-indicator.linear`):
 ///
-/// | Variant       | trackHeight | gap | dot⌀ | dotVOff | amp | λ  | H   |
-/// |---------------|-------------|-----|------|---------|-----|----|-----|
-/// | Flat  small   | 4           | 4   | 4    | 0       | —   | —  | 4   |
-/// | Flat  medium  | 8           | 8   | 4    | 2       | —   | —  | 8   |
-/// | Wavy  small   | 4           | 4   | 4    | 0       | 3   | 40 | 10  |
-/// | Wavy  medium  | 8           | 8   | 4    | 2       | 3   | 40 | 14  |
+/// | Variant      | Height | Gap | dot⌀ | dotVOff | amp | λ    | λ(indet) |
+/// |--------------|--------|-----|------|---------|-----|------|----------|
+/// | Flat  small  | 4      | 4   | 4    | 0       | —   | —    | —        |
+/// | Flat  medium | 8      | 4   | 4    | 2       | —   | —    | —        |
+/// | Wavy  small  | 10     | 4   | 4    | 0       | 3   | 40   | 20       |
+/// | Wavy  medium | 14     | 4   | 4    | 2       | 3   | 40   | 20       |
 LinearSpecs specForLinear({
   required ProgressIndicatorSize size,
   required ProgressIndicatorShape shape,
@@ -627,7 +646,7 @@ LinearSpecs specForLinear({
   final thickness = size.thickness;
   // Shared derived measurements.
   final dotDiameter = 4.0 * scale;
-  final gap = thickness; // spec: gap equals track height
+  final gap = 4.0 * scale; // spec: track-active-indicator-space = 4dp (fixed)
   final dotVerticalOffset =
       (thickness - dotDiameter) / 2; // 0 for 4dp, 2 for 8dp
 
@@ -649,8 +668,10 @@ LinearSpecs specForLinear({
         dotVerticalOffset: dotVerticalOffset,
         trailingMargin: gap + dotDiameter,
         isWavy: true,
-        waveAmplitude: 3 * scale,
-        wavePeriod: 40 * scale,
+        waveAmplitude: WavyProgressConstants.defaultAmplitude * scale,
+        wavePeriod: WavyProgressConstants.defaultWavePeriod * scale,
+        indeterminateWavePeriod:
+            WavyProgressConstants.indeterminateWavePeriod * scale,
       );
   }
 }

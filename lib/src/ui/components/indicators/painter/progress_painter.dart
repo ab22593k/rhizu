@@ -3,15 +3,16 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:rhizu/rhizu.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
+import 'package:rhizu/src/ui/components/indicators/constants.dart';
 
 /// Paints a flat (non-wavy) circular progress indicator.
 ///
-/// Spec measurements (from M3 circular progress indicator image):
+/// Spec measurements (merged M3 token set `md.comp.progress-indicator.circular`):
 ///
 /// | Variant      | Container ⌀ | Stroke | Gap | Stop ⌀ |
 /// |--------------|-------------|--------|-----|--------|
 /// | Flat  small  | 40          | 4      | 4   | 4      |
-/// | Flat  medium | 44          | 8      | 4   | 4      |
+/// | Flat  medium | 52          | 8      | 4   | 4      |
 class CircularFlatPainter extends CustomPainter {
   CircularFlatPainter({
     required this.value,
@@ -100,12 +101,15 @@ class CircularFlatPainter extends CustomPainter {
 
 /// Paints a wavy (squiggle) circular progress indicator.
 ///
-/// Spec measurements (from M3 circular progress indicator image):
+/// Spec measurements (merged M3 token set `md.comp.progress-indicator.circular`):
 ///
 /// | Variant      | Container ⌀ | Stroke | Gap | Amplitude | Scallop λ | Stop ⌀ |
 /// |--------------|-------------|--------|-----|-----------|-----------|--------|
 /// | Wavy  small  | 48          | 4      | 4   | 1.6       | 15        | 4      |
-/// | Wavy  medium | 52          | 8      | 4   | 1.6       | 15        | 4      |
+/// | Wavy  medium | 60*         | 8      | 4   | 1.6       | 15        | 4      |
+///
+/// *Derived from `circular.thick.size` (52dp) + the baseline wavy container
+/// offset (48 − 40 = 8dp).
 class CircularWavyPainter extends CustomPainter {
   CircularWavyPainter({
     required this.value,
@@ -138,7 +142,7 @@ class CircularWavyPainter extends CustomPainter {
     final center = s.center(Offset.zero);
 
     // Spec: wave amplitude = 1.6dp (radial deviation from base circle).
-    const amp = 1.6;
+    const amp = WavyProgressConstants.circularWaveAmplitude;
 
     // Base radius: account for wave amplitude + stroke so the
     // outermost wave peak + half-stroke stays within the container.
@@ -148,7 +152,7 @@ class CircularWavyPainter extends CustomPainter {
     final baseRadius = (math.min(s.width, s.height) - stroke) / 2 - amp;
 
     // Spec: scallop arc-length wavelength = 15dp.
-    const scallopLen = 15.0;
+    const scallopLen = WavyProgressConstants.circularWavePeriod;
     // Taper length to fade the wave to zero near the tip (gives a closed look).
     const taperLen = scallopLen / 2;
 
@@ -334,14 +338,15 @@ class LinearPainter extends CustomPainter {
       }
 
       // Stop dot at the end
-      // Dot gets rendered beneath the active layer, so when activeEndX sweeps past it at 100%,
+      // Spec: stop-indicator.color = md.sys.color.primary. The dot is drawn
+      // beneath the active layer, so when activeEndX sweeps past it at 100%,
       // it is cleanly absorbed into the flat line.
       final dotCenterX = right + spec.gap + spec.dotDiameter / 2;
       final dotCenterY = trackCy + spec.dotVerticalOffset;
       canvas.drawCircle(
         Offset(dotCenterX, dotCenterY),
         spec.dotDiameter / 2,
-        Paint()..color = track, // Draw dot with track color
+        Paint()..color = active, // Spec: stop-indicator.color = primary
       );
     }
 
@@ -360,7 +365,11 @@ class LinearPainter extends CustomPainter {
       if (end > start) {
         _path.reset();
         const step = 1.5;
-        final k = 2 * math.pi / spec.wavePeriod;
+        // Spec: indeterminate wavelength = 20dp; determinate = 40dp.
+        final period = isIndeterminate
+            ? spec.indeterminateWavePeriod
+            : spec.wavePeriod;
+        final k = 2 * math.pi / period;
 
         var x = start;
         var y = activeCy + currentAmp * math.sin(phase + (x - left) * k);

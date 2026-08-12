@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart'
+    hide CircularProgressIndicator, LinearProgressIndicator, ProgressIndicator;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/rhizu.dart';
 
@@ -36,10 +37,6 @@ Widget wrapWithTheme(Widget child) {
 
 void main() {
   group('SplitButtonM3E', () {
-    // =========================================================================
-    // RENDERING TESTS
-    // =========================================================================
-
     group('Rendering', () {
       testWidgets('renders with label and icon', (tester) async {
         await tester.pumpWidget(
@@ -147,10 +144,6 @@ void main() {
         expect(find.byIcon(Icons.keyboard_arrow_down), findsOneWidget);
       });
     });
-
-    // =========================================================================
-    // INTERACTION TESTS
-    // =========================================================================
 
     group('Interaction', () {
       testWidgets('calls onPressed when leading segment tapped', (
@@ -301,10 +294,6 @@ void main() {
       });
     });
 
-    // =========================================================================
-    // STATE MANAGEMENT TESTS
-    // =========================================================================
-
     group('State Management', () {
       testWidgets('disabled state prevents interaction', (tester) async {
         var pressed = false;
@@ -392,9 +381,239 @@ void main() {
       });
     });
 
-    // =========================================================================
-    // SIZE & LAYOUT TESTS
-    // =========================================================================
+    group('Loading state', () {
+      testWidgets('renders a loading indicator instead of the leading icon', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              leadingIcon: Icons.save,
+              isLoading: true,
+              onPressed: () {},
+              items: const [],
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+
+        expect(find.byIcon(Icons.save), findsNothing);
+        expect(find.byType(ProgressIndicator), findsOneWidget);
+        expect(find.text('Save'), findsOneWidget);
+      });
+
+      testWidgets('uses the flat shape for XS and SM sizes', (tester) async {
+        for (final size in [SplitButtonSize.xs, SplitButtonSize.sm]) {
+          await tester.pumpWidget(
+            wrapWithTheme(
+              SplitButton<String>(
+                size: size,
+                label: 'Save',
+                isLoading: true,
+                onPressed: () {},
+                items: const [],
+              ),
+            ),
+          );
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final indicator = tester.widget<ProgressIndicator>(
+            find.byType(ProgressIndicator),
+          );
+          expect(indicator.shape, ProgressIndicatorShape.flat);
+        }
+      });
+
+      testWidgets('uses the wavy shape for MD and larger sizes', (
+        tester,
+      ) async {
+        for (final size in [
+          SplitButtonSize.md,
+          SplitButtonSize.lg,
+          SplitButtonSize.xl,
+        ]) {
+          await tester.pumpWidget(
+            wrapWithTheme(
+              SplitButton<String>(
+                size: size,
+                label: 'Save',
+                isLoading: true,
+                onPressed: () {},
+                items: const [],
+              ),
+            ),
+          );
+          await tester.pump(const Duration(milliseconds: 100));
+
+          final indicator = tester.widget<ProgressIndicator>(
+            find.byType(ProgressIndicator),
+          );
+          expect(indicator.shape, ProgressIndicatorShape.wavy);
+        }
+      });
+
+      testWidgets('uses the foreground color and removes the track', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          MaterialApp(
+            theme: ThemeData(
+              colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+            ),
+            home: Scaffold(
+              body: SplitButton<String>(
+                label: 'Save',
+                isLoading: true,
+                onPressed: () {},
+                items: const [],
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 100));
+
+        final indicator = tester.widget<ProgressIndicator>(
+          find.byType(ProgressIndicator),
+        );
+        final cs = Theme.of(
+          tester.element(find.byType(SplitButton<String>)),
+        ).colorScheme;
+
+        // Default emphasis is tonal: foreground = onSecondaryContainer.
+        expect(indicator.activeColor, equals(cs.onSecondaryContainer));
+        expect(indicator.trackColor, equals(Colors.transparent));
+      });
+
+      testWidgets('disables leading tap while loading', (tester) async {
+        var pressed = false;
+
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              isLoading: true,
+              onPressed: () => pressed = true,
+              items: const [],
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Save'), warnIfMissed: false);
+        await tester.pump();
+
+        expect(pressed, isFalse);
+      });
+
+      testWidgets('disables menu opening while loading', (tester) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              isLoading: true,
+              onPressed: () {},
+              items: const [
+                SplitButtonItem(value: 'draft', child: 'Draft'),
+              ],
+            ),
+          ),
+        );
+
+        await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+        await tester.pump();
+
+        expect(find.text('Draft'), findsNothing);
+      });
+
+      testWidgets('closes an open menu when loading begins', (tester) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              onPressed: () {},
+              items: const [
+                SplitButtonItem(value: 'draft', child: 'Draft'),
+              ],
+            ),
+          ),
+        );
+
+        // Open the menu.
+        await tester.tap(find.byIcon(Icons.keyboard_arrow_down));
+        await tester.pumpAndSettle();
+        expect(find.text('Draft'), findsOneWidget);
+
+        // Start loading. The indeterminate indicator animates forever, so
+        // pump a fixed duration instead of pumpAndSettle.
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              isLoading: true,
+              onPressed: () {},
+              items: const [
+                SplitButtonItem(value: 'draft', child: 'Draft'),
+              ],
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 300));
+
+        expect(find.text('Draft'), findsNothing);
+      });
+
+      testWidgets('renders a static indicator under reduced motion', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          const MediaQuery(
+            data: MediaQueryData(disableAnimations: true),
+            child: MaterialApp(
+              home: Scaffold(
+                body: SplitButton<String>(
+                  label: 'Save',
+                  isLoading: true,
+                  items: [],
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.byType(ProgressIndicator), findsOneWidget);
+        // The indicator must render statically: no repeating animation builder
+        // inside the split button.
+        expect(
+          find.descendant(
+            of: find.byType(SplitButton<String>),
+            matching: find.byType(RepeatingAnimationBuilder<double>),
+          ),
+          findsNothing,
+        );
+      });
+
+      testWidgets('isLoading takes precedence over enabled', (tester) async {
+        var pressed = false;
+
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SplitButton<String>(
+              label: 'Save',
+              enabled: false,
+              isLoading: true,
+              onPressed: () => pressed = true,
+              items: const [],
+            ),
+          ),
+        );
+
+        await tester.tap(find.text('Save'), warnIfMissed: false);
+        await tester.pump();
+
+        expect(pressed, isFalse);
+      });
+    });
 
     group('Size & Layout', () {
       testWidgets('trailing segment has minimum touch target of 48dp', (
@@ -483,10 +702,6 @@ void main() {
         expect(transform.transform.getTranslation().x, -2.0);
       });
     });
-
-    // =========================================================================
-    // EDGE CASES & ERROR HANDLING
-    // =========================================================================
 
     group('Edge Cases', () {
       test(
@@ -618,10 +833,6 @@ void main() {
       });
     });
 
-    // =========================================================================
-    // ACCESSIBILITY TESTS
-    // =========================================================================
-
     group('Accessibility', () {
       testWidgets('provides tooltips when specified', (tester) async {
         await tester.pumpWidget(
@@ -673,10 +884,6 @@ void main() {
         expect(leadingPressed, isTrue);
       });
     });
-
-    // =========================================================================
-    // ANIMATION TESTS
-    // =========================================================================
 
     group('Animation', () {
       testWidgets('morphing animation plays for M/L/XL round shapes', (

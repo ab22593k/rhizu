@@ -119,8 +119,27 @@ void main() {
       expect(WavyProgressConstants.defaultWaves, equals(12));
     });
 
-    test('default amplitude is 2.0', () {
-      expect(WavyProgressConstants.defaultAmplitude, equals(2.0));
+    test('default amplitude is 3.0 (linear wave spec)', () {
+      expect(WavyProgressConstants.defaultAmplitude, equals(3.0));
+    });
+
+    test('default wave period is 40.0 (linear wavelength spec)', () {
+      expect(WavyProgressConstants.defaultWavePeriod, equals(40.0));
+    });
+
+    test(
+      'indeterminate wave period is 20.0 (indeterminate wavelength spec)',
+      () {
+        expect(WavyProgressConstants.indeterminateWavePeriod, equals(20.0));
+      },
+    );
+
+    test('circular wave amplitude is 1.6 (circular wave spec)', () {
+      expect(WavyProgressConstants.circularWaveAmplitude, equals(1.6));
+    });
+
+    test('circular wave period is 15.0 (circular scallop spec)', () {
+      expect(WavyProgressConstants.circularWavePeriod, equals(15.0));
     });
 
     test('default track gap is 4.0', () {

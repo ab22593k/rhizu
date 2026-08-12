@@ -8,6 +8,7 @@ import 'package:rhizu/src/ui/components/indicators/animation/loading_animation_c
 import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 import 'package:rhizu/src/ui/styles/motion/fallbacks.dart';
 
 export 'shapes/shape_type.dart';
@@ -144,7 +145,7 @@ class MorphingLoadingindicator extends StatefulWidget {
 
 class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     with TickerProviderStateMixin {
-  static const _springCurve = SpringCurve();
+  static final _springCurve = SpringCurve();
 
   late final LoadingAnimationController _animationController;
 
@@ -164,6 +165,17 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     );
     _animationController = LoadingAnimationController(
       vsync: this,
+      // Start stopped; didChangeDependencies applies the ambient
+      // reduced-motion preference before the first build.
+      animationsEnabled: false,
+    );
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _animationController.setAnimationsEnabled(
+      enabled: !MediaQuery.disableAnimationsOf(context),
     );
   }
 
@@ -200,6 +212,10 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
       IndicatorState.error => colorScheme.errorContainer,
     };
 
+    // Respect the user's reduced-motion preference: keep the morphing shape
+    // static and swap result states instantly instead of animating.
+    final disableAnimations = MediaQuery.disableAnimationsOf(context);
+
     // RepaintBoundary isolates the animation from parent repaints,
     // preventing unnecessary GPU work when the parent widget changes.
     return RepaintBoundary(
@@ -211,7 +227,9 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
           shape: BoxShape.circle,
         ),
         child: AnimatedSwitcher(
-          duration: MotionFallbacks.expressiveFastSpatialDuration,
+          duration: disableAnimations
+              ? Duration.zero
+              : MotionFallbacks.expressiveFastSpatialDuration,
           switchInCurve: MotionFallbacks.expressiveFastSpatial,
           switchOutCurve: Curves.easeOut,
           transitionBuilder: (child, animation) {
@@ -221,14 +239,38 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
             );
           },
           child: widget.state == IndicatorState.loading
-              ? _buildMorphingAnimation(indicatorColor, clampedSize)
+              ? _buildMorphingAnimation(
+                  indicatorColor,
+                  clampedSize,
+                  staticShape: disableAnimations,
+                )
               : _buildResultIcon(widget.state, clampedSize),
         ),
       ),
     );
   }
 
-  Widget _buildMorphingAnimation(Color indicatorColor, double clampedSize) {
+  Widget _buildMorphingAnimation(
+    Color indicatorColor,
+    double clampedSize, {
+    bool staticShape = false,
+  }) {
+    // With reduced motion, render the current shape once without any
+    // rotation or morphing so the indicator stays visually identifiable.
+    if (staticShape) {
+      return CustomPaint(
+        key: const ValueKey(IndicatorState.loading),
+        painter: _buildShapePainter(
+          indicatorColor,
+          clampedSize,
+          currentShape: _animationController.currentShape,
+          nextShape: _animationController.currentShape,
+          progress: 0.0,
+          rotation: 0.0,
+        ),
+      );
+    }
+
     return AnimatedBuilder(
       key: const ValueKey(IndicatorState.loading),
       animation: _animationController.animation,
@@ -249,18 +291,36 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
         )!;
 
         return CustomPaint(
-          painter: MorphingShapePainter(
-            color: indicatorColor,
+          painter: _buildShapePainter(
+            indicatorColor,
+            clampedSize,
             currentShape: _animationController.currentShape,
             nextShape: _animationController.nextShape,
             progress: morphProgress,
             rotation: globalRotation + stepRotation,
-            path: _path,
-            points: _points,
-            scale: clampedSize / LoadingIndicatorConstants.defaultContainerSize,
           ),
         );
       },
+    );
+  }
+
+  MorphingShapePainter _buildShapePainter(
+    Color indicatorColor,
+    double clampedSize, {
+    required ShapeType currentShape,
+    required ShapeType nextShape,
+    required double progress,
+    required double rotation,
+  }) {
+    return MorphingShapePainter(
+      color: indicatorColor,
+      currentShape: currentShape,
+      nextShape: nextShape,
+      progress: progress,
+      rotation: rotation,
+      path: _path,
+      points: _points,
+      scale: clampedSize / LoadingIndicatorConstants.defaultContainerSize,
     );
   }
 

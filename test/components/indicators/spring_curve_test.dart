@@ -1,10 +1,11 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
+import 'package:rhizu/src/ui/styles/motion/tokens.dart';
 
 void main() {
   group('SpringCurve', () {
     test('transform returns value in reasonable range', () {
-      const curve = SpringCurve();
+      final curve = SpringCurve();
 
       // Test at various points
       for (var t = 0.0; t <= 1.0; t += 0.1) {
@@ -15,18 +16,18 @@ void main() {
     });
 
     test('transform returns 0 at t=0', () {
-      const curve = SpringCurve();
+      final curve = SpringCurve();
       expect(curve.transform(0), equals(0.0));
     });
 
     test('transform returns approximately 1 at t=1', () {
-      const curve = SpringCurve();
+      final curve = SpringCurve();
       // Spring curves may overshoot, so we check it's close to 1
       expect(curve.transform(1), closeTo(1.0, 0.2));
     });
 
     test('transform is monotonic (generally increasing)', () {
-      const curve = SpringCurve();
+      final curve = SpringCurve();
       var previousValue = 0.0;
 
       // Check that values generally increase (allowing for small spring oscillations)
@@ -39,7 +40,7 @@ void main() {
     });
 
     test('has spring-like behavior with overshoot', () {
-      const curve = SpringCurve();
+      final curve = SpringCurve();
 
       // A spring curve typically overshoots around 0.6-0.8
       final values = <double>[];
@@ -52,6 +53,40 @@ void main() {
 
       // Spring should overshoot target (1.0) at some point
       expect(maxValue, greaterThan(1.0));
+    });
+
+    test('defaults to the Expressive slow spatial motion token', () {
+      final curve = SpringCurve();
+      expect(curve.description, equals(MotionTokens.expressiveSlowSpatial));
+    });
+
+    test('honors a custom Expressive motion token', () {
+      final fast = SpringCurve(description: MotionTokens.expressiveFastSpatial);
+      final slow = SpringCurve(description: MotionTokens.expressiveSlowSpatial);
+
+      // Stiffer springs settle faster: sampled across the animation, the fast
+      // spring stays closer to the target on average than the slow spring.
+      double distanceToTarget(SpringCurve curve) {
+        var total = 0.0;
+        for (var t = 0.0; t <= 1.0; t += 0.05) {
+          total += (curve.transform(t) - 1.0).abs();
+        }
+        return total;
+      }
+
+      expect(
+        distanceToTarget(fast),
+        lessThan(distanceToTarget(slow)),
+      );
+    });
+
+    test('caches lookup tables per description without mutating output', () {
+      final a = SpringCurve(description: MotionTokens.expressiveFastSpatial);
+      final b = SpringCurve(description: MotionTokens.expressiveFastSpatial);
+
+      for (var t = 0.0; t <= 1.0; t += 0.1) {
+        expect(a.transform(t), equals(b.transform(t)));
+      }
     });
   });
 }

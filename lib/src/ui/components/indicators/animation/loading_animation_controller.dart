@@ -21,12 +21,14 @@ class LoadingAnimationController {
     required TickerProvider vsync,
     List<ShapeType>? shapeSequence,
     this._onShapeChange,
-  }) : _shapeSequence = shapeSequence ?? defaultShapeSequence {
+    bool animationsEnabled = true,
+  }) : _shapeSequence = shapeSequence ?? defaultShapeSequence,
+       _animationsEnabled = animationsEnabled {
     // Global Rotation: 360 degrees every rotationDuration (Linear)
     _rotationController = AnimationController(
       vsync: vsync,
       duration: LoadingIndicatorConstants.rotationDuration,
-    )..repeat();
+    );
 
     // Morph Animation: morphDuration per shape transition
     _morphController = AnimationController(
@@ -34,13 +36,16 @@ class LoadingAnimationController {
       duration: LoadingIndicatorConstants.morphDuration,
     );
 
-    _startMorphSequence();
+    if (animationsEnabled) {
+      _startAnimations();
+    }
   }
   late final AnimationController _rotationController;
   late final AnimationController _morphController;
 
   int _currentIndex = 0;
   bool _isDisposed = false;
+  bool _animationsEnabled;
 
   final VoidCallback? _onShapeChange;
   final List<ShapeType> _shapeSequence;
@@ -57,6 +62,9 @@ class LoadingAnimationController {
 
   /// Whether this controller has been disposed.
   bool get isDisposed => _isDisposed;
+
+  /// Whether the rotation and morph animations are currently running.
+  bool get isAnimating => _rotationController.isAnimating;
 
   /// The rotation animation controller value [0, 1].
   double get rotationValue => _rotationController.value;
@@ -78,6 +86,30 @@ class LoadingAnimationController {
         _startMorphSequence();
       }
     });
+  }
+
+  /// Starts or stops the continuous rotation and morph animations.
+  ///
+  /// Pass `false` to honor the user's reduced-motion preference: the tickers
+  /// stop entirely instead of running unused in the background.
+  ///
+  /// Setting the value to its current state is a no-op.
+  void setAnimationsEnabled({
+    required bool enabled,
+  }) {
+    if (_isDisposed || _animationsEnabled == enabled) return;
+    _animationsEnabled = enabled;
+    if (enabled) {
+      _startAnimations();
+    } else {
+      _morphController.stop();
+      _rotationController.stop();
+    }
+  }
+
+  void _startAnimations() {
+    _rotationController.repeat();
+    _startMorphSequence();
   }
 
   /// Disposes of the animation controllers.

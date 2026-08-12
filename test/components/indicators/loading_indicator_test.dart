@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 import 'package:rhizu/src/ui/components/indicators/morphing.dart';
+import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
 
 void main() {
   group('MorphingLoadingIndicator', () {
@@ -145,6 +146,80 @@ void main() {
       );
 
       expect(find.byType(MorphingLoadingindicator), findsNothing);
+    });
+
+    testWidgets('renders a static shape under reduced motion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(body: MorphingLoadingindicator()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      // The morphing shape must still render, but without the animated
+      // morph/rotation builder.
+      expect(
+        find.descendant(
+          of: find.byType(MorphingLoadingindicator),
+          matching: find.byType(CustomPaint),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byType(MorphingLoadingindicator),
+          matching: find.byType(AnimatedBuilder),
+        ),
+        findsNothing,
+      );
+
+      // The static frame must not rotate or morph (zero progress/rotation).
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      expect(painter.progress, equals(0.0));
+      expect(painter.rotation, equals(0.0));
+    });
+
+    testWidgets('switches state instantly under reduced motion', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(body: MorphingLoadingindicator()),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(
+              body: MorphingLoadingindicator(state: IndicatorState.success),
+            ),
+          ),
+        ),
+      );
+
+      // No transition duration: the success icon appears immediately.
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.byIcon(Icons.check_rounded), findsOneWidget);
     });
 
     testWidgets('MorphingLoadingIndicator respects size parameter', (
@@ -379,6 +454,88 @@ void main() {
       // The icon should use onPrimaryContainer or a custom success color
       final icon = tester.widget<Icon>(find.byIcon(Icons.check_rounded));
       expect(icon.color, isNotNull);
+    });
+
+    testWidgets('active indicator uses primary in simple mode (spec token)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          ),
+          home: const Scaffold(
+            body: MorphingLoadingindicator(),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      final cs = Theme.of(
+        tester.element(find.byType(MorphingLoadingindicator)),
+      ).colorScheme;
+
+      // Spec: active-indicator.color = md.sys.color.primary
+      expect(painter.color, equals(cs.primary));
+    });
+
+    testWidgets('contained mode uses onPrimaryContainer on primaryContainer', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: Colors.blue),
+          ),
+          home: const Scaffold(
+            body: MorphingLoadingindicator(
+              containment: Containment.contained,
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      final cs = Theme.of(
+        tester.element(find.byType(MorphingLoadingindicator)),
+      ).colorScheme;
+
+      // Spec: contained.active-indicator.color = md.sys.color.on-primary-container
+      expect(painter.color, equals(cs.onPrimaryContainer));
+
+      // Spec: contained.container.color = md.sys.color.primary-container
+      final container = tester.widget<Container>(
+        find
+            .descendant(
+              of: find.byType(MorphingLoadingindicator),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      final decoration = container.decoration! as BoxDecoration;
+      expect(decoration.color, equals(cs.primaryContainer));
     });
 
     testWidgets('default state is loading', (tester) async {
