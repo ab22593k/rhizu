@@ -86,30 +86,34 @@ void main() {
       );
     });
 
-    testWidgets('ProgressIndicator respects text scale factor', (tester) async {
-      await tester.pumpWidget(
-        const MediaQuery(
-          data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
-          child: Directionality(
-            textDirection: TextDirection.ltr,
-            child: ProgressIndicator(),
+    testWidgets(
+      'ProgressIndicator size is independent of text scale',
+      (tester) async {
+        await tester.pumpWidget(
+          const MediaQuery(
+            data: MediaQueryData(textScaler: TextScaler.linear(2.0)),
+            child: Directionality(
+              textDirection: TextDirection.ltr,
+              child: ProgressIndicator(),
+            ),
           ),
-        ),
-      );
+        );
 
-      final sizedBoxFinder = find
-          .descendant(
-            of: find.byType(ProgressIndicator),
-            matching: find.byType(SizedBox),
-          )
-          .first;
+        final sizedBoxFinder = find
+            .descendant(
+              of: find.byType(ProgressIndicator),
+              matching: find.byType(SizedBox),
+            )
+            .first;
 
-      final sizedBox = tester.widget<SizedBox>(sizedBoxFinder);
+        final sizedBox = tester.widget<SizedBox>(sizedBoxFinder);
 
-      // Default circular wavy size is 48.0 + scale 2.0 = 96.0
-      expect(sizedBox.width, equals(96.0));
-      expect(sizedBox.height, equals(96.0));
-    });
+        // Typography settings are not a layout breakpoint: the default
+        // circular wavy size (48.0) stays 48.0 at 2x text scale.
+        expect(sizedBox.width, equals(48.0));
+        expect(sizedBox.height, equals(48.0));
+      },
+    );
 
     testWidgets('ProgressIndicator invokes onComplete when value reaches 1.0', (
       tester,

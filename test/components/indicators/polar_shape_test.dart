@@ -5,10 +5,15 @@ import 'package:rhizu/src/ui/components/indicators/shapes/polar_shape.dart';
 import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
 import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 
-void main() {
+void main() async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // Shape geometry comes from the SVG assets; load them before exercising
+  // the registry so lookups are synchronous and cached.
+  await ShapeRegistry.prewarm();
+
   group('ShapeType', () {
-    test('has 7 defined shape types', () {
-      expect(ShapeType.values.length, equals(7));
+    test('has 35 defined shape types matching the asset library', () {
+      expect(ShapeType.values.length, equals(35));
     });
 
     test('default shape sequence has correct order', () {
@@ -98,7 +103,7 @@ void main() {
       }
     });
 
-    test('shape registry caches shapes', () {
+    test('shapes are cached across lookups', () {
       final shape1 = ShapeRegistry.get(ShapeType.softBurst);
       final shape2 = ShapeRegistry.get(ShapeType.softBurst);
 

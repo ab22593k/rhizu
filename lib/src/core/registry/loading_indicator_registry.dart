@@ -54,18 +54,19 @@ class LoadingIndicatorRegistry {
 
   /// Prewarms all shape providers to avoid first-frame jank.
   ///
-  /// Call this during app initialization:
+  /// Loads the SVG shape assets so shapes can be rendered synchronously by
+  /// the loading indicator. Call this during app initialization:
   /// ```dart
-  /// void main() {
-  ///   LoadingIndicatorRegistry.instance.prewarm();
+  /// void main() async {
+  ///   await LoadingIndicatorRegistry.instance.prewarm();
   ///   runApp(MyApp());
   /// }
   /// ```
-  void prewarm() {
+  Future<void> prewarm() async {
     initialize();
-    for (final provider in _shapeProviders.values) {
-      provider.prewarm();
-    }
+    await Future.wait(
+      _shapeProviders.values.map((provider) => provider.prewarm()),
+    );
   }
 
   /// Whether the registry has been initialized.

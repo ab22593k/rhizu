@@ -1,6 +1,8 @@
+import 'dart:async';
 import 'dart:math' as math;
 import 'dart:ui';
 
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
 
@@ -8,6 +10,7 @@ import 'package:rhizu/src/ui/components/indicators/animation/loading_animation_c
 import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
 import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 import 'package:rhizu/src/ui/styles/motion/fallbacks.dart';
 
@@ -66,10 +69,24 @@ enum IndicatorState {
 /// - [MorphingLoadingindicator.large] (96dp)
 /// - [MorphingLoadingindicator.extraLarge] (144dp)
 ///
+/// By default the indicator morphs through [defaultShapeSequence] (7 shapes).
+/// Pass [shapeSequence] to pick any subset of the 35 [ShapeType]s the
+/// indicator should morph through, in any order.
+///
 /// Example usage:
 /// ```dart
-/// // Simple loading indicator (default 48dp)
+/// // Simple loading indicator (default 48dp, default shape sequence)
 /// const MorphingLoadingindicator()
+///
+/// // Morph through a custom set of shapes
+/// const MorphingLoadingindicator(
+///   shapeSequence: [
+///     ShapeType.heart,
+///     ShapeType.diamond,
+///     ShapeType.clover4,
+///     ShapeType.flower,
+///   ],
+/// )
 ///
 /// // Transition to success state
 /// MorphingLoadingindicator(state: IndicatorState.success)
@@ -83,11 +100,14 @@ class MorphingLoadingindicator extends StatefulWidget {
   /// The [containment] parameter controls the visual presentation.
   /// The [state] parameter controls whether the indicator shows the
   /// loading animation, a success checkmark, or an error X.
+  /// The [shapeSequence] parameter controls which [ShapeType]s the indicator
+  /// morphs through while loading.
   const MorphingLoadingindicator({
     super.key,
     this.containment = Containment.simple,
     this.size = LoadingIndicatorConstants.defaultContainerSize,
     this.state = IndicatorState.loading,
+    this.shapeSequence = defaultShapeSequence,
   });
 
   /// Creates a small loading indicator (24dp).
@@ -95,6 +115,7 @@ class MorphingLoadingindicator extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
     this.state = IndicatorState.loading,
+    this.shapeSequence = defaultShapeSequence,
   }) : size = LoadingIndicatorConstants.minContainerSize;
 
   /// Creates a medium loading indicator (48dp).
@@ -102,6 +123,7 @@ class MorphingLoadingindicator extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
     this.state = IndicatorState.loading,
+    this.shapeSequence = defaultShapeSequence,
   }) : size = LoadingIndicatorConstants.defaultContainerSize;
 
   /// Creates a large loading indicator (96dp).
@@ -109,6 +131,7 @@ class MorphingLoadingindicator extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
     this.state = IndicatorState.loading,
+    this.shapeSequence = defaultShapeSequence,
   }) : size = 96.0;
 
   /// Creates an extra large loading indicator (144dp).
@@ -116,6 +139,7 @@ class MorphingLoadingindicator extends StatefulWidget {
     super.key,
     this.containment = Containment.simple,
     this.state = IndicatorState.loading,
+    this.shapeSequence = defaultShapeSequence,
   }) : size = 144.0;
 
   /// How the loading indicator should be visually contained.
@@ -129,6 +153,9 @@ class MorphingLoadingindicator extends StatefulWidget {
   /// Defaults to [LoadingIndicatorConstants.defaultContainerSize] (48.0).
   /// Must be between [LoadingIndicatorConstants.minContainerSize] (24.0)
   /// and [LoadingIndicatorConstants.maxContainerSize] (240.0).
+  ///
+  /// The size is independent of the ambient text scale factor; increasing
+  /// the system font size does not grow the indicator.
   final double size;
 
   /// The current state of the indicator.
@@ -137,6 +164,14 @@ class MorphingLoadingindicator extends StatefulWidget {
   /// When changed to [IndicatorState.success] or [IndicatorState.error],
   /// the morphing animation will crossfade into the appropriate icon.
   final IndicatorState state;
+
+  /// The sequence of [ShapeType]s the indicator morphs through.
+  ///
+  /// Defaults to [defaultShapeSequence]. Any subset of the 35 available
+  /// shapes can be supplied, in any order. An empty list falls back to the
+  /// default sequence. Changes to this value while loading take effect on
+  /// the next rebuild.
+  final List<ShapeType> shapeSequence;
 
   @override
   State<MorphingLoadingindicator> createState() =>
@@ -165,10 +200,35 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     );
     _animationController = LoadingAnimationController(
       vsync: this,
+      shapeSequence: widget.shapeSequence,
       // Start stopped; didChangeDependencies applies the ambient
       // reduced-motion preference before the first build.
       animationsEnabled: false,
     );
+
+    // Shape geometry lives in the SVG assets; load them so the first
+    // frame can paint the morphing shape instead of the placeholder.
+    unawaited(_ensureShapesLoaded());
+  }
+
+  @override
+  void didUpdateWidget(covariant MorphingLoadingindicator oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!listEquals(oldWidget.shapeSequence, widget.shapeSequence)) {
+      _animationController.setShapeSequence(widget.shapeSequence);
+    }
+  }
+
+  Future<void> _ensureShapesLoaded() async {
+    try {
+      await ShapeRegistry.prewarm();
+    } on Object catch (error) {
+      // Shape assets ship with the package, so a failure is not expected;
+      // stay on the placeholder rather than crashing with an unhandled error.
+      debugPrint('Failed to load shape assets: $error');
+      return;
+    }
+    if (mounted) setState(() {});
   }
 
   @override
@@ -198,9 +258,10 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
       ),
     };
 
-    final scale = MediaQuery.textScalerOf(context).scale(1.0);
-    final scaledSize = widget.size * scale;
-    final clampedSize = scaledSize.clamp(
+    // The indicator is sized in logical pixels and deliberately ignores the
+    // ambient text scale factor: typography settings are an accessibility
+    // preference, not a window breakpoint (spec: 24-240dp by placement).
+    final clampedSize = widget.size.clamp(
       LoadingIndicatorConstants.minContainerSize,
       LoadingIndicatorConstants.maxContainerSize,
     );
@@ -239,11 +300,13 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
             );
           },
           child: widget.state == IndicatorState.loading
-              ? _buildMorphingAnimation(
-                  indicatorColor,
-                  clampedSize,
-                  staticShape: disableAnimations,
-                )
+              ? ShapeRegistry.isReady
+                    ? _buildMorphingAnimation(
+                        indicatorColor,
+                        clampedSize,
+                        staticShape: disableAnimations,
+                      )
+                    : _buildShapePlaceholder(indicatorColor, clampedSize)
               : _buildResultIcon(widget.state, clampedSize),
         ),
       ),
@@ -324,6 +387,22 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
     );
   }
 
+  Widget _buildShapePlaceholder(Color indicatorColor, double clampedSize) {
+    // While the SVG shape assets are loading, paint a neutral circle sized to
+    // match the largest indicator glyph so the first frames are stable.
+    final glyphRadius =
+        LoadingIndicatorConstants.svgCenter *
+        LoadingIndicatorConstants.svgScaleFactor *
+        (clampedSize / LoadingIndicatorConstants.defaultContainerSize);
+    return CustomPaint(
+      key: const ValueKey('shape-placeholder'),
+      painter: _ShapePlaceholderPainter(
+        color: indicatorColor,
+        radius: glyphRadius,
+      ),
+    );
+  }
+
   Widget _buildResultIcon(IndicatorState state, double clampedSize) {
     final colorScheme = Theme.of(context).colorScheme;
     final (iconData, iconColor) = switch (state) {
@@ -346,6 +425,30 @@ class _MorphingLoadingindicatorState extends State<MorphingLoadingindicator>
       size: clampedSize * 0.5,
       color: iconColor,
     );
+  }
+}
+
+/// Paints a filled circle used as a placeholder while shape assets load.
+class _ShapePlaceholderPainter extends CustomPainter {
+  _ShapePlaceholderPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    canvas.drawCircle(
+      Offset(size.width / 2, size.height / 2),
+      radius,
+      Paint()
+        ..color = color
+        ..isAntiAlias = true,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _ShapePlaceholderPainter oldDelegate) {
+    return oldDelegate.color != color || oldDelegate.radius != radius;
   }
 }
 
@@ -408,10 +511,34 @@ Widget previewExpressiveLoaderContained() => MaterialApp(
               ),
             ],
           ),
-          // Row 3: Success state
+          // Row 3: Custom shape sequences
           const Row(
             mainAxisAlignment: MainAxisAlignment.center,
             spacing: 24,
+            children: [
+              MorphingLoadingindicator.medium(
+                shapeSequence: [
+                  ShapeType.heart,
+                  ShapeType.diamond,
+                  ShapeType.clover4,
+                  ShapeType.flower,
+                ],
+              ),
+              MorphingLoadingindicator.medium(
+                shapeSequence: [
+                  ShapeType.circle,
+                  ShapeType.square,
+                  ShapeType.triangle,
+                ],
+              ),
+              MorphingLoadingindicator.medium(
+                shapeSequence: [
+                  ShapeType.burst,
+                  ShapeType.boom,
+                  ShapeType.verySunny,
+                ],
+              ),
+            ],
           ),
         ],
       ),

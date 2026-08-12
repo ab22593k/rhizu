@@ -1,40 +1,50 @@
-/// Defines the types of shapes used in the loading indicator animation.
+import 'package:rhizu/src/contracts/indicators/shape_contract.dart';
+import 'package:rhizu/src/ui/styles/shapes/static.dart';
+
+export 'package:rhizu/src/contracts/indicators/shape_contract.dart'
+    show ShapeType, defaultShapeSequence;
+
+/// Canonical package asset path for each [ShapeType].
 ///
-/// Each shape type corresponds to a unique polar shape that can be morphed
-/// into other shapes during the loading animation sequence.
-enum ShapeType {
-  /// A soft star-burst shape with gentle undulations.
-  softBurst,
-
-  /// A cookie-like shape with 9 scalloped edges.
-  cookie9,
-
-  /// A regular pentagon shape.
-  pentagon,
-
-  /// A pill/capsule shape (rounded rectangle rotated 45 degrees).
-  pill,
-
-  /// A sun-like shape with rounded corners.
-  sunny,
-
-  /// A cookie-like shape with 4 scalloped edges.
-  cookie4,
-
-  /// An oval/ellipse shape rotated 45 degrees.
-  oval,
+/// Every shape is defined by an SVG in `assets/shapes/`; this maps each
+/// selectable shape to its `RZShapes` asset path.
+extension ShapeTypeAssetPathX on ShapeType {
+  /// The `RZShapes` asset path of the SVG that defines this shape.
+  String get assetPath => switch (this) {
+    ShapeType.softBurst => RZShapes.softBurst,
+    ShapeType.cookie9 => RZShapes.cookie9,
+    ShapeType.pentagon => RZShapes.pentagon,
+    ShapeType.pill => RZShapes.pill,
+    ShapeType.sunny => RZShapes.sunny,
+    ShapeType.cookie4 => RZShapes.cookie4,
+    ShapeType.oval => RZShapes.oval,
+    ShapeType.arch => RZShapes.arch,
+    ShapeType.arrow => RZShapes.arrow,
+    ShapeType.boom => RZShapes.boom,
+    ShapeType.bun => RZShapes.bun,
+    ShapeType.burst => RZShapes.burst,
+    ShapeType.circle => RZShapes.circle,
+    ShapeType.clover4 => RZShapes.clover4,
+    ShapeType.clover8 => RZShapes.clover8,
+    ShapeType.cookie12 => RZShapes.cookie12,
+    ShapeType.cookie6 => RZShapes.cookie6,
+    ShapeType.cookie7 => RZShapes.cookie7,
+    ShapeType.diamond => RZShapes.diamond,
+    ShapeType.fan => RZShapes.fan,
+    ShapeType.flower => RZShapes.flower,
+    ShapeType.gem => RZShapes.gem,
+    ShapeType.ghostish => RZShapes.ghostish,
+    ShapeType.heart => RZShapes.heart,
+    ShapeType.hexagon => RZShapes.hexagon,
+    ShapeType.pixelCircle => RZShapes.pixelCircle,
+    ShapeType.pixelTriangle => RZShapes.pixelTriangle,
+    ShapeType.puffy => RZShapes.puffy,
+    ShapeType.puffyDiamond => RZShapes.puffyDiamond,
+    ShapeType.semicircle => RZShapes.semicircle,
+    ShapeType.slantedSquare => RZShapes.slantedSquare,
+    ShapeType.softBoom => RZShapes.softBoom,
+    ShapeType.square => RZShapes.square,
+    ShapeType.triangle => RZShapes.triangle,
+    ShapeType.verySunny => RZShapes.verySunny,
+  };
 }
-
-/// The default sequence of shapes for the loading indicator animation.
-///
-/// This sequence defines the order in which shapes morph from one to another
-/// during the continuous animation loop.
-const List<ShapeType> defaultShapeSequence = [
-  ShapeType.softBurst,
-  ShapeType.cookie9,
-  ShapeType.pentagon,
-  ShapeType.pill,
-  ShapeType.sunny,
-  ShapeType.cookie4,
-  ShapeType.oval,
-];

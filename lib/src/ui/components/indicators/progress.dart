@@ -66,6 +66,9 @@ class ProgressIndicatorSize {
   static const ProgressIndicatorSize fixed = s;
 
   /// Returns a scaled copy of this size.
+  ///
+  /// Manual utility for consumers; the progress indicator widgets do not
+  /// apply this automatically (dimensions are fixed in logical pixels).
   ProgressIndicatorSize scaled(double scale) {
     if (scale == 1.0) return this;
     return ProgressIndicatorSize(
@@ -153,6 +156,9 @@ class ProgressIndicator extends StatefulWidget {
   final ProgressIndicatorVariant variant;
 
   /// Visual size variant.
+  ///
+  /// The size is independent of the ambient text scale factor; typography
+  /// settings do not resize the indicator.
   final ProgressIndicatorSize size;
 
   /// Shape variant: flat or wavy.
@@ -222,19 +228,20 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
 
   @override
   Widget build(BuildContext context) {
-    final scale = MediaQuery.textScalerOf(context).scale(1.0);
-    final scaledSize = widget.size.scaled(scale);
+    // Indicator dimensions are fixed in logical pixels and deliberately
+    // ignore the ambient text scale factor: typography settings are an
+    // accessibility preference, not a layout breakpoint.
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
     if (widget.value == null) {
-      return _buildVariant(context, null, scaledSize, scale);
+      return _buildVariant(context, null, widget.size);
     }
 
     // Respect the user's reduced-motion preference: render the final value
     // directly instead of running the expressive spring.
     if (disableAnimations) {
       _checkCompletion(widget.value!);
-      return _buildVariant(context, widget.value, scaledSize, scale);
+      return _buildVariant(context, widget.value, widget.size);
     }
 
     // We animate the determinate value implicitly with motion physics.
@@ -245,7 +252,7 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
       curve: SpringCurve(MotionTokens.expressiveSlowSpatial),
       builder: (context, animValue, child) {
         _checkCompletion(animValue);
-        return _buildVariant(context, animValue, scaledSize, scale);
+        return _buildVariant(context, animValue, widget.size);
       },
     );
   }
@@ -253,19 +260,17 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
   Widget _buildVariant(
     BuildContext context,
     double? animatedValue,
-    ProgressIndicatorSize scaledSize,
-    double scale,
+    ProgressIndicatorSize size,
   ) {
     if (widget.variant == ProgressIndicatorVariant.linear) {
       return _LinearProgressIndicator(
         value: animatedValue,
-        size: scaledSize,
+        size: size,
         shape: widget.shape,
         activeColor: widget.activeColor,
         trackColor: widget.trackColor,
         phase: widget.phase,
         inset: widget.inset,
-        scale: scale,
         showInlineLabel: widget.showInlineLabel,
         textStyle: widget.textStyle,
       );
@@ -273,7 +278,7 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
 
     final circular = _CircularProgressIndicator(
       value: animatedValue,
-      size: scaledSize,
+      size: size,
       shape: widget.shape,
       activeColor: widget.activeColor,
       trackColor: widget.trackColor,
@@ -282,7 +287,7 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
 
     if (!widget.showLabel || animatedValue == null) return circular;
 
-    final d = scaledSize.diameterWavy;
+    final d = size.diameterWavy;
     return SizedBox(
       width: d,
       height: d,
@@ -427,7 +432,6 @@ class _LinearProgressIndicator extends StatefulWidget {
     required this.shape,
     required this.phase,
     required this.inset,
-    required this.scale,
     this.value,
     this.activeColor,
     this.trackColor,
@@ -442,7 +446,6 @@ class _LinearProgressIndicator extends StatefulWidget {
   final Color? trackColor;
   final double phase;
   final double inset;
-  final double scale;
   final bool showInlineLabel;
   final TextStyle? textStyle;
 
@@ -477,7 +480,6 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
     final spec = specForLinear(
       size: widget.size,
       shape: widget.shape,
-      scale: widget.scale,
     );
 
     final activeHeight = spec.isWavy

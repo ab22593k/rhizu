@@ -3,8 +3,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 import 'package:rhizu/src/ui/components/indicators/morphing.dart';
 import 'package:rhizu/src/ui/components/indicators/painter/morphing_shape_painter.dart';
+import 'package:rhizu/src/ui/components/indicators/shapes/shape_registry.dart';
 
-void main() {
+void main() async {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // Shape geometry comes from the SVG assets; prewarm the store so the
+  // indicator renders the morphing shape from the first frame.
+  await ShapeRegistry.prewarm();
   group('MorphingLoadingIndicator', () {
     testWidgets('renders without error', (tester) async {
       await tester.pumpWidget(
@@ -148,6 +153,120 @@ void main() {
       expect(find.byType(MorphingLoadingindicator), findsNothing);
     });
 
+    testWidgets('morphs through the default shape sequence by default', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(body: MorphingLoadingindicator()),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      expect(painter.currentShape, equals(defaultShapeSequence.first));
+      expect(painter.nextShape, equals(defaultShapeSequence.first));
+    });
+
+    testWidgets('morphs through a custom shape sequence', (tester) async {
+      await tester.pumpWidget(
+        const MediaQuery(
+          data: MediaQueryData(disableAnimations: true),
+          child: MaterialApp(
+            home: Scaffold(
+              body: MorphingLoadingindicator(
+                shapeSequence: [
+                  ShapeType.heart,
+                  ShapeType.diamond,
+                  ShapeType.clover4,
+                ],
+              ),
+            ),
+          ),
+        ),
+      );
+
+      await tester.pump();
+
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      expect(painter.currentShape, equals(ShapeType.heart));
+      expect(painter.nextShape, equals(ShapeType.heart));
+    });
+
+    testWidgets('renders with the full 35-shape library', (tester) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(shapeSequence: ShapeType.values),
+          ),
+        ),
+      );
+
+      expect(find.byType(MorphingLoadingindicator), findsOneWidget);
+      expect(ShapeType.values, hasLength(35));
+    });
+
+    testWidgets('updates the sequence when shapeSequence changes', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(
+              shapeSequence: [ShapeType.heart, ShapeType.diamond],
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: MorphingLoadingindicator(
+              shapeSequence: [ShapeType.triangle, ShapeType.square],
+            ),
+          ),
+        ),
+      );
+      await tester.pump();
+
+      // The indicator should keep morphing, now from the new first shape.
+      final painter =
+          tester
+                  .widget<CustomPaint>(
+                    find.descendant(
+                      of: find.byType(MorphingLoadingindicator),
+                      matching: find.byType(CustomPaint),
+                    ),
+                  )
+                  .painter!
+              as MorphingShapePainter;
+      expect(painter.currentShape, equals(ShapeType.triangle));
+      expect(painter.nextShape, equals(ShapeType.square));
+    });
+
     testWidgets('renders a static shape under reduced motion', (
       tester,
     ) async {
@@ -254,7 +373,7 @@ void main() {
       expect(container2.constraints?.minHeight, equals(customSize));
     });
 
-    testWidgets('MorphingLoadingIndicator respects text scale factor', (
+    testWidgets('MorphingLoadingIndicator size is independent of text scale', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -273,9 +392,10 @@ void main() {
             .first,
       );
 
-      // Default size is 48.0, with scale 2.0 it should be 96.0
-      expect(container.constraints?.minWidth, equals(96.0));
-      expect(container.constraints?.minHeight, equals(96.0));
+      // Typography settings are not a layout breakpoint: 48dp stays 48dp
+      // even at 2x text scale.
+      expect(container.constraints?.minWidth, equals(48.0));
+      expect(container.constraints?.minHeight, equals(48.0));
     });
 
     testWidgets('MorphingLoadingIndicator clamps size to constraints', (

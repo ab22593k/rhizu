@@ -10,19 +10,22 @@ import 'package:rhizu/src/ui/components/indicators/shapes/shape_type.dart';
 /// The controller handles:
 /// - Global rotation (360 degrees every 4666ms)
 /// - Morphing between shapes (650ms per transition)
-/// - Shape sequence progression (7 shapes in cycle)
+/// - Shape sequence progression (7 shapes in the default cycle)
 class LoadingAnimationController {
   /// Creates a new animation controller.
   ///
   /// [vsync] provides the ticker for the animation controllers.
-  /// [shapeSequence] defines the order of shape morphing (defaults to [defaultShapeSequence]).
+  /// [shapeSequence] defines the order of shape morphing (defaults to
+  /// [defaultShapeSequence]). An empty list also falls back to the default.
   /// [_onShapeChange] is called when the shape sequence advances to the next shape.
   LoadingAnimationController({
     required TickerProvider vsync,
     List<ShapeType>? shapeSequence,
     this._onShapeChange,
     bool animationsEnabled = true,
-  }) : _shapeSequence = shapeSequence ?? defaultShapeSequence,
+  }) : _shapeSequence = (shapeSequence == null || shapeSequence.isEmpty)
+           ? defaultShapeSequence
+           : List<ShapeType>.of(shapeSequence),
        _animationsEnabled = animationsEnabled {
     // Global Rotation: 360 degrees every rotationDuration (Linear)
     _rotationController = AnimationController(
@@ -48,7 +51,19 @@ class LoadingAnimationController {
   bool _animationsEnabled;
 
   final VoidCallback? _onShapeChange;
-  final List<ShapeType> _shapeSequence;
+  List<ShapeType> _shapeSequence;
+
+  /// Replaces the shape sequence used by the morphing animation.
+  ///
+  /// The current index is clamped so the indicator keeps morphing from the
+  /// shape it is currently on. Passing an empty list restores
+  /// [defaultShapeSequence].
+  void setShapeSequence(List<ShapeType> sequence) {
+    _shapeSequence = sequence.isEmpty
+        ? defaultShapeSequence
+        : List<ShapeType>.of(sequence);
+    _currentIndex = _currentIndex.clamp(0, _shapeSequence.length - 1);
+  }
 
   /// The current shape in the animation sequence.
   ShapeType get currentShape => _shapeSequence[_currentIndex];
