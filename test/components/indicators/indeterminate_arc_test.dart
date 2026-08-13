@@ -1,5 +1,6 @@
 import 'dart:math' as math;
 
+import 'package:flutter/animation.dart' show Curves;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
 
@@ -28,24 +29,48 @@ void main() {
       expect(sweep, lessThan(math.pi / 3)); // < 60°
     });
 
-    test('head expands faster than tail contracts (asymmetric easing)', () {
-      // In the first half, the head uses ease-out (fast start, slow end).
-      // In the second half, the tail uses ease-in (slow start, fast end).
-      //
-      // So the sweep should grow rapidly near t=0 → 0.1 (head ease-out)
-      // but shrink slowly near t=0.5 → 0.6 (tail ease-in).
+    test('head expands with the M3 standard easing curve (fastOutSlowIn)', () {
+      // In the first half, the head advances with the M3 standard easing
+      // curve (`md.sys.motion.easing-standard`, i.e. fastOutSlowIn) while
+      // the tail stays stationary. Both curves are the reference
+      // implementation's curves for the indeterminate arc.
       final (_, sweepAt0) = IndeterminateArcMotion.compute(0.0);
       final (_, sweepAt10) = IndeterminateArcMotion.compute(0.1);
       final (_, sweepAt50) = IndeterminateArcMotion.compute(0.5);
       final (_, sweepAt60) = IndeterminateArcMotion.compute(0.6);
 
-      // Growth rate in first 10% of expansion
+      // Growth rate in first 10% of expansion, driven by the head curve.
       final growthRate = sweepAt10 - sweepAt0;
-      // Shrink rate in first 10% of contraction
+      // Shrink rate in first 10% of contraction, driven by the tail curve.
       final shrinkRate = sweepAt50 - sweepAt60;
 
-      // Head expands faster (ease-out) than tail contracts (ease-in)
-      expect(growthRate, greaterThan(shrinkRate));
+      // Both endpoints use the same standard easing curve, so the growth
+      // rate in the first half equals the shrink rate in the second half.
+      // This is the reference behavior: the sweep is asymmetric in *time*
+      // (head leads, tail catches up) but not in easing.
+      final expected =
+          Curves.fastOutSlowIn.transform(0.2) *
+          (IndeterminateArcMotion.maxSweep - IndeterminateArcMotion.minSweep);
+      expect(growthRate, closeTo(expected, 0.001));
+      expect(shrinkRate, closeTo(expected, 0.001));
+    });
+
+    test('duration constants match the M3 motion reference', () {
+      // md.comp.progress-indicator.circular.indeterminate: the arc length
+      // completes one cycle every 1333ms and the indicator rotates 360°
+      // every 2222ms. The combined LCM keeps both integer-aligned.
+      expect(
+        IndeterminateArcMotion.arcCycleDuration,
+        const Duration(milliseconds: 1333),
+      );
+      expect(
+        IndeterminateArcMotion.rotationCycleDuration,
+        const Duration(milliseconds: 2222),
+      );
+      expect(
+        IndeterminateArcMotion.combinedCycleDuration,
+        const Duration(milliseconds: 1333 * 2222),
+      );
     });
 
     test('start angle shifts as tail advances in second half', () {

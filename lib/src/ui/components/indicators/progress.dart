@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/rhizu.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/linear_indeterminate_motion.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 
 /// Re-exports the painters used by the progress indicator widgets.
@@ -362,19 +364,32 @@ class _CircularProgressIndicatorState
         height: diameter,
         child: _shouldAnimate
             ? RepeatingAnimationBuilder<double>(
-                // 1333ms per arc cycle, 2222ms per rotation cycle.
-                // The LCM (1333 * 2222 = 2961926ms) ensures seamless wrapping.
-                duration: wantsWavy
-                    ? const Duration(
-                        milliseconds: 1333 * 2222,
-                      ) // keep simple, same LCM for wavy? Or maybe standard 1333 is fine? Wavy actually usually isn't M3, but we can standardize.
-                    : const Duration(milliseconds: 1333 * 2222),
-                animatable: Tween(begin: 0.0, end: 1333.0 * 2222.0),
+                // M3 motion spec (md.comp.progress-indicator.circular
+                // indeterminate): the arc length completes one cycle every
+                // 1333ms and the indicator rotates 360° every 2222ms. The
+                // combined LCM (1333 * 2222) keeps both sub-cycles
+                // integer-aligned so the animation wraps seamlessly.
+                duration: IndeterminateArcMotion.combinedCycleDuration,
+                animatable: Tween(
+                  begin: 0.0,
+                  end: IndeterminateArcMotion
+                      .combinedCycleDuration
+                      .inMilliseconds
+                      .toDouble(),
+                ),
                 builder: (context, totalMs, child) {
                   final isIndeterminate = widget.value == null;
 
-                  final arcCycles = totalMs / 1333.0;
-                  final spinAngle = (totalMs / 2222.0) * 2 * math.pi;
+                  final arcCycles =
+                      totalMs /
+                      IndeterminateArcMotion.arcCycleDuration.inMilliseconds;
+                  final spinAngle =
+                      (totalMs /
+                          IndeterminateArcMotion
+                              .rotationCycleDuration
+                              .inMilliseconds) *
+                      2 *
+                      math.pi;
 
                   return CustomPaint(
                     painter: wantsWavy
@@ -388,7 +403,11 @@ class _CircularProgressIndicatorState
                             baseSpin: isIndeterminate ? spinAngle : 0.0,
                             size: widget.size,
                             path: _path,
-                            wavePhase: (totalMs / 1000.0) * 2 * math.pi,
+                            // The wave travels with the arc cycle (one
+                            // wavelength per 1333ms cycle) so it stays
+                            // integer-aligned with the combined LCM and never
+                            // jumps at the wrap boundary.
+                            wavePhase: arcCycles * 2 * math.pi,
                           )
                         : CircularFlatPainter(
                             value: widget.value,
@@ -492,7 +511,9 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
       width: double.infinity,
       child: _shouldAnimate
           ? RepeatingAnimationBuilder<double>(
-              duration: const Duration(milliseconds: 2000),
+              // M3 motion spec (md.comp.progress-indicator.linear
+              // indeterminate): one full two-line cycle every 2000ms.
+              duration: LinearIndeterminateMotion.cycleDuration,
               animatable: Tween(begin: 0.0, end: 1.0),
               builder: (context, animValue, child) {
                 final phaseValue = animValue * 2 * math.pi;
@@ -515,7 +536,14 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
                 spec: spec,
                 active: active,
                 track: track,
-                phase: widget.phase,
+                // Reduced motion: freeze at a representative cycle position so
+                // an active segment stays visible (not an empty track), but
+                // honor an explicitly supplied phase when provided.
+                phase: widget.value == null
+                    ? (widget.phase != 0.0
+                          ? widget.phase
+                          : LinearIndeterminateMotion.staticPhase)
+                    : widget.phase,
                 inset: widget.inset,
                 path: _path,
               ),

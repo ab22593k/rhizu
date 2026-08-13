@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:rhizu/rhizu.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
+import 'package:rhizu/src/ui/components/indicators/animation/linear_indeterminate_motion.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
 
 /// Paints a flat (non-wavy) circular progress indicator.
@@ -281,10 +282,8 @@ class LinearPainter extends CustomPainter {
 
     // both strokes share the same baseline (centerline)
     final cy = size.height / 2;
-    final trackCy = cy;
-    final activeCy = cy;
 
-    // --- Draw track lane (flat pill) ---
+    // --- Track lane (flat pill) ---
     final base = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = spec.trackHeight
@@ -295,74 +294,24 @@ class LinearPainter extends CustomPainter {
     final isIndeterminate = value == null;
     final pEnd = isIndeterminate ? 0.0 : value!.clamp(0.0, 1.0);
 
-    var activeStartX = left;
-    var activeEndX = left;
-
     // Total physical bound of the indicator (including gap + dot)
     final trackEnd = isIndeterminate
         ? size.width
         : right + spec.gap + spec.dotDiameter;
     final fullActiveWidth = trackEnd - left;
 
-    if (isIndeterminate) {
-      // Indeterminate: slide center back and forth, while width grows and shrinks.
-      final width = trackEnd - left;
-      final centerT = (math.sin(phase - math.pi / 2) + 1.0) / 2.0;
-      final widthT = (math.sin(phase * 2) + 1.0) / 2.0;
-      final w = 0.2 + 0.5 * widthT;
-      final sT = (centerT - w / 2).clamp(0.0, 1.0);
-      final eT = (centerT + w / 2).clamp(0.0, 1.0);
-      activeStartX = left + width * sT;
-      activeEndX = left + width * eT;
-    } else {
-      activeStartX = left;
-      activeEndX = left + fullActiveWidth * pEnd;
-    }
-
-    // --- Draw track lane ---
-    if (isIndeterminate) {
-      canvas.drawLine(
-        Offset(left, trackCy),
-        Offset(trackEnd, trackCy),
-        base..color = track,
-      );
-    } else {
-      // Determinate fixed inter-stroke gap
-      final trackStartX = math.min(trackEnd, activeEndX + spec.gap);
-      if (trackStartX < trackEnd) {
-        canvas.drawLine(
-          Offset(trackStartX, trackCy),
-          Offset(trackEnd, trackCy),
-          base..color = track,
-        );
-      }
-
-      // Stop dot at the end
-      // Spec: stop-indicator.color = md.sys.color.primary. The dot is drawn
-      // beneath the active layer, so when activeEndX sweeps past it at 100%,
-      // it is cleanly absorbed into the flat line.
-      final dotCenterX = right + spec.gap + spec.dotDiameter / 2;
-      final dotCenterY = trackCy + spec.dotVerticalOffset;
-      canvas.drawCircle(
-        Offset(dotCenterX, dotCenterY),
-        spec.dotDiameter / 2,
-        Paint()..color = active, // Spec: stop-indicator.color = primary
-      );
-    }
-
-    // --- Active lane ---
     // Fade wave amplitude to 0 as progress hits 100%
     final ampFade = isIndeterminate
         ? 1.0
         : (1.0 - pEnd).clamp(0.0, 0.05) / 0.05;
     final currentAmp = spec.waveAmplitude * ampFade;
 
-    if (spec.isWavy && currentAmp > 0.01) {
-      // wavy centerline
-      final start = activeStartX;
-      final end = activeEndX;
+    // Paints one active segment (flat or wavy) between [startX, endX].
+    void paintActiveSegment(double startX, double endX) {
+      if (endX - startX <= 0) return;
 
-      if (end > start) {
+      if (spec.isWavy && currentAmp > 0.01) {
+        // wavy centerline
         _path.reset();
         const step = 1.5;
         // Spec: indeterminate wavelength = 20dp; determinate = 40dp.
@@ -371,15 +320,15 @@ class LinearPainter extends CustomPainter {
             : spec.wavePeriod;
         final k = 2 * math.pi / period;
 
-        var x = start;
-        var y = activeCy + currentAmp * math.sin(phase + (x - left) * k);
+        var x = startX;
+        var y = cy + currentAmp * math.sin(phase + (x - left) * k);
         _path.moveTo(x, y);
-        for (x = start + step; x <= end; x += step) {
-          y = activeCy + currentAmp * math.sin(phase + (x - left) * k);
+        for (x = startX + step; x <= endX; x += step) {
+          y = cy + currentAmp * math.sin(phase + (x - left) * k);
           _path.lineTo(x, y);
         }
-        y = activeCy + currentAmp * math.sin(phase + (end - left) * k);
-        _path.lineTo(end, y);
+        y = cy + currentAmp * math.sin(phase + (endX - left) * k);
+        _path.lineTo(endX, y);
 
         canvas.drawPath(
           _path,
@@ -387,21 +336,93 @@ class LinearPainter extends CustomPainter {
             ..color = active
             ..strokeWidth = spec.trackHeight,
         );
-      }
-    } else {
-      // flat active pill
-      final start = activeStartX;
-      final end = activeEndX;
-      if (end > start) {
+      } else {
+        // flat active pill
         canvas.drawLine(
-          Offset(start, activeCy),
-          Offset(end, activeCy),
+          Offset(startX, cy),
+          Offset(endX, cy),
           base
             ..color = active
             ..strokeWidth = spec.trackHeight,
         );
       }
     }
+
+    if (isIndeterminate) {
+      // M3 two-line chase (md.comp.progress-indicator.linear.indeterminate):
+      // two active segments sweep the track, growing from the left edge and
+      // collapsing at the right. Line 1 leads; line 2 follows half a cycle
+      // later so the track never sits empty while the animation wraps.
+      final t = (phase / (2 * math.pi)) % 1.0;
+      final (line1Start, line1End, line2Start, line2End) =
+          LinearIndeterminateMotion.compute(t);
+      final width = fullActiveWidth;
+      // Spec: track-active-indicator-space = 4dp (fixed).
+      final gapFraction = spec.gap / width;
+
+      // Track right of line 1's head. When the head has not started yet
+      // (line1End == 0) the track still spans from the left edge, mirroring
+      // the reference implementation.
+      final trackRightStart = line1End > 0 ? line1End + gapFraction : 0.0;
+      if (trackRightStart < 1.0) {
+        canvas.drawLine(
+          Offset(left + trackRightStart * width, cy),
+          Offset(trackEnd, cy),
+          base..color = track,
+        );
+      }
+      // Line 1 active segment.
+      paintActiveSegment(left + line1Start * width, left + line1End * width);
+      // Track between line 1 and line 2. When line 2's head has not started
+      // yet (line2End == 0) the track piece begins at the left edge.
+      final trackBetweenStart = line2End > 0 ? line2End + gapFraction : 0.0;
+      if (line1Start - gapFraction > trackBetweenStart) {
+        canvas.drawLine(
+          Offset(left + trackBetweenStart * width, cy),
+          Offset(left + (line1Start - gapFraction) * width, cy),
+          base..color = track,
+        );
+      }
+      // Line 2 active segment.
+      paintActiveSegment(left + line2Start * width, left + line2End * width);
+      // Track left of line 2's tail.
+      if (line2Start - gapFraction > 0.0) {
+        canvas.drawLine(
+          Offset(left, cy),
+          Offset(left + (line2Start - gapFraction) * width, cy),
+          base..color = track,
+        );
+      }
+      return;
+    }
+
+    // --- Determinate ---
+    final activeEndX = left + fullActiveWidth * pEnd;
+
+    // Determinate fixed inter-stroke gap
+    final trackStartX = math.min(trackEnd, activeEndX + spec.gap);
+    if (trackStartX < trackEnd) {
+      canvas.drawLine(
+        Offset(trackStartX, cy),
+        Offset(trackEnd, cy),
+        base..color = track,
+      );
+    }
+
+    // Stop dot at the end
+    // Spec: stop-indicator.color = md.sys.color.primary. The dot is drawn
+    // beneath the active layer, so when activeEndX sweeps past it at 100%,
+    // it is cleanly absorbed into the flat line.
+    final dotCenterX = right + spec.gap + spec.dotDiameter / 2;
+    final dotCenterY = cy + spec.dotVerticalOffset;
+    canvas.drawCircle(
+      Offset(dotCenterX, dotCenterY),
+      spec.dotDiameter / 2,
+      Paint()..color = active, // Spec: stop-indicator.color = primary
+    );
+
+    // --- Active lane ---
+    paintActiveSegment(left, activeEndX);
   }
 
   @override
