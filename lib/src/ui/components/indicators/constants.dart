@@ -137,6 +137,50 @@ class WavyProgressConstants {
   /// Spec: `md.comp.progress-indicator.circular.active-indicator.wave.wavelength` = 15dp
   static const double circularWavePeriod = 15;
 
+  /// Progress below which a determinate wavy indicator renders flat.
+  ///
+  /// Reference (`WavyProgressIndicatorDefaults.indicatorAmplitude`): the wave
+  /// amplitude is zero below 10% (and above 95%) progress so short arcs do not
+  /// look detached from the track — the active segment renders as a clean flat
+  /// stroke with the spec 4dp gap.
+  static const double determinateWaveAmplitudeMinProgress = 0.10;
+
+  /// Progress above which a determinate wavy indicator renders flat.
+  ///
+  /// Reference: amplitude returns to zero at 95% so the wave fades out as the
+  /// indicator approaches completion.
+  static const double determinateWaveAmplitudeMaxProgress = 0.95;
+
+  /// Width (in progress units) of the smooth transition bands on each side of
+  /// the amplitude ramp thresholds.
+  ///
+  /// The reference steps the amplitude instantly; Rhizu animates the progress
+  /// value with a spring, so a short band approximates the reference's animated
+  /// amplitude (Increasing/DecreasingAmplitudeAnimationSpec) without a hard
+  /// pop as the wave appears or disappears.
+  static const double determinateWaveAmplitudeRampWidth = 0.02;
+
+  /// Returns the wave amplitude factor for a determinate [value].
+  ///
+  /// Reference (`WavyProgressIndicatorDefaults.indicatorAmplitude`): `0.0`
+  /// below [determinateWaveAmplitudeMinProgress] and above
+  /// [determinateWaveAmplitudeMaxProgress], `1.0` in between, with a short
+  /// smooth ramp at each threshold. Indeterminate indicators always use `1.0`.
+  static double determinateWaveAmplitudeFactor(double value) {
+    final v = value.clamp(0.0, 1.0);
+    const minProgress = determinateWaveAmplitudeMinProgress;
+    const maxProgress = determinateWaveAmplitudeMaxProgress;
+    const ramp = determinateWaveAmplitudeRampWidth;
+    if (v <= minProgress || v >= maxProgress) return 0.0;
+    if (v < minProgress + ramp) {
+      return ((v - minProgress) / ramp).clamp(0.0, 1.0);
+    }
+    if (v > maxProgress - ramp) {
+      return ((maxProgress - v) / ramp).clamp(0.0, 1.0);
+    }
+    return 1.0;
+  }
+
   /// Default gap between the active indicator and track in logical pixels.
   static const double defaultTrackGap = 4;
 

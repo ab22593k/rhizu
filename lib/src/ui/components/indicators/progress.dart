@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widget_previews.dart';
 import 'package:rhizu/rhizu.dart';
@@ -142,6 +143,7 @@ class ProgressIndicator extends StatefulWidget {
     this.showLabel = false,
     this.showInlineLabel = false,
     this.textStyle,
+    this.semanticsLabel,
     this.onComplete,
     this.enableHapticFeedback = false,
   });
@@ -197,6 +199,14 @@ class ProgressIndicator extends StatefulWidget {
   /// Optional style for the percentage text shown in the center.
   final TextStyle? textStyle;
 
+  /// Accessible label for the progress indicator.
+  ///
+  /// When null, no label is announced. The determinate indicator is exposed
+  /// to assistive technologies as a progress bar with `minValue = 0`,
+  /// `maxValue = 100` and `value = <percentage>`, mirroring the reference
+  /// implementation's semantics.
+  final String? semanticsLabel;
+
   /// Called when the animated progress value reaches 1.0 (completion).
   ///
   /// This is triggered once per completion event. If the value drops below
@@ -235,27 +245,41 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
     // accessibility preference, not a layout breakpoint.
     final disableAnimations = MediaQuery.disableAnimationsOf(context);
 
+    final Widget indicator;
     if (widget.value == null) {
-      return _buildVariant(context, null, widget.size);
-    }
-
-    // Respect the user's reduced-motion preference: render the final value
-    // directly instead of running the expressive spring.
-    if (disableAnimations) {
+      indicator = _buildVariant(context, null, widget.size);
+    } else if (disableAnimations) {
+      // Respect the user's reduced-motion preference: render the final value
+      // directly instead of running the expressive spring.
       _checkCompletion(widget.value!);
-      return _buildVariant(context, widget.value, widget.size);
+      indicator = _buildVariant(context, widget.value, widget.size);
+    } else {
+      // We animate the determinate value implicitly with motion physics.
+      indicator = TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.0, end: widget.value),
+        // Note: SpringCurve overrides standard translation, so this duration simply guarantees the animation lives long enough for the spring to settle.
+        duration: const Duration(milliseconds: 1500),
+        curve: SpringCurve(MotionTokens.expressiveSlowSpatial),
+        builder: (context, animValue, child) {
+          _checkCompletion(animValue);
+          return _buildVariant(context, animValue, widget.size);
+        },
+      );
     }
 
-    // We animate the determinate value implicitly with motion physics.
-    return TweenAnimationBuilder<double>(
-      tween: Tween<double>(begin: 0.0, end: widget.value),
-      // Note: SpringCurve overrides standard translation, so this duration simply guarantees the animation lives long enough for the spring to settle.
-      duration: const Duration(milliseconds: 1500),
-      curve: SpringCurve(MotionTokens.expressiveSlowSpatial),
-      builder: (context, animValue, child) {
-        _checkCompletion(animValue);
-        return _buildVariant(context, animValue, widget.size);
-      },
+    // Accessibility: expose determinate indicators as progress bars with a
+    // percentage value, and indeterminate ones as loading spinners
+    // (reference implementation semantics).
+    final isProgressBar = widget.value != null;
+    return Semantics(
+      label: widget.semanticsLabel,
+      role: isProgressBar
+          ? SemanticsRole.progressBar
+          : SemanticsRole.loadingSpinner,
+      minValue: isProgressBar ? '0' : null,
+      maxValue: isProgressBar ? '100' : null,
+      value: isProgressBar ? '${(widget.value! * 100).round()}' : null,
+      child: indicator,
     );
   }
 
@@ -344,7 +368,11 @@ class _CircularProgressIndicatorState
     if (widget.rotation != 0.0) return false;
     final v = widget.value;
     if (v == null) return true;
-    return widget.shape == ProgressIndicatorShape.wavy;
+    if (widget.shape != ProgressIndicatorShape.wavy) return false;
+    // The reference only runs the wave animation while the wave amplitude is
+    // positive: the determinate amplitude ramp keeps the wave flat below 10%
+    // and above 95% progress, so there is nothing to animate there.
+    return WavyProgressConstants.determinateWaveAmplitudeFactor(v) > 0.0;
   }
 
   @override
@@ -364,8 +392,8 @@ class _CircularProgressIndicatorState
         height: diameter,
         child: _shouldAnimate
             ? RepeatingAnimationBuilder<double>(
-                // M3 motion spec (md.comp.progress-indicator.circular
-                // indeterminate): the arc length completes one cycle every
+                // M3 motion spec (md.comp.progress-indicator.circular indeterminate):
+                // the arc length completes one cycle every
                 // 1333ms and the indicator rotates 360° every 2222ms. The
                 // combined LCM (1333 * 2222) keeps both sub-cycles
                 // integer-aligned so the animation wraps seamlessly.
@@ -487,7 +515,10 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
     if (widget.phase != 0.0) return false;
     final v = widget.value;
     if (v == null) return true;
-    return widget.shape == ProgressIndicatorShape.wavy;
+    if (widget.shape != ProgressIndicatorShape.wavy) return false;
+    // Mirror the circular indicator: animate the wave only where the reference
+    // amplitude ramp keeps it visible (10%–95% determinate progress).
+    return WavyProgressConstants.determinateWaveAmplitudeFactor(v) > 0.0;
   }
 
   @override
@@ -495,6 +526,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
     final theme = Theme.of(context);
     final active = widget.activeColor ?? theme.colorScheme.primary;
     final track = widget.trackColor ?? theme.colorScheme.secondaryContainer;
+    final textDirection = Directionality.of(context);
 
     final spec = specForLinear(
       size: widget.size,
@@ -525,6 +557,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
                     track: track,
                     phase: phaseValue,
                     inset: widget.inset,
+                    textDirection: textDirection,
                     path: _path,
                   ),
                 );
@@ -545,6 +578,7 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
                           : LinearIndeterminateMotion.staticPhase)
                     : widget.phase,
                 inset: widget.inset,
+                textDirection: textDirection,
                 path: _path,
               ),
             ),
@@ -618,8 +652,6 @@ class LinearSpecs {
     required this.trackHeight,
     required this.gap,
     required this.dotDiameter,
-    required this.dotVerticalOffset,
-    required this.trailingMargin,
     required this.isWavy,
     this.waveAmplitude = 0,
     this.wavePeriod = WavyProgressConstants.defaultWavePeriod,
@@ -636,13 +668,6 @@ class LinearSpecs {
 
   /// Diameter of the stop indicator dot (always 4dp).
   final double dotDiameter;
-
-  /// Vertical offset of the stop dot from the track centerline.
-  /// Spec: 0dp for small (4dp), 2dp for medium (8dp).
-  final double dotVerticalOffset;
-
-  /// Right-side margin reserving space for the stop dot region.
-  final double trailingMargin;
 
   /// Whether the active track uses a wavy path.
   final bool isWavy;
@@ -662,12 +687,12 @@ class LinearSpecs {
 /// Measurements from the merged M3 progress indicator token set
 /// (`md.comp.progress-indicator.linear`):
 ///
-/// | Variant      | Height | Gap | dot⌀ | dotVOff | amp | λ    | λ(indet) |
-/// |--------------|--------|-----|------|---------|-----|------|----------|
-/// | Flat  small  | 4      | 4   | 4    | 0       | —   | —    | —        |
-/// | Flat  medium | 8      | 4   | 4    | 2       | —   | —    | —        |
-/// | Wavy  small  | 10     | 4   | 4    | 0       | 3   | 40   | 20       |
-/// | Wavy  medium | 14     | 4   | 4    | 2       | 3   | 40   | 20       |
+/// | Variant      | Height | Gap | dot⌀ | amp | λ    | λ(indet) |
+/// |--------------|--------|-----|------|-----|------|----------|
+/// | Flat  small  | 4      | 4   | 4    | —   | —    | —        |
+/// | Flat  medium | 8      | 4   | 4    | —   | —    | —        |
+/// | Wavy  small  | 10     | 4   | 4    | 3   | 40   | 20       |
+/// | Wavy  medium | 14     | 4   | 4    | 3   | 40   | 20       |
 LinearSpecs specForLinear({
   required ProgressIndicatorSize size,
   required ProgressIndicatorShape shape,
@@ -676,9 +701,7 @@ LinearSpecs specForLinear({
   final thickness = size.thickness;
   // Shared derived measurements.
   final dotDiameter = 4.0 * scale;
-  final gap = 4.0 * scale; // spec: track-active-indicator-space = 4dp (fixed)
-  final dotVerticalOffset =
-      (thickness - dotDiameter) / 2; // 0 for 4dp, 2 for 8dp
+  final gap = 4.0 * scale;
 
   switch (shape) {
     case ProgressIndicatorShape.flat:
@@ -686,8 +709,6 @@ LinearSpecs specForLinear({
         trackHeight: thickness,
         gap: gap,
         dotDiameter: dotDiameter,
-        dotVerticalOffset: dotVerticalOffset,
-        trailingMargin: gap + dotDiameter,
         isWavy: false,
       );
     case ProgressIndicatorShape.wavy:
@@ -695,8 +716,6 @@ LinearSpecs specForLinear({
         trackHeight: thickness,
         gap: gap,
         dotDiameter: dotDiameter,
-        dotVerticalOffset: dotVerticalOffset,
-        trailingMargin: gap + dotDiameter,
         isWavy: true,
         waveAmplitude: WavyProgressConstants.defaultAmplitude * scale,
         wavePeriod: WavyProgressConstants.defaultWavePeriod * scale,

@@ -40,9 +40,13 @@ class CircularFlatPainter extends CustomPainter {
 
     // Spec: gap between active arc and track arc = 4dp.
     const gapDp = 4.0;
-    final gapAngle = gapDp / radius;
-
     final isIndeterminate = value == null;
+
+    // Reference (`startGap = strokeRadius + gapRadius`): the track gap is
+    // stroke-inclusive in both determinate and indeterminate modes, so the
+    // round caps of the active and track arcs leave a real 4dp visible gap
+    // between them instead of touching.
+    final gapAngle = (stroke + gapDp) / radius;
 
     late final double activeStart;
     late final double sweep;
@@ -134,7 +138,8 @@ class CircularWavyPainter extends CustomPainter {
   /// Phase offset applied to the wave sin function.
   ///
   /// Animating this value makes the wave *travel* along the arc without
-  /// changing the arc's position. Used for determinate wavy mode.
+  /// changing the arc's position. Used by the animated (indeterminate and
+  /// wavy determinate) render paths.
   final double wavePhase;
 
   @override
@@ -154,8 +159,6 @@ class CircularWavyPainter extends CustomPainter {
 
     // Spec: scallop arc-length wavelength = 15dp.
     const scallopLen = WavyProgressConstants.circularWavePeriod;
-    // Taper length to fade the wave to zero near the tip (gives a closed look).
-    const taperLen = scallopLen / 2;
 
     // Spec: gap between active and track = 4dp.
     const gapDp = 4.0;
@@ -186,7 +189,10 @@ class CircularWavyPainter extends CustomPainter {
         ..strokeCap = StrokeCap.round
         ..isAntiAlias = true
         ..color = track;
-      final gapAngle = gapDp / baseRadius;
+      // Reference (`startGap = strokeRadius + gapRadius`): stroke-inclusive
+      // gap in both determinate and indeterminate modes so the round caps
+      // leave a real 4dp visible gap instead of touching.
+      final gapAngle = (stroke + gapDp) / baseRadius;
       final rect = Rect.fromCircle(center: center, radius: baseRadius);
       final a1 = end + gapAngle;
       final a2 = start - gapAngle;
@@ -197,12 +203,15 @@ class CircularWavyPainter extends CustomPainter {
       canvas.drawArc(rect, a1, sweep1, false, trackPaint);
     }
 
+    // Reference (`WavyProgressIndicatorDefaults.indicatorAmplitude`): the wave
+    // is flat below 10% and above 95% determinate progress so a short active
+    // arc keeps the spec 4dp gap crisp instead of looking detached from the
+    // track. Indeterminate keeps full amplitude, and the arc end is cut cleanly
+    // with the round stroke cap (the reference does not taper the wave).
     final pEnd = isIndeterminate ? 0.0 : value!.clamp(0.0, 1.0);
-    // Taper amplitude to 0 as progress hits 100% (from 95% -> 100%)
-    final ampFade = isIndeterminate
-        ? 1.0
-        : (1.0 - pEnd).clamp(0.0, 0.05) / 0.05;
-    final currentAmp = amp * ampFade;
+    final currentAmp = isIndeterminate
+        ? amp
+        : amp * WavyProgressConstants.determinateWaveAmplitudeFactor(pEnd);
 
     // Active squiggle path.
     final steps = math.max(48, (s.width * 1.2).round());
@@ -212,18 +221,9 @@ class CircularWavyPainter extends CustomPainter {
       final ang = start + (end - start) * t;
       final arcLen = baseRadius * (ang - start);
 
-      // Taper amplitude to 0 near the end for a closed appearance.
-      final arcToEnd = baseRadius * (end - ang);
-      var taperFactor = 1.0;
-      if (arcToEnd < taperLen) {
-        final tEnd = (arcToEnd / taperLen).clamp(0.0, 1.0);
-        taperFactor = math.sin(tEnd * math.pi / 2);
-      }
-
       final r =
           baseRadius +
-          (currentAmp * taperFactor) *
-              math.sin(arcLen / scallopLen * 2 * math.pi + wavePhase);
+          currentAmp * math.sin(arcLen / scallopLen * 2 * math.pi + wavePhase);
       final p = Offset(
         center.dx + r * math.cos(ang),
         center.dy + r * math.sin(ang),
@@ -264,6 +264,7 @@ class LinearPainter extends CustomPainter {
     required this.track,
     required this.phase,
     required this.inset,
+    required this.textDirection,
     required this._path,
   });
 
@@ -273,12 +274,48 @@ class LinearPainter extends CustomPainter {
   final Color track;
   final double phase;
   final double inset;
+  final TextDirection textDirection;
   final Path _path;
+
+  /// Progress value below which the determinate track gap ramps in.
+  ///
+  /// Reference (`_kTrackGapRampDownThreshold`): the track gap
+  /// (`track-active-indicator-space`) scales linearly from 0 to its full value
+  /// as progress grows from 0 to 1%, so the gap never pops in abruptly at low
+  /// progress values.
+  @visibleForTesting
+  static const double trackGapRampDownThreshold = 0.01;
+
+  /// Returns the effective track-gap fraction for [value].
+  ///
+  /// Scales [gapFraction] linearly from 0 to its full value as [value]
+  /// grows from 0 to [trackGapRampDownThreshold], and keeps it at the full
+  /// value beyond that.
+  @visibleForTesting
+  static double effectiveTrackGapFraction(double value, double gapFraction) {
+    return gapFraction *
+        (value.clamp(0.0, trackGapRampDownThreshold) /
+            trackGapRampDownThreshold);
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
+    // Spec (guidelines): linear progress indicators should be mirrored
+    // horizontally for products using right-to-left (RTL) languages.
+    final isLtr = textDirection == TextDirection.ltr;
+    if (!isLtr) {
+      canvas.save();
+      canvas.translate(size.width, 0);
+      canvas.scale(-1, 1);
+    }
+    _paintInLtr(canvas, size);
+    if (!isLtr) {
+      canvas.restore();
+    }
+  }
+
+  void _paintInLtr(Canvas canvas, Size size) {
     final left = inset;
-    final right = size.width - spec.trailingMargin;
 
     // both strokes share the same baseline (centerline)
     final cy = size.height / 2;
@@ -294,17 +331,31 @@ class LinearPainter extends CustomPainter {
     final isIndeterminate = value == null;
     final pEnd = isIndeterminate ? 0.0 : value!.clamp(0.0, 1.0);
 
-    // Total physical bound of the indicator (including gap + dot)
-    final trackEnd = isIndeterminate
-        ? size.width
-        : right + spec.gap + spec.dotDiameter;
+    // The track spans the full container width; the stop indicator sits at
+    // the right edge (reference implementation draws the track to 1.0 and
+    // the stop dot at `size.width - maxRadius`).
+    final trackEnd = size.width;
     final fullActiveWidth = trackEnd - left;
 
-    // Fade wave amplitude to 0 as progress hits 100%
-    final ampFade = isIndeterminate
-        ? 1.0
-        : (1.0 - pEnd).clamp(0.0, 0.05) / 0.05;
-    final currentAmp = spec.waveAmplitude * ampFade;
+    // The gap between the active track end and the inactive track start
+    // (`track-active-indicator-space` = 4dp) is stroke-inclusive, mirroring
+    // the circular painters (reference `startGap = strokeRadius + gapRadius`):
+    // both strokes use round caps that extend `stroke/2` beyond their
+    // endpoints, so the endpoints must be `gap + stroke` apart for a real 4dp
+    // visible gap to remain instead of the caps touching. Shared by the
+    // determinate and indeterminate lanes below.
+    final strokeInclusiveGap = spec.gap + spec.trackHeight;
+    final gapFraction = fullActiveWidth > 0
+        ? strokeInclusiveGap / fullActiveWidth
+        : 0.0;
+
+    // Reference (`WavyProgressIndicatorDefaults.indicatorAmplitude`): the wave
+    // is flat below 10% and above 95% determinate progress; indeterminate keeps
+    // full amplitude.
+    final currentAmp = isIndeterminate
+        ? spec.waveAmplitude
+        : spec.waveAmplitude *
+              WavyProgressConstants.determinateWaveAmplitudeFactor(pEnd);
 
     // Paints one active segment (flat or wavy) between [startX, endX].
     void paintActiveSegment(double startX, double endX) {
@@ -357,8 +408,6 @@ class LinearPainter extends CustomPainter {
       final (line1Start, line1End, line2Start, line2End) =
           LinearIndeterminateMotion.compute(t);
       final width = fullActiveWidth;
-      // Spec: track-active-indicator-space = 4dp (fixed).
-      final gapFraction = spec.gap / width;
 
       // Track right of line 1's head. When the head has not started yet
       // (line1End == 0) the track still spans from the left edge, mirroring
@@ -399,8 +448,16 @@ class LinearPainter extends CustomPainter {
     // --- Determinate ---
     final activeEndX = left + fullActiveWidth * pEnd;
 
-    // Determinate fixed inter-stroke gap
-    final trackStartX = math.min(trackEnd, activeEndX + spec.gap);
+    // Track gap ramps in over the first 1% of progress (reference:
+    // `_kTrackGapRampDownThreshold`) instead of appearing abruptly.
+    final effectiveGapFraction = effectiveTrackGapFraction(
+      pEnd,
+      gapFraction,
+    );
+    final trackStartX = math.min(
+      trackEnd,
+      left + (pEnd + effectiveGapFraction) * fullActiveWidth,
+    );
     if (trackStartX < trackEnd) {
       canvas.drawLine(
         Offset(trackStartX, cy),
@@ -409,15 +466,20 @@ class LinearPainter extends CustomPainter {
       );
     }
 
-    // Stop dot at the end
+    // Stop dot at the end.
     // Spec: stop-indicator.color = md.sys.color.primary. The dot is drawn
     // beneath the active layer, so when activeEndX sweeps past it at 100%,
     // it is cleanly absorbed into the flat line.
-    final dotCenterX = right + spec.gap + spec.dotDiameter / 2;
-    final dotCenterY = cy + spec.dotVerticalOffset;
+    // Reference placement: centered on the track centerline, its trailing
+    // edge `maxRadius` from the container edge (`size.width - maxRadius`).
+    // This yields 0dp trailing space at 4dp height and 2dp at 8dp
+    // (`stop-indicator.trailing-space`), and the dot radius is clamped to
+    // half the indicator height.
+    final maxRadius = size.height / 2;
+    final dotRadius = math.min(spec.dotDiameter / 2, maxRadius);
     canvas.drawCircle(
-      Offset(dotCenterX, dotCenterY),
-      spec.dotDiameter / 2,
+      Offset(size.width - maxRadius, maxRadius),
+      dotRadius,
       Paint()..color = active, // Spec: stop-indicator.color = primary
     );
 
@@ -432,5 +494,6 @@ class LinearPainter extends CustomPainter {
       active != old.active ||
       track != old.track ||
       phase != old.phase ||
-      inset != old.inset;
+      inset != old.inset ||
+      textDirection != old.textDirection;
 }
