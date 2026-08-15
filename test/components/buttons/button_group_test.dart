@@ -388,14 +388,26 @@ void main() {
     });
 
     group('Custom color', () {
-      testWidgets('color overrides the selected button background', (
+      Material materialOf(
+        WidgetTester tester,
+        String label,
+      ) => tester.widget<Material>(
+        find
+            .ancestor(
+              of: find.text(label),
+              matching: find.byType(Material),
+            )
+            .first,
+      );
+
+      testWidgets('selectedColor overrides the selected button background', (
         tester,
       ) async {
         const custom = Color(0xFF00696D);
         await tester.pumpWidget(
           wrapWithTheme(
             ButtonGroup<String>(
-              color: custom,
+              selectedColor: custom,
               items: const [
                 ButtonGroupItem(value: 'a', label: 'Alpha'),
                 ButtonGroupItem(value: 'b', label: 'Beta'),
@@ -405,33 +417,55 @@ void main() {
           ),
         );
 
-        Material materialOf(String label) => tester.widget<Material>(
-          find
-              .ancestor(
-                of: find.text(label),
-                matching: find.byType(Material),
-              )
-              .first,
-        );
-
         // Selected button uses the custom color.
-        expect(materialOf('Alpha').color, custom);
+        expect(materialOf(tester, 'Alpha').color, custom);
         // Unselected button keeps the tonal style's default container.
         expect(
-          materialOf('Beta').color,
+          materialOf(tester, 'Beta').color,
           Theme.of(
             tester.element(find.text('Beta')),
           ).colorScheme.surfaceContainerHighest,
         );
       });
 
-      testWidgets('dark custom color derives a light foreground', (
+      testWidgets(
+        'unselectedColor overrides the unselected button background',
+        (
+          tester,
+        ) async {
+          const custom = Color(0xFFE3F2F2);
+          await tester.pumpWidget(
+            wrapWithTheme(
+              ButtonGroup<String>(
+                unselectedColor: custom,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          );
+
+          // Selected button keeps the style's default container.
+          expect(
+            materialOf(tester, 'Alpha').color,
+            Theme.of(
+              tester.element(find.text('Alpha')),
+            ).colorScheme.secondaryContainer,
+          );
+          // Unselected button uses the custom color.
+          expect(materialOf(tester, 'Beta').color, custom);
+        },
+      );
+
+      testWidgets('dark selected color derives a light foreground', (
         tester,
       ) async {
         await tester.pumpWidget(
           wrapWithTheme(
             ButtonGroup<String>(
-              color: const Color(0xFF111111),
+              selectedColor: const Color(0xFF111111),
               items: const [
                 ButtonGroupItem(value: 'a', label: 'Alpha'),
                 ButtonGroupItem(value: 'b', label: 'Beta'),
@@ -445,13 +479,13 @@ void main() {
         expect(label.style?.color, Colors.white);
       });
 
-      testWidgets('light custom color derives a dark foreground', (
+      testWidgets('light selected color derives a dark foreground', (
         tester,
       ) async {
         await tester.pumpWidget(
           wrapWithTheme(
             ButtonGroup<String>(
-              color: const Color(0xFFEEEEEE),
+              selectedColor: const Color(0xFFEEEEEE),
               items: const [
                 ButtonGroupItem(value: 'a', label: 'Alpha'),
                 ButtonGroupItem(value: 'b', label: 'Beta'),
@@ -465,6 +499,73 @@ void main() {
         expect(label.style?.color, Colors.black);
       });
 
+      testWidgets('unselectedColor derives a readable foreground', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              unselectedColor: const Color(0xFF111111),
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        final label = tester.widget<Text>(find.text('Beta'));
+        expect(label.style?.color, Colors.white);
+      });
+
+      testWidgets('selectedColor takes precedence over the legacy color', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              // The legacy [ButtonGroup.color] parameter is exercised here.
+              // ignore: deprecated_member_use_from_same_package
+              color: const Color(0xFF000000),
+              selectedColor: const Color(0xFF00696D),
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        expect(
+          materialOf(tester, 'Alpha').color,
+          const Color(0xFF00696D),
+        );
+      });
+
+      testWidgets('legacy color parameter aliases selectedColor', (
+        tester,
+      ) async {
+        const custom = Color(0xFF00696D);
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              // The legacy [ButtonGroup.color] parameter is exercised here.
+              // ignore: deprecated_member_use_from_same_package
+              color: custom,
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        expect(materialOf(tester, 'Alpha').color, custom);
+      });
+
       testWidgets('custom color applies across all styles', (tester) async {
         const custom = Color(0xFF00696D);
         for (final style in ButtonGroupStyle.values) {
@@ -472,7 +573,7 @@ void main() {
             wrapWithTheme(
               ButtonGroup<String>(
                 style: style,
-                color: custom,
+                selectedColor: custom,
                 items: const [
                   ButtonGroupItem(value: 'a', label: 'Alpha'),
                   ButtonGroupItem(value: 'b', label: 'Beta'),
@@ -482,16 +583,183 @@ void main() {
             ),
           );
 
-          final material = tester.widget<Material>(
-            find
-                .ancestor(
-                  of: find.text('Alpha'),
-                  matching: find.byType(Material),
-                )
-                .first,
-          );
-          expect(material.color, custom);
+          expect(materialOf(tester, 'Alpha').color, custom);
         }
+      });
+    });
+
+    group('Overflow menu', () {
+      testWidgets('collapses trailing buttons into an overflow menu on '
+          'narrow width', (tester) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 200,
+              child: ButtonGroup<String>(
+                overflowMode: ButtonGroupOverflowMode.menu,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump(); // let natural widths measure
+        await tester.pump(); // rebuild with overflow
+
+        // Only the leading item stays visible; the rest collapse into ⋯.
+        expect(find.text('Alpha'), findsOneWidget);
+        expect(find.text('Beta'), findsNothing);
+        expect(find.text('Gamma'), findsNothing);
+        expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+      });
+
+      testWidgets('collapses every button when nothing fits next to ⋯', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 100,
+              child: ButtonGroup<String>(
+                overflowMode: ButtonGroupOverflowMode.menu,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // No item fits; only the overflow menu button remains.
+        expect(find.text('Alpha'), findsNothing);
+        expect(find.byIcon(Icons.more_horiz), findsOneWidget);
+      });
+
+      testWidgets('shows all buttons when the width is sufficient', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 600,
+              child: ButtonGroup<String>(
+                overflowMode: ButtonGroupOverflowMode.menu,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Alpha'), findsOneWidget);
+        expect(find.text('Beta'), findsOneWidget);
+        expect(find.text('Gamma'), findsOneWidget);
+        expect(find.byIcon(Icons.more_horiz), findsNothing);
+      });
+
+      testWidgets('selecting a collapsed item from the menu changes the '
+          'selection', (tester) async {
+        Set<String>? result;
+        var selected = <String>{'a'};
+        await tester.pumpWidget(
+          StatefulBuilder(
+            builder: (context, setState) => wrapWithTheme(
+              SizedBox(
+                width: 200,
+                child: ButtonGroup<String>(
+                  overflowMode: ButtonGroupOverflowMode.menu,
+                  items: const [
+                    ButtonGroupItem(value: 'a', label: 'Alpha'),
+                    ButtonGroupItem(value: 'b', label: 'Beta'),
+                    ButtonGroupItem(value: 'c', label: 'Gamma'),
+                  ],
+                  selected: selected,
+                  onSelectionChanged: (next) {
+                    result = next;
+                    setState(() => selected = next);
+                  },
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+        await tester.pump();
+
+        // Open the overflow menu and pick the collapsed 'Gamma' item.
+        await tester.tap(find.byIcon(Icons.more_horiz));
+        await tester.pumpAndSettle();
+        expect(find.text('Gamma'), findsOneWidget);
+
+        await tester.tap(find.text('Gamma'));
+        await tester.pumpAndSettle();
+
+        expect(result, {'c'});
+      });
+
+      testWidgets('connected groups ignore overflow mode', (tester) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 140,
+              child: ButtonGroup<String>(
+                variant: ButtonGroupVariant.connected,
+                overflowMode: ButtonGroupOverflowMode.menu,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Alpha'), findsOneWidget);
+        expect(find.text('Beta'), findsOneWidget);
+        expect(find.text('Gamma'), findsOneWidget);
+        expect(find.byIcon(Icons.more_horiz), findsNothing);
+      });
+
+      testWidgets('expanded groups ignore overflow mode', (tester) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 140,
+              child: ButtonGroup<String>(
+                expanded: true,
+                overflowMode: ButtonGroupOverflowMode.menu,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        expect(find.text('Alpha'), findsOneWidget);
+        expect(find.text('Beta'), findsOneWidget);
+        expect(find.text('Gamma'), findsOneWidget);
+        expect(find.byIcon(Icons.more_horiz), findsNothing);
       });
     });
 

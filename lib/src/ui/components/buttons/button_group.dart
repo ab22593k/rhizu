@@ -173,6 +173,21 @@ enum ButtonGroupStyle {
   elevated,
 }
 
+/// The overflow behavior of a [ButtonGroup] when it cannot fit its available
+/// width.
+enum ButtonGroupOverflowMode {
+  /// Buttons always render in the group; a fixed group may exceed the
+  /// available width.
+  none,
+
+  /// When the available width cannot fit every button, the trailing buttons
+  /// collapse into an overflow menu button (⋯). Only horizontal, fixed
+  /// (non-[ButtonGroup.expanded]) [ButtonGroupVariant.standard] groups
+  /// support this; connected, expanded, and vertical groups ignore it
+  /// because their buttons always fit by sharing the width.
+  menu,
+}
+
 /// A single item of a [ButtonGroup].
 class ButtonGroupItem<T> {
   const ButtonGroupItem({
@@ -219,7 +234,8 @@ class ButtonGroupItem<T> {
 /// Selection mirrors the segmented button API: pass the current selection via
 /// [selected] and react to changes with [onSelectionChanged]. Use
 /// [multiSelectionEnabled] for multi-select and [emptySelectionAllowed] to
-/// allow deselecting the last item.
+/// allow deselecting the last item. On narrow windows, set
+/// [ButtonGroup.overflowMode] to collapse trailing buttons into a menu.
 ///
 /// See also:
 /// * [M3 Expressive button groups](https://m3.material.io/components/button-groups/overview)
@@ -234,11 +250,21 @@ class ButtonGroup<T> extends StatefulWidget {
     this.size = ButtonGroupSize.md,
     this.shape = ButtonGroupShape.round,
     this.style = ButtonGroupStyle.tonal,
+    // Kept for backward compatibility with the original custom-color API;
+    // it is a fresh deprecation, not one awaiting a breaking release.
+    // ignore: remove_deprecations_in_breaking_versions
+    @Deprecated(
+      'Use selectedColor instead. This parameter will be removed in a '
+      'future release.',
+    )
     this.color,
+    this.selectedColor,
+    this.unselectedColor,
     this.multiSelectionEnabled = false,
     this.emptySelectionAllowed = false,
     this.direction = Axis.horizontal,
     this.expanded = false,
+    this.overflowMode = ButtonGroupOverflowMode.none,
     this.showSelectedIcon = false,
     this.selectedIcon,
   }) : assert(
@@ -280,7 +306,26 @@ class ButtonGroup<T> extends StatefulWidget {
   /// otherwise provide, across all styles. The foreground (icon/label/check)
   /// is derived automatically from this color — black or white, whichever
   /// has the higher WCAG contrast ratio — so the selection stays readable.
-  /// Unselected buttons keep the style's default neutral treatment.
+  /// Unselected buttons keep the style's default neutral treatment unless
+  /// [unselectedColor] is set.
+  final Color? selectedColor;
+
+  /// A custom container color for unselected buttons.
+  ///
+  /// Overrides the resting background that [ButtonGroupStyle] would
+  /// otherwise provide. Like [selectedColor], the foreground is derived
+  /// automatically for readable contrast, and for the outlined style the
+  /// border picks up this color.
+  final Color? unselectedColor;
+
+  /// Deprecated: use [selectedColor] instead.
+  // Kept for backward compatibility with the original custom-color API;
+  // it is a fresh deprecation, not one awaiting a breaking release.
+  // ignore: remove_deprecations_in_breaking_versions
+  @Deprecated(
+    'Use selectedColor instead. This parameter will be removed in a future '
+    'release.',
+  )
   final Color? color;
 
   /// Whether multiple items can be selected at once.
@@ -305,6 +350,14 @@ class ButtonGroup<T> extends StatefulWidget {
   /// to the full width. The 15% pressed-width morph still applies: the
   /// pressed button takes a larger share and its neighbors give it up.
   final bool expanded;
+
+  /// How the group behaves when it does not fit its available width.
+  ///
+  /// With [ButtonGroupOverflowMode.menu], horizontal fixed standard groups
+  /// collapse their trailing buttons into an overflow menu button (⋯) on
+  /// narrow windows; the collapsed items stay selectable from the menu.
+  /// See [ButtonGroupOverflowMode] for which groups support overflow.
+  final ButtonGroupOverflowMode overflowMode;
 
   /// Whether to show a check icon on selected items.
   ///
@@ -626,14 +679,20 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
       ),
     };
 
-    // A custom [ButtonGroup.color] overrides the selected container and
-    // derives a readable foreground (and an outlined border) from it.
-    final custom = widget.color;
-    final resolvedBackground = selected && custom != null ? custom : background;
-    final resolvedForeground = selected && custom != null
+    // Custom [ButtonGroup.selectedColor] / [ButtonGroup.unselectedColor]
+    // overrides replace the container color of their state and derive a
+    // readable foreground (and an outlined border) from it.
+    // The legacy [ButtonGroup.color] aliases [selectedColor].
+    // ignore: deprecated_member_use_from_same_package
+    final legacySelectedColor = widget.color;
+    final custom = selected
+        ? (widget.selectedColor ?? legacySelectedColor)
+        : widget.unselectedColor;
+    final resolvedBackground = custom ?? background;
+    final resolvedForeground = custom != null
         ? _onColorFor(custom)
         : foreground;
-    final resolvedBorder = selected && custom != null
+    final resolvedBorder = custom != null
         ? (widget.style == ButtonGroupStyle.outlined ? custom : border)
         : border;
 
@@ -776,47 +835,296 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
     );
   }
 
+  /// A synchronous estimate of the natural width of the item at [index],
+  /// used to decide overflow on the very first frame before the post-frame
+  /// measurement of [_naturalWidths] is available. The small margin keeps
+  /// the estimate from ever undercounting the rendered width.
+  double _estimatedNaturalWidth(int index) {
+    final item = widget.items[index];
+    final textStyle =
+        widget.size.textStyle(context) ??
+        Theme.of(context).textTheme.bodyMedium;
+    var width = widget.size.padding.horizontal;
+    if (item.icon != null) {
+      width += widget.size.iconSize;
+      if (item.label != null) width += 8;
+    }
+    if (item.label != null) {
+      final painter = TextPainter(
+        text: TextSpan(text: item.label, style: textStyle),
+        maxLines: 1,
+        textDirection: Directionality.of(context),
+        textScaler: MediaQuery.textScalerOf(context),
+      )..layout();
+      width += painter.width;
+    }
+    if (widget.showSelectedIcon && widget.selected.contains(item.value)) {
+      width += 8 + widget.size.iconSize;
+    }
+    return width + 4;
+  }
+
+  /// The number of leading items that fit in [availableWidth] next to the
+  /// overflow menu button, or `null` when every item fits on its own (no
+  /// overflow needed).
+  ///
+  /// Uses the measured natural widths when available and falls back to
+  /// [_estimatedNaturalWidth] on the first frame so the row never renders
+  /// more items than fit.
+  int? _overflowFit(double availableWidth, double gap, double overflowWidth) {
+    if (widget.items.length <= 1) return null;
+
+    double widthAt(int index) {
+      final measured = _naturalWidths[index];
+      return measured != null && measured > 0
+          ? measured
+          : _estimatedNaturalWidth(index);
+    }
+
+    // Everything fits without the overflow button?
+    var all = 0.0;
+    for (var i = 0; i < widget.items.length; i++) {
+      all += widthAt(i) + (i > 0 ? gap : 0);
+    }
+    if (all <= availableWidth) return null;
+
+    // Greedily fit leading items; every item carries a trailing gap and the
+    // overflow button sits at the end.
+    var count = 0;
+    var used = 0.0;
+    for (var i = 0; i < widget.items.length; i++) {
+      final next = used + widthAt(i) + gap + overflowWidth;
+      if (next > availableWidth) break;
+      used += widthAt(i) + gap;
+      count++;
+    }
+    // When nothing fits next to the overflow button, collapse every button
+    // into the menu and show the overflow button on its own.
+    return count.clamp(0, widget.items.length - 1);
+  }
+
+  /// The corner radii for the overflow menu button, which sits at the end of
+  /// the group and inherits the group's outer corner on the trailing edge.
+  ({Radius tl, Radius tr, Radius bl, Radius br}) _overflowRadii() {
+    final height = widget.size.height;
+    final pill = height / 2;
+    final inner = widget.size.innerCorner;
+    final rest = widget.shape == ButtonGroupShape.round ? pill : inner;
+    final isVertical = widget.direction == Axis.vertical;
+    final isRtl =
+        !isVertical && Directionality.of(context) == TextDirection.rtl;
+    // Standard items rest with the outer shape on every corner; connected
+    // items face the group with their inner corner.
+    final double leading;
+    final double trailing;
+    if (widget.variant == ButtonGroupVariant.standard) {
+      leading = rest;
+      trailing = rest;
+    } else {
+      leading = inner;
+      trailing = rest;
+    }
+    if (isVertical) {
+      return (
+        tl: Radius.circular(leading),
+        tr: Radius.circular(leading),
+        bl: Radius.circular(trailing),
+        br: Radius.circular(trailing),
+      );
+    }
+    if (isRtl) {
+      return (
+        tl: Radius.circular(trailing),
+        tr: Radius.circular(leading),
+        bl: Radius.circular(trailing),
+        br: Radius.circular(leading),
+      );
+    }
+    return (
+      tl: Radius.circular(leading),
+      tr: Radius.circular(trailing),
+      bl: Radius.circular(leading),
+      br: Radius.circular(trailing),
+    );
+  }
+
+  /// The popup menu entries for the items hidden behind the overflow button.
+  List<PopupMenuEntry<int>> _overflowMenuItems(
+    BuildContext context,
+    List<int> indices,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return [
+      for (final index in indices)
+        PopupMenuItem<int>(
+          value: index,
+          enabled: widget.items[index].enabled,
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (widget.items[index].icon != null) ...[
+                Icon(
+                  widget.items[index].icon,
+                  size: 20,
+                  color: colorScheme.onSurface,
+                ),
+                const SizedBox(width: 8),
+              ],
+              Flexible(
+                child: Text(
+                  widget.items[index].label ??
+                      widget.items[index].tooltip ??
+                      '',
+                ),
+              ),
+              if (widget.selected.contains(widget.items[index].value)) ...[
+                const SizedBox(width: 8),
+                Icon(Icons.check, size: 18, color: colorScheme.primary),
+              ],
+            ],
+          ),
+        ),
+    ];
+  }
+
+  /// The overflow menu button (⋯) shown in place of the collapsed trailing
+  /// items. It mirrors the group's unselected styling and inherits the
+  /// trailing edge's outer corner.
+  Widget _buildOverflowButton(BuildContext context, int firstHidden) {
+    final hiddenIndices = [
+      for (var i = firstHidden; i < widget.items.length; i++) i,
+    ];
+    final disabled = !widget.items
+        .skip(firstHidden)
+        .any((item) => item.enabled);
+    final colors = _colorsFor(context, false, disabled);
+    final overflowWidth = widget.size.iconSize + widget.size.padding.horizontal;
+    final radii = _overflowRadii();
+    final shape = RoundedRectangleBorder(
+      side: colors.border != null
+          ? BorderSide(color: colors.border!)
+          : BorderSide.none,
+      borderRadius: BorderRadius.only(
+        topLeft: radii.tl,
+        topRight: radii.tr,
+        bottomLeft: radii.bl,
+        bottomRight: radii.br,
+      ),
+    );
+    return Material(
+      color: colors.background,
+      elevation: colors.elevation,
+      shape: shape,
+      clipBehavior: Clip.antiAlias,
+      child: PopupMenuButton<int>(
+        tooltip: 'More options',
+        enabled: !disabled,
+        onSelected: _handleTap,
+        itemBuilder: (context) => _overflowMenuItems(context, hiddenIndices),
+        child: SizedBox(
+          width: overflowWidth,
+          height: widget.size.height,
+          child: Icon(
+            Icons.more_horiz,
+            size: widget.size.iconSize,
+            color: colors.foreground,
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the group's row/column of buttons.
+  ///
+  /// When [visibleCount] is set, only that many leading items are shown and
+  /// an overflow menu button takes the place of the trailing items.
+  Widget _buildRow(
+    double pressProgress,
+    double gap, {
+    int? visibleCount,
+  }) {
+    final isVertical = widget.direction == Axis.vertical;
+    final showingOverflow =
+        visibleCount != null && visibleCount < widget.items.length;
+    final count = showingOverflow ? visibleCount : widget.items.length;
+
+    final children = <Widget>[];
+    for (var i = 0; i < count; i++) {
+      if (i > 0) {
+        children.add(
+          isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
+        );
+      }
+      final item = _buildItem(context, i);
+      children.add(
+        _flexible && !isVertical
+            ? Expanded(flex: _flexFor(i, pressProgress), child: item)
+            : item,
+      );
+    }
+
+    if (showingOverflow) {
+      // Only a gap separates the last visible button from the overflow
+      // button; when nothing is visible the overflow button stands alone.
+      if (count > 0) {
+        children.add(
+          isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
+        );
+      }
+      children.add(_buildOverflowButton(context, count));
+    }
+
+    if (isVertical) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: _flexible
+            ? CrossAxisAlignment.stretch
+            : CrossAxisAlignment.start,
+        children: children,
+      );
+    }
+    return Row(
+      mainAxisSize: _flexible ? MainAxisSize.max : MainAxisSize.min,
+      children: children,
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isVertical = widget.direction == Axis.vertical;
     final connected = widget.variant == ButtonGroupVariant.connected;
     final gap = connected ? 2.0 : widget.size.standardGap;
+    final overflow =
+        widget.overflowMode == ButtonGroupOverflowMode.menu &&
+        !isVertical &&
+        !_flexible;
 
     // Flexible groups (connected, or standard with [ButtonGroup.expanded])
     // span the width of their surface and share it equally; fixed standard
     // groups hug their buttons. The container itself is not a focusable or
     // labeled element per the button group accessibility spec.
-    return AnimatedBuilder(
-      animation: _pressAnimation,
-      builder: (context, _) {
-        final pressProgress = _pressAnimation.value;
-        final children = <Widget>[];
-        for (var i = 0; i < widget.items.length; i++) {
-          if (i > 0) {
-            children.add(
-              isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
-            );
-          }
-          final item = _buildItem(context, i);
-          children.add(
-            _flexible && !isVertical
-                ? Expanded(flex: _flexFor(i, pressProgress), child: item)
-                : item,
-          );
-        }
-
-        if (isVertical) {
-          return Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: _flexible
-                ? CrossAxisAlignment.stretch
-                : CrossAxisAlignment.start,
-            children: children,
-          );
-        }
-        return Row(
-          mainAxisSize: _flexible ? MainAxisSize.max : MainAxisSize.min,
-          children: children,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return AnimatedBuilder(
+          animation: _pressAnimation,
+          builder: (context, _) {
+            final pressProgress = _pressAnimation.value;
+            if (overflow) {
+              final overflowWidth =
+                  widget.size.iconSize + widget.size.padding.horizontal;
+              final fit = _overflowFit(
+                constraints.maxWidth,
+                gap,
+                overflowWidth,
+              );
+              return _buildRow(
+                pressProgress,
+                gap,
+                visibleCount: fit,
+              );
+            }
+            return _buildRow(pressProgress, gap);
+          },
         );
       },
     );
@@ -911,7 +1219,8 @@ class _ButtonGroupPreviewState extends State<_ButtonGroupPreview> {
           const Text('Standard - custom color'),
           const SizedBox(height: 12),
           ButtonGroup<ButtonGroupSize>(
-            color: const Color(0xFF00696D),
+            selectedColor: const Color(0xFF00696D),
+            unselectedColor: const Color(0xFFE3F2F2),
             items: const [
               ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
               ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
@@ -922,6 +1231,28 @@ class _ButtonGroupPreviewState extends State<_ButtonGroupPreview> {
               () => _sizes
                 ..clear()
                 ..addAll(next),
+            ),
+          ),
+          const SizedBox(height: 40),
+          const Text('Standard - overflow menu (narrow)'),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: 260,
+            child: ButtonGroup<ButtonGroupSize>(
+              overflowMode: ButtonGroupOverflowMode.menu,
+              items: const [
+                ButtonGroupItem(value: ButtonGroupSize.xs, label: 'XS'),
+                ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
+                ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
+                ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
+                ButtonGroupItem(value: ButtonGroupSize.xl, label: 'XL'),
+              ],
+              selected: _sizes,
+              onSelectionChanged: (next) => setState(
+                () => _sizes
+                  ..clear()
+                  ..addAll(next),
+              ),
             ),
           ),
           const SizedBox(height: 40),
