@@ -139,6 +139,8 @@ class ProgressIndicator extends StatefulWidget {
     this.trackColor,
     this.rotation = 0.0,
     this.phase = 0.0,
+    this.amplitude,
+    this.wavelength,
     this.inset = 4.0,
     this.showLabel = false,
     this.showInlineLabel = false,
@@ -181,6 +183,30 @@ class ProgressIndicator extends StatefulWidget {
 
   /// Phase (radians) offset applied to the linear wave.
   final double phase;
+
+  /// Wave amplitude (in logical pixels) for the wavy shape.
+  ///
+  /// When `null` the M3 Expressive spec defaults apply
+  /// (`md.comp.progress-indicator.linear.active-indicator.wave.amplitude` = 3dp
+  /// for linear, `md.comp.progress-indicator.circular.active-indicator.wave.amplitude`
+  /// = 1.6dp for circular).
+  ///
+  /// The amplitude measures from the center of the resting position to the
+  /// center of the peak. For the linear variant the wave's peak-to-trough
+  /// extent (`thickness + 2 × amplitude`) is the overall container height.
+  final double? amplitude;
+
+  /// Wave wavelength (in logical pixels) for the wavy shape.
+  ///
+  /// When `null` the M3 Expressive spec defaults apply
+  /// (`md.comp.progress-indicator.linear.active-indicator.wave.wavelength` =
+  /// 40dp determinate / 20dp indeterminate for linear,
+  /// `md.comp.progress-indicator.circular.active-indicator.wave.wavelength` =
+  /// 15dp for circular).
+  ///
+  /// Supplying a value overrides the wavelength in every wavy mode. The
+  /// wavelength measures the distance between two adjacent wave peaks.
+  final double? wavelength;
 
   /// Horizontal inset/padding for the linear active area.
   final double inset;
@@ -296,6 +322,8 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
         activeColor: widget.activeColor,
         trackColor: widget.trackColor,
         phase: widget.phase,
+        amplitude: widget.amplitude,
+        wavelength: widget.wavelength,
         inset: widget.inset,
         showInlineLabel: widget.showInlineLabel,
         textStyle: widget.textStyle,
@@ -309,6 +337,8 @@ class _ProgressIndicatorState extends State<ProgressIndicator> {
       activeColor: widget.activeColor,
       trackColor: widget.trackColor,
       rotation: widget.rotation,
+      amplitude: widget.amplitude,
+      wavelength: widget.wavelength,
     );
 
     if (!widget.showLabel || animatedValue == null) return circular;
@@ -339,6 +369,8 @@ class _CircularProgressIndicator extends StatefulWidget {
     this.value,
     this.activeColor,
     this.trackColor,
+    this.amplitude,
+    this.wavelength,
   });
 
   final double? value;
@@ -347,6 +379,8 @@ class _CircularProgressIndicator extends StatefulWidget {
   final Color? activeColor;
   final Color? trackColor;
   final double rotation;
+  final double? amplitude;
+  final double? wavelength;
 
   @override
   State<_CircularProgressIndicator> createState() =>
@@ -431,6 +465,8 @@ class _CircularProgressIndicatorState
                             baseSpin: isIndeterminate ? spinAngle : 0.0,
                             size: widget.size,
                             path: _path,
+                            amplitude: widget.amplitude,
+                            wavelength: widget.wavelength,
                             // The wave travels with the arc cycle (one
                             // wavelength per 1333ms cycle) so it stays
                             // integer-aligned with the combined LCM and never
@@ -459,6 +495,8 @@ class _CircularProgressIndicatorState
                         rotation: widget.rotation,
                         size: widget.size,
                         path: _path,
+                        amplitude: widget.amplitude,
+                        wavelength: widget.wavelength,
                       )
                     : CircularFlatPainter(
                         value: widget.value,
@@ -482,6 +520,8 @@ class _LinearProgressIndicator extends StatefulWidget {
     this.value,
     this.activeColor,
     this.trackColor,
+    this.amplitude,
+    this.wavelength,
     this.showInlineLabel = false,
     this.textStyle,
   });
@@ -492,6 +532,8 @@ class _LinearProgressIndicator extends StatefulWidget {
   final Color? activeColor;
   final Color? trackColor;
   final double phase;
+  final double? amplitude;
+  final double? wavelength;
   final double inset;
   final bool showInlineLabel;
   final TextStyle? textStyle;
@@ -531,6 +573,8 @@ class _LinearProgressIndicatorState extends State<_LinearProgressIndicator> {
     final spec = specForLinear(
       size: widget.size,
       shape: widget.shape,
+      amplitude: widget.amplitude,
+      wavelength: widget.wavelength,
     );
 
     final activeHeight = spec.isWavy
@@ -693,10 +737,18 @@ class LinearSpecs {
 /// | Flat  medium | 8      | 4   | 4    | —   | —    | —        |
 /// | Wavy  small  | 10     | 4   | 4    | 3   | 40   | 20       |
 /// | Wavy  medium | 14     | 4   | 4    | 3   | 40   | 20       |
+///
+/// Wavy indicators use [amplitude] and [wavelength] to determine the shape of
+/// the wave; the wave's peak-to-trough extent
+/// (`trackHeight + 2 × amplitude`) is the overall container height. Pass either
+/// override to replace the spec default (3dp amplitude, 40dp determinate /
+/// 20dp indeterminate wavelength).
 LinearSpecs specForLinear({
   required ProgressIndicatorSize size,
   required ProgressIndicatorShape shape,
   double scale = 1.0,
+  double? amplitude,
+  double? wavelength,
 }) {
   final thickness = size.thickness;
   // Shared derived measurements.
@@ -712,15 +764,32 @@ LinearSpecs specForLinear({
         isWavy: false,
       );
     case ProgressIndicatorShape.wavy:
+      // A custom wavelength replaces the determinate (40dp) and indeterminate
+      // (20dp) wavelengths alike; negative amplitudes flatten the wave and a
+      // non-positive wavelength would break the wave period, so both are
+      // clamped defensively.
+      final effectiveAmplitude =
+          (amplitude ?? WavyProgressConstants.defaultAmplitude).clamp(
+            0.0,
+            double.infinity,
+          );
+      final customWavelength = wavelength;
+      final effectiveWavelength =
+          (customWavelength ?? WavyProgressConstants.defaultWavePeriod).clamp(
+            1.0,
+            double.infinity,
+          );
+      final effectiveIndeterminateWavelength = customWavelength == null
+          ? WavyProgressConstants.indeterminateWavePeriod
+          : effectiveWavelength;
       return LinearSpecs(
         trackHeight: thickness,
         gap: gap,
         dotDiameter: dotDiameter,
         isWavy: true,
-        waveAmplitude: WavyProgressConstants.defaultAmplitude * scale,
-        wavePeriod: WavyProgressConstants.defaultWavePeriod * scale,
-        indeterminateWavePeriod:
-            WavyProgressConstants.indeterminateWavePeriod * scale,
+        waveAmplitude: effectiveAmplitude * scale,
+        wavePeriod: effectiveWavelength * scale,
+        indeterminateWavePeriod: effectiveIndeterminateWavelength * scale,
       );
   }
 }
@@ -766,6 +835,42 @@ Widget previewProgressDeterminate() {
     ),
   );
 }
+
+@Preview(
+  name: 'Progress — Custom wave (amplitude/wavelength)',
+  size: Size.fromHeight(180),
+)
+Widget previewProgressCustomWave() => const MaterialApp(
+  debugShowCheckedModeBanner: false,
+  home: Scaffold(
+    body: Center(
+      child: Row(
+        mainAxisAlignment: .spaceEvenly,
+        children: [
+          // Circular wavy with a deep, long scallop.
+          ProgressIndicator(amplitude: 3.2, wavelength: 30),
+          // Linear wavy with a bold 6dp wave; height = 4 + 2×6 = 16dp.
+          SizedBox(
+            width: 120,
+            child: ProgressIndicator(
+              value: 0.6,
+              variant: ProgressIndicatorVariant.linear,
+              amplitude: 6,
+              wavelength: 64,
+            ),
+          ),
+          // Linear indeterminate with the default spec wave.
+          SizedBox(
+            width: 120,
+            child: ProgressIndicator(
+              variant: ProgressIndicatorVariant.linear,
+            ),
+          ),
+        ],
+      ),
+    ),
+  ),
+);
 
 @Preview(name: 'Progress — Indeterminate', size: Size.fromHeight(180))
 Widget previewProgressIndeterminate() {

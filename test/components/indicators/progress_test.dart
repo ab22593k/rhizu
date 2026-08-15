@@ -91,6 +91,96 @@ void main() {
       );
     });
 
+    test('specForLinear wavy honors custom amplitude and wavelength', () {
+      final spec = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+        amplitude: 6.0,
+        wavelength: 80.0,
+      );
+      expect(spec.waveAmplitude, equals(6.0));
+      expect(spec.wavePeriod, equals(80.0));
+      // A custom wavelength replaces the determinate and indeterminate
+      // wavelengths alike.
+      expect(spec.indeterminateWavePeriod, equals(80.0));
+    });
+
+    test('specForLinear wavy clamps invalid amplitude and wavelength', () {
+      final spec = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+        amplitude: -2.0,
+        wavelength: 0.0,
+      );
+      // Negative amplitude flattens the wave; a non-positive wavelength would
+      // break the wave period (`2π / λ`).
+      expect(spec.waveAmplitude, equals(0.0));
+      expect(spec.wavePeriod, equals(1.0));
+      expect(spec.indeterminateWavePeriod, equals(1.0));
+    });
+
+    testWidgets(
+      'linear wavy container height is thickness + 2×amplitude',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: Center(
+                child: SizedBox(
+                  width: 200,
+                  child: ProgressIndicator(
+                    value: 0.6,
+                    variant: ProgressIndicatorVariant.linear,
+                    amplitude: 6,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1600));
+
+        // The wave's peak-to-trough extent (4dp thickness + 2 × 6dp
+        // amplitude) is the overall container height.
+        final size = tester.getSize(
+          find.descendant(
+            of: find.byType(ProgressIndicator),
+            matching: find.byType(CustomPaint),
+          ),
+        );
+        expect(size.height, equals(16.0));
+        expect(size.width, equals(200.0));
+      },
+    );
+
+    testWidgets(
+      'circular wavy painter receives custom amplitude and wavelength',
+      (tester) async {
+        await tester.pumpWidget(
+          const MaterialApp(
+            home: Scaffold(
+              body: ProgressIndicator(
+                value: 0.5,
+                amplitude: 3.2,
+                wavelength: 30,
+              ),
+            ),
+          ),
+        );
+        await tester.pump(const Duration(milliseconds: 1600));
+
+        final customPaint = tester.widget<CustomPaint>(
+          find.descendant(
+            of: find.byType(ProgressIndicator),
+            matching: find.byType(CustomPaint),
+          ),
+        );
+        final painter = customPaint.painter! as CircularWavyPainter;
+        expect(painter.amplitude, equals(3.2));
+        expect(painter.wavelength, equals(30.0));
+      },
+    );
+
     testWidgets(
       'ProgressIndicator size is independent of text scale',
       (tester) async {
@@ -502,6 +592,96 @@ void main() {
       final a = await renderToBytes(phase0, size);
       final b = await renderToBytes(phasePi, size);
       expect(a, orderedEquals(b));
+    });
+
+    test('linear wavy wavelength changes the painted wave shape', () async {
+      const active = Color(0xFF006C45);
+      const track = Color(0xFFA0F6B3);
+      const size = Size(200, 10);
+      final specDefault = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+      );
+      final specLong = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+        wavelength: 80.0,
+      );
+
+      final a = await renderToBytes(
+        LinearPainter(
+          value: 0.5,
+          spec: specDefault,
+          active: active,
+          track: track,
+          phase: 0.0,
+          inset: 4.0,
+          textDirection: TextDirection.ltr,
+          path: Path(),
+        ),
+        size,
+      );
+      final b = await renderToBytes(
+        LinearPainter(
+          value: 0.5,
+          spec: specLong,
+          active: active,
+          track: track,
+          phase: 0.0,
+          inset: 4.0,
+          textDirection: TextDirection.ltr,
+          path: Path(),
+        ),
+        size,
+      );
+
+      // Different wavelength → different wave crest/trough positions.
+      expect(a, isNot(orderedEquals(b)));
+    });
+
+    test('linear wavy amplitude changes the painted wave shape', () async {
+      const active = Color(0xFF006C45);
+      const track = Color(0xFFA0F6B3);
+      const size = Size(200, 16);
+      final specDefault = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+      );
+      final specTall = specForLinear(
+        size: ProgressIndicatorSize.s,
+        shape: ProgressIndicatorShape.wavy,
+        amplitude: 6.0,
+      );
+
+      final a = await renderToBytes(
+        LinearPainter(
+          value: 0.5,
+          spec: specDefault,
+          active: active,
+          track: track,
+          phase: 0.0,
+          inset: 4.0,
+          textDirection: TextDirection.ltr,
+          path: Path(),
+        ),
+        size,
+      );
+      final b = await renderToBytes(
+        LinearPainter(
+          value: 0.5,
+          spec: specTall,
+          active: active,
+          track: track,
+          phase: 0.0,
+          inset: 4.0,
+          textDirection: TextDirection.ltr,
+          path: Path(),
+        ),
+        size,
+      );
+
+      // Different amplitude → different wave peaks and troughs.
+      expect(a, isNot(orderedEquals(b)));
     });
 
     testWidgets(

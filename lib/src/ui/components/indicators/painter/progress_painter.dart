@@ -125,6 +125,8 @@ class CircularWavyPainter extends CustomPainter {
     required this._path,
     this.baseSpin = 0.0,
     this.wavePhase = 0.0,
+    this.amplitude,
+    this.wavelength,
   });
 
   final double? value;
@@ -134,6 +136,22 @@ class CircularWavyPainter extends CustomPainter {
   final double baseSpin;
   final ProgressIndicatorSize size;
   final Path _path;
+
+  /// Wave amplitude (radial deviation from the base circle) in logical
+  /// pixels.
+  ///
+  /// When `null` the M3 Expressive spec default applies
+  /// (`md.comp.progress-indicator.circular.active-indicator.wave.amplitude` =
+  /// 1.6dp). The base radius shrinks as the amplitude grows so the outer wave
+  /// peak stays within the container.
+  final double? amplitude;
+
+  /// Wave wavelength (scallop arc-length) in logical pixels.
+  ///
+  /// When `null` the M3 Expressive spec default applies
+  /// (`md.comp.progress-indicator.circular.active-indicator.wave.wavelength` =
+  /// 15dp).
+  final double? wavelength;
 
   /// Phase offset applied to the wave sin function.
   ///
@@ -148,7 +166,11 @@ class CircularWavyPainter extends CustomPainter {
     final center = s.center(Offset.zero);
 
     // Spec: wave amplitude = 1.6dp (radial deviation from base circle).
-    const amp = WavyProgressConstants.circularWaveAmplitude;
+    final amp = (amplitude ?? WavyProgressConstants.circularWaveAmplitude)
+        .clamp(
+          0.0,
+          double.infinity,
+        );
 
     // Base radius: account for wave amplitude + stroke so the
     // outermost wave peak + half-stroke stays within the container.
@@ -158,7 +180,11 @@ class CircularWavyPainter extends CustomPainter {
     final baseRadius = (math.min(s.width, s.height) - stroke) / 2 - amp;
 
     // Spec: scallop arc-length wavelength = 15dp.
-    const scallopLen = WavyProgressConstants.circularWavePeriod;
+    final scallopLen = (wavelength ?? WavyProgressConstants.circularWavePeriod)
+        .clamp(
+          1.0,
+          double.infinity,
+        );
 
     // Spec: gap between active and track = 4dp.
     const gapDp = 4.0;
@@ -252,7 +278,9 @@ class CircularWavyPainter extends CustomPainter {
       rotation != old.rotation ||
       baseSpin != old.baseSpin ||
       size != old.size ||
-      wavePhase != old.wavePhase;
+      wavePhase != old.wavePhase ||
+      amplitude != old.amplitude ||
+      wavelength != old.wavelength;
 }
 
 /// Paints a linear progress indicator (flat or wavy).
