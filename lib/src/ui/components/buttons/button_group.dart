@@ -234,6 +234,7 @@ class ButtonGroup<T> extends StatefulWidget {
     this.size = ButtonGroupSize.md,
     this.shape = ButtonGroupShape.round,
     this.style = ButtonGroupStyle.tonal,
+    this.color,
     this.multiSelectionEnabled = false,
     this.emptySelectionAllowed = false,
     this.direction = Axis.horizontal,
@@ -272,6 +273,15 @@ class ButtonGroup<T> extends StatefulWidget {
 
   /// The color style of the group.
   final ButtonGroupStyle style;
+
+  /// A custom container color for selected buttons.
+  ///
+  /// Overrides the selected-state background that [ButtonGroupStyle] would
+  /// otherwise provide, across all styles. The foreground (icon/label/check)
+  /// is derived automatically from this color — black or white, whichever
+  /// has the higher WCAG contrast ratio — so the selection stays readable.
+  /// Unselected buttons keep the style's default neutral treatment.
+  final Color? color;
 
   /// Whether multiple items can be selected at once.
   final bool multiSelectionEnabled;
@@ -616,20 +626,48 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
       ),
     };
 
+    // A custom [ButtonGroup.color] overrides the selected container and
+    // derives a readable foreground (and an outlined border) from it.
+    final custom = widget.color;
+    final resolvedBackground = selected && custom != null ? custom : background;
+    final resolvedForeground = selected && custom != null
+        ? _onColorFor(custom)
+        : foreground;
+    final resolvedBorder = selected && custom != null
+        ? (widget.style == ButtonGroupStyle.outlined ? custom : border)
+        : border;
+
     if (disabled) {
       return (
-        background: background,
+        background: resolvedBackground,
         foreground: colorScheme.onSurface.withValues(alpha: 0.38),
         border: colorScheme.onSurface.withValues(alpha: 0.12),
         elevation: elevation,
       );
     }
     return (
-      background: background,
-      foreground: foreground,
-      border: border,
+      background: resolvedBackground,
+      foreground: resolvedForeground,
+      border: resolvedBorder,
       elevation: elevation,
     );
+  }
+
+  /// The WCAG relative-luminance contrast ratio between two colors.
+  static double _contrastRatio(Color a, Color b) {
+    final la = a.computeLuminance();
+    final lb = b.computeLuminance();
+    final lighter = math.max(la, lb);
+    final darker = math.min(la, lb);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  /// The foreground color that reads best on [background]: black or white,
+  /// whichever has the higher WCAG contrast ratio.
+  static Color _onColorFor(Color background) {
+    final white = _contrastRatio(background, Colors.white);
+    final black = _contrastRatio(background, Colors.black);
+    return white >= black ? Colors.white : Colors.black;
   }
 
   Widget _buildItem(BuildContext context, int index) {
@@ -867,6 +905,23 @@ class _ButtonGroupPreviewState extends State<_ButtonGroupPreview> {
                   ..clear()
                   ..addAll(next),
               ),
+            ),
+          ),
+          const SizedBox(height: 40),
+          const Text('Standard - custom color'),
+          const SizedBox(height: 12),
+          ButtonGroup<ButtonGroupSize>(
+            color: const Color(0xFF00696D),
+            items: const [
+              ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
+              ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
+              ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
+            ],
+            selected: _sizes,
+            onSelectionChanged: (next) => setState(
+              () => _sizes
+                ..clear()
+                ..addAll(next),
             ),
           ),
           const SizedBox(height: 40),

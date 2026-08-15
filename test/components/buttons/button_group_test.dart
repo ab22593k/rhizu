@@ -387,6 +387,114 @@ void main() {
       });
     });
 
+    group('Custom color', () {
+      testWidgets('color overrides the selected button background', (
+        tester,
+      ) async {
+        const custom = Color(0xFF00696D);
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              color: custom,
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        Material materialOf(String label) => tester.widget<Material>(
+          find
+              .ancestor(
+                of: find.text(label),
+                matching: find.byType(Material),
+              )
+              .first,
+        );
+
+        // Selected button uses the custom color.
+        expect(materialOf('Alpha').color, custom);
+        // Unselected button keeps the tonal style's default container.
+        expect(
+          materialOf('Beta').color,
+          Theme.of(
+            tester.element(find.text('Beta')),
+          ).colorScheme.surfaceContainerHighest,
+        );
+      });
+
+      testWidgets('dark custom color derives a light foreground', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              color: const Color(0xFF111111),
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        final label = tester.widget<Text>(find.text('Alpha'));
+        expect(label.style?.color, Colors.white);
+      });
+
+      testWidgets('light custom color derives a dark foreground', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            ButtonGroup<String>(
+              color: const Color(0xFFEEEEEE),
+              items: const [
+                ButtonGroupItem(value: 'a', label: 'Alpha'),
+                ButtonGroupItem(value: 'b', label: 'Beta'),
+              ],
+              selected: const {'a'},
+            ),
+          ),
+        );
+
+        final label = tester.widget<Text>(find.text('Alpha'));
+        expect(label.style?.color, Colors.black);
+      });
+
+      testWidgets('custom color applies across all styles', (tester) async {
+        const custom = Color(0xFF00696D);
+        for (final style in ButtonGroupStyle.values) {
+          await tester.pumpWidget(
+            wrapWithTheme(
+              ButtonGroup<String>(
+                style: style,
+                color: custom,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          );
+
+          final material = tester.widget<Material>(
+            find
+                .ancestor(
+                  of: find.text('Alpha'),
+                  matching: find.byType(Material),
+                )
+                .first,
+          );
+          expect(material.color, custom);
+        }
+      });
+    });
+
     group('Connected variant layout', () {
       testWidgets('uses 2dp gaps between buttons', (tester) async {
         await tester.pumpWidget(
