@@ -222,6 +222,171 @@ void main() {
       });
     });
 
+    group('Expanded variant layout', () {
+      testWidgets('expanded standard group fills available width', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 400,
+              child: ButtonGroup<String>(
+                expanded: true,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+
+        final box = tester.getSize(find.byType(ButtonGroup<String>));
+        expect(box.width, 400);
+      });
+
+      testWidgets('expanded group shares width equally at rest', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 400,
+              child: ButtonGroup<String>(
+                expanded: true,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        // 400 - 2 * 8dp gap = 384 shared by 3 buttons = 128 each.
+        final widths = find
+            .descendant(
+              of: find.byType(ButtonGroup<String>),
+              matching: find.byType(Material),
+            )
+            .evaluate()
+            .map((element) {
+              return tester.getSize(find.byWidget(element.widget)).width;
+            })
+            .toList();
+        expect(widths, hasLength(3));
+        for (final width in widths) {
+          expect(width, closeTo(128, 0.5));
+        }
+      });
+
+      testWidgets('expanded group keeps total width stable while pressing', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 400,
+              child: ButtonGroup<String>(
+                expanded: true,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                  ButtonGroupItem(value: 'c', label: 'Gamma'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+        await tester.pump();
+
+        final groupFinder = find.byType(ButtonGroup<String>);
+        final groupBefore = tester.getSize(groupFinder);
+        final betaFinder = find.ancestor(
+          of: find.text('Beta'),
+          matching: find.byType(Material),
+        );
+        final betaBefore = tester.getSize(betaFinder.first);
+
+        final gesture = await tester.startGesture(
+          tester.getCenter(find.text('Beta')),
+        );
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 150));
+
+        // The pressed button takes a larger share while held.
+        final betaDuring = tester.getSize(betaFinder.first);
+        expect(betaDuring.width, greaterThan(betaBefore.width));
+
+        // The group still spans the full available width.
+        final groupDuring = tester.getSize(groupFinder);
+        expect(groupDuring.width, closeTo(groupBefore.width, 0.5));
+
+        await gesture.up();
+        await tester.pumpAndSettle();
+      });
+
+      testWidgets('expanded vertical group stretches buttons full width', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 300,
+              child: ButtonGroup<String>(
+                expanded: true,
+                direction: Axis.vertical,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+
+        final materials = find.descendant(
+          of: find.byType(ButtonGroup<String>),
+          matching: find.byType(Material),
+        );
+        for (final material in materials.evaluate()) {
+          expect(
+            tester.getSize(find.byWidget(material.widget)).width,
+            300,
+          );
+        }
+      });
+
+      testWidgets('connected group ignores expanded flag (always flexible)', (
+        tester,
+      ) async {
+        await tester.pumpWidget(
+          wrapWithTheme(
+            SizedBox(
+              width: 400,
+              child: ButtonGroup<String>(
+                variant: ButtonGroupVariant.connected,
+                items: const [
+                  ButtonGroupItem(value: 'a', label: 'Alpha'),
+                  ButtonGroupItem(value: 'b', label: 'Beta'),
+                ],
+                selected: const {'a'},
+              ),
+            ),
+          ),
+        );
+
+        final box = tester.getSize(find.byType(ButtonGroup<String>));
+        expect(box.width, 400);
+      });
+    });
+
     group('Connected variant layout', () {
       testWidgets('uses 2dp gaps between buttons', (tester) async {
         await tester.pumpWidget(

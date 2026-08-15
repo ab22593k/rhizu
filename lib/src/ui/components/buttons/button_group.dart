@@ -208,11 +208,13 @@ class ButtonGroupItem<T> {
 ///   padding between independent buttons. Pressing or selecting a button
 ///   changes its width (a 15% growth animated with the fast spatial spring)
 ///   and the buttons directly next to it temporarily give up that width.
-///   Standard groups hug the width of their buttons.
+///   By default standard groups hug the width of their buttons; pass
+///   [ButtonGroup.expanded] to make them share the available width instead.
 /// - **[ButtonGroupVariant.connected]** – the buttons are visually joined
-///   with a 2dp gutter and share the available width. Only the pressed or
-///   selected button changes shape (its inner corners morph). This variant
-///   replaces the M3 segmented button, which is no longer recommended.
+///   with a 2dp gutter and always share the available width. Only the
+///   pressed or selected button changes shape (its inner corners morph).
+///   This variant replaces the M3 segmented button, which is no longer
+///   recommended.
 ///
 /// Selection mirrors the segmented button API: pass the current selection via
 /// [selected] and react to changes with [onSelectionChanged]. Use
@@ -235,6 +237,7 @@ class ButtonGroup<T> extends StatefulWidget {
     this.multiSelectionEnabled = false,
     this.emptySelectionAllowed = false,
     this.direction = Axis.horizontal,
+    this.expanded = false,
     this.showSelectedIcon = false,
     this.selectedIcon,
   }) : assert(
@@ -278,6 +281,20 @@ class ButtonGroup<T> extends StatefulWidget {
 
   /// The layout direction of the group.
   final Axis direction;
+
+  /// Whether the buttons share the available width (flexible resizing).
+  ///
+  /// Per the M3 Expressive guideline, button groups can be **fixed** or
+  /// **flexible**: flexible groups automatically grow or shrink the width of
+  /// their buttons to fill the space they are placed in, until every button
+  /// is at its widest. This only affects [ButtonGroupVariant.standard]
+  /// groups — connected groups always span the width of their surface.
+  ///
+  /// When `true`, horizontal standard groups fill the available width and
+  /// give every button an equal share; vertical groups stretch each button
+  /// to the full width. The 15% pressed-width morph still applies: the
+  /// pressed button takes a larger share and its neighbors give it up.
+  final bool expanded;
 
   /// Whether to show a check icon on selected items.
   ///
@@ -406,12 +423,19 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
 
   double _lerp(double a, double b, double t) => a + (b - a) * t;
 
+  /// Whether the group uses flexible (share-the-width) layout: connected
+  /// groups always do; standard groups only when [ButtonGroup.expanded] is
+  /// set.
+  bool get _flexible =>
+      widget.variant == ButtonGroupVariant.connected || widget.expanded;
+
   /// The width each button should take for the current press progress.
   ///
-  /// Returns `null` for [ButtonGroupVariant.connected] groups (they never
-  /// change width) and before the natural widths have been measured.
+  /// Returns `null` for flexible groups (they allocate width through flex
+  /// shares instead) and before the natural widths have been measured.
   double? _widthFor(int index, double pressProgress) {
-    if (widget.variant == ButtonGroupVariant.connected) return null;
+    // Flexible groups allocate width through flex shares, not explicit sizes.
+    if (_flexible) return null;
     final pressed = _pressedIndex;
     if (!_widthsMeasured || pressed == null || pressProgress <= 0) return null;
     final natural = _naturalWidths[index];
@@ -432,6 +456,33 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
       return natural - clampedShrink;
     }
     return natural;
+  }
+
+  /// The flex share each button takes in a flexible (expanded) group.
+  ///
+  /// At rest every button gets an equal share. While pressed, a standard
+  /// group's pressed button grows by 15% and its neighbors give up exactly
+  /// that share, keeping the total (and therefore the group width) stable.
+  /// Connected groups never morph width on press. Shares are scaled to
+  /// integer flex units (×1000) so fractional 15% growth stays expressible.
+  int _flexFor(int index, double pressProgress) {
+    if (widget.variant == ButtonGroupVariant.connected) return 1000;
+    final pressed = _pressedIndex;
+    if (pressed == null || pressProgress <= 0) return 1000;
+    if (index == pressed) {
+      return (1000 * (1 + _pressedWidthMultiplier * pressProgress)).round();
+    }
+    if ((index - pressed).abs() == 1) {
+      final neighborCount =
+          (pressed > 0 ? 1 : 0) + (pressed < widget.items.length - 1 ? 1 : 0);
+      if (neighborCount == 0) return 1000;
+      return math.max(
+        (1000 * (1 - (_pressedWidthMultiplier * pressProgress) / neighborCount))
+            .round(),
+        100,
+      );
+    }
+    return 1000;
   }
 
   /// The four corner radii for the button at [index].
@@ -693,38 +744,43 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
     final connected = widget.variant == ButtonGroupVariant.connected;
     final gap = connected ? 2.0 : widget.size.standardGap;
 
-    // Connected groups span the width of their surface and share it equally
-    // (like a segmented button); standard groups hug their buttons. The
-    // container itself is not a focusable or labeled element per the button
-    // group accessibility spec.
-    final children = <Widget>[];
-    for (var i = 0; i < widget.items.length; i++) {
-      if (i > 0) {
-        children.add(
-          isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
-        );
-      }
-      final item = _buildItem(context, i);
-      children.add(
-        connected && !isVertical ? Expanded(child: item) : item,
-      );
-    }
+    // Flexible groups (connected, or standard with [ButtonGroup.expanded])
+    // span the width of their surface and share it equally; fixed standard
+    // groups hug their buttons. The container itself is not a focusable or
+    // labeled element per the button group accessibility spec.
+    return AnimatedBuilder(
+      animation: _pressAnimation,
+      builder: (context, _) {
+        final pressProgress = _pressAnimation.value;
+        final children = <Widget>[];
+        for (var i = 0; i < widget.items.length; i++) {
+          if (i > 0) {
+            children.add(
+              isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
+            );
+          }
+          final item = _buildItem(context, i);
+          children.add(
+            _flexible && !isVertical
+                ? Expanded(flex: _flexFor(i, pressProgress), child: item)
+                : item,
+          );
+        }
 
-    if (isVertical) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: children,
-      );
-    }
-    if (connected) {
-      return Row(
-        children: children,
-      );
-    }
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: children,
+        if (isVertical) {
+          return Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: _flexible
+                ? CrossAxisAlignment.stretch
+                : CrossAxisAlignment.start,
+            children: children,
+          );
+        }
+        return Row(
+          mainAxisSize: _flexible ? MainAxisSize.max : MainAxisSize.min,
+          children: children,
+        );
+      },
     );
   }
 }
@@ -791,6 +847,26 @@ class _ButtonGroupPreviewState extends State<_ButtonGroupPreview> {
               () => _sizes
                 ..clear()
                 ..addAll(next),
+            ),
+          ),
+          const SizedBox(height: 40),
+          const Text('Standard - expanded (flexible)'),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: 420,
+            child: ButtonGroup<ButtonGroupSize>(
+              expanded: true,
+              items: const [
+                ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
+                ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
+                ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
+              ],
+              selected: _sizes,
+              onSelectionChanged: (next) => setState(
+                () => _sizes
+                  ..clear()
+                  ..addAll(next),
+              ),
             ),
           ),
           const SizedBox(height: 40),
