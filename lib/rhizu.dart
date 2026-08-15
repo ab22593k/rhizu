@@ -5,6 +5,7 @@ export 'package:google_fonts/google_fonts.dart';
 export 'package:hugeicons/hugeicons.dart';
 
 // Components
+export 'src/ui/components/buttons/button_group.dart';
 export 'src/ui/components/buttons/split_button.dart';
 export 'src/ui/components/fab_menu.dart';
 export 'src/ui/components/indicators/morphing.dart';
