@@ -1,10 +1,12 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:rhizu/rhizu.dart';
-import 'package:rhizu/src/ui/components/indicators/animation/indeterminate_arc_motion.dart';
+
 import 'package:rhizu/src/ui/components/indicators/animation/linear_indeterminate_motion.dart';
 import 'package:rhizu/src/ui/components/indicators/constants.dart';
+import 'package:rhizu/src/ui/components/indicators/painter/circular_arc.dart';
+import 'package:rhizu/src/ui/components/indicators/progress_linear_specs.dart';
+import 'package:rhizu/src/ui/components/indicators/progress_tokens.dart';
 
 /// Paints a flat (non-wavy) circular progress indicator.
 ///
@@ -40,30 +42,20 @@ class CircularFlatPainter extends CustomPainter {
 
     // Spec: gap between active arc and track arc = 4dp.
     const gapDp = 4.0;
-    final isIndeterminate = value == null;
-
+    final arc = CircularArc.forProgress(
+      value: value,
+      rotation: rotation,
+      baseSpin: baseSpin,
+    );
     // Reference (`startGap = strokeRadius + gapRadius`): the track gap is
     // stroke-inclusive in both determinate and indeterminate modes, so the
     // round caps of the active and track arcs leave a real 4dp visible gap
     // between them instead of touching.
-    final gapAngle = (stroke + gapDp) / radius;
-
-    late final double activeStart;
-    late final double sweep;
-
-    if (isIndeterminate) {
-      // M3-spec two-arc asymmetric motion:
-      // rotation here represents the continuous count of elapsed arc cycles.
-      final (arcStart, arcSweep) = IndeterminateArcMotion.compute(rotation);
-      // Add baseSpin rotation as the continuous spinning offset.
-      activeStart = arcStart + baseSpin;
-      sweep = arcSweep;
-    } else {
-      sweep = value!.clamp(0.0, 1.0) * math.pi * 2;
-      activeStart = -math.pi / 2 + rotation;
-    }
-
-    final activeEnd = activeStart + sweep;
+    final gapAngle = arc.gapAngle(
+      stroke: stroke,
+      gap: gapDp,
+      radius: radius,
+    );
 
     // TRACK: gapped arc (hidden when active covers full circle).
     final trackPaint = Paint()
@@ -73,15 +65,8 @@ class CircularFlatPainter extends CustomPainter {
       ..isAntiAlias = true
       ..color = track;
 
-    const total = math.pi * 2;
-    if (sweep < total * 0.999) {
-      final a1 = activeEnd + gapAngle;
-      final a2 = activeStart - gapAngle;
-      var sweep1 = a2 - a1;
-      while (sweep1 <= 0) {
-        sweep1 += total;
-      }
-      canvas.drawArc(rect, a1, sweep1, false, trackPaint);
+    if (!arc.isFullCircle) {
+      arc.paintTrack(canvas, rect, trackPaint, gapAngle);
     }
 
     // ACTIVE arc.
@@ -91,7 +76,7 @@ class CircularFlatPainter extends CustomPainter {
       ..strokeCap = StrokeCap.round
       ..isAntiAlias = true
       ..color = active;
-    canvas.drawArc(rect, activeStart, sweep, false, activePaint);
+    canvas.drawArc(rect, arc.start, arc.sweep, false, activePaint);
   }
 
   @override
@@ -190,25 +175,13 @@ class CircularWavyPainter extends CustomPainter {
     const gapDp = 4.0;
 
     final isIndeterminate = value == null;
+    final arc = CircularArc.forProgress(
+      value: value,
+      rotation: rotation,
+      baseSpin: baseSpin,
+    );
 
-    late final double start;
-    late final double end;
-    late final double activeSweep;
-
-    if (isIndeterminate) {
-      // M3-spec two-arc asymmetric motion.
-      final (arcStart, arcSweep) = IndeterminateArcMotion.compute(rotation);
-      start = arcStart + baseSpin;
-      activeSweep = arcSweep;
-      end = start + activeSweep;
-    } else {
-      activeSweep = value!.clamp(0.0, 1.0) * math.pi * 2;
-      start = -math.pi / 2 + rotation;
-      end = start + activeSweep;
-    }
-
-    const total = math.pi * 2;
-    if (activeSweep < total * 0.999) {
+    if (!arc.isFullCircle) {
       final trackPaint = Paint()
         ..style = PaintingStyle.stroke
         ..strokeWidth = stroke
@@ -218,15 +191,13 @@ class CircularWavyPainter extends CustomPainter {
       // Reference (`startGap = strokeRadius + gapRadius`): stroke-inclusive
       // gap in both determinate and indeterminate modes so the round caps
       // leave a real 4dp visible gap instead of touching.
-      final gapAngle = (stroke + gapDp) / baseRadius;
+      final gapAngle = arc.gapAngle(
+        stroke: stroke,
+        gap: gapDp,
+        radius: baseRadius,
+      );
       final rect = Rect.fromCircle(center: center, radius: baseRadius);
-      final a1 = end + gapAngle;
-      final a2 = start - gapAngle;
-      var sweep1 = a2 - a1;
-      while (sweep1 <= 0) {
-        sweep1 += total;
-      }
-      canvas.drawArc(rect, a1, sweep1, false, trackPaint);
+      arc.paintTrack(canvas, rect, trackPaint, gapAngle);
     }
 
     // Reference (`WavyProgressIndicatorDefaults.indicatorAmplitude`): the wave
@@ -244,8 +215,8 @@ class CircularWavyPainter extends CustomPainter {
     _path.reset();
     for (var i = 0; i <= steps; i++) {
       final t = i / steps;
-      final ang = start + (end - start) * t;
-      final arcLen = baseRadius * (ang - start);
+      final ang = arc.start + (arc.end - arc.start) * t;
+      final arcLen = baseRadius * (ang - arc.start);
 
       final r =
           baseRadius +

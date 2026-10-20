@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/ui/components/toolbar/items.dart';
-import 'package:rhizu/src/ui/components/toolbar/placement.dart';
+
 import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/layout/layout_toolbar.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 /// A feed layout that adapts column count based on window size.
 ///
 /// Integrated with [RZToolbar] to handle both actions and navigation
 /// on mobile and desktop.
-class FeedLayout extends StatefulWidget {
+class FeedLayout extends StatelessWidget {
   const FeedLayout({
     required this.itemCount,
     required this.itemBuilder,
@@ -40,113 +40,63 @@ class FeedLayout extends StatefulWidget {
   /// An optional header widget displayed above the grid.
   final Widget? header;
 
-  @override
-  State<FeedLayout> createState() => _FeedLayoutState();
-}
-
-class _FeedLayoutState extends State<FeedLayout> {
-  late int? _cachedCrossAxisCount;
-  double? _cachedWidth;
-
-  int _getCrossAxisCount(double width) {
-    if (_cachedWidth != null && width == _cachedWidth) {
-      return _cachedCrossAxisCount!;
-    }
-
-    _cachedWidth = width;
-    final sizeClass = WindowSizeClass.fromWidth(width);
-
-    switch (sizeClass) {
-      case WindowSizeClass.compact:
-        _cachedCrossAxisCount = 1;
-      case WindowSizeClass.medium:
-        _cachedCrossAxisCount = 1;
-      case WindowSizeClass.expanded:
-        _cachedCrossAxisCount = 2;
-      case WindowSizeClass.large:
-        _cachedCrossAxisCount = 3;
-      case WindowSizeClass.extraLarge:
-        _cachedCrossAxisCount = 4;
-    }
-
-    return _cachedCrossAxisCount!;
+  /// The number of grid columns for [sizeClass].
+  static int crossAxisCountFor(WindowSizeClass sizeClass) {
+    return switch (sizeClass) {
+      WindowSizeClass.compact || WindowSizeClass.medium => 1,
+      WindowSizeClass.expanded => 2,
+      WindowSizeClass.large => 3,
+      WindowSizeClass.extraLarge => 4,
+    };
   }
 
   @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final sizeClass = WindowSizeClass.fromWidth(width);
-        final crossAxisCount = _getCrossAxisCount(width);
-
-        // Calculate bottom padding for toolbar avoidance
-        final bottomPadding =
-            (widget.toolbar != null || widget.destinations != null)
-            ? (sizeClass == WindowSizeClass.compact ? 80.0 : 100.0)
-            : 16.0;
+        final sizeClass = WindowSizeClass.fromWidth(constraints.maxWidth);
+        final hasToolbar = toolbar != null || destinations != null;
 
         final grid = GridView.builder(
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
             top: 16,
-            bottom: bottomPadding,
+            bottom: layoutBottomPadding(
+              sizeClass,
+              hasToolbar: hasToolbar,
+            ),
           ),
           gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: crossAxisCount,
-            childAspectRatio: widget.childAspectRatio,
+            crossAxisCount: crossAxisCountFor(sizeClass),
+            childAspectRatio: childAspectRatio,
             mainAxisSpacing: 16,
             crossAxisSpacing: 16,
           ),
-          itemCount: widget.itemCount,
-          itemBuilder: widget.itemBuilder,
+          itemCount: itemCount,
+          itemBuilder: itemBuilder,
         );
 
-        final destinations = widget.destinations;
-        final toolbar = widget.toolbar;
+        final header = this.header;
+        final content = header == null
+            ? grid
+            : Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  header,
+                  Expanded(child: grid),
+                ],
+              );
 
-        Widget content = grid;
-        if (widget.header != null) {
-          content = Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              widget.header!,
-              Expanded(child: grid),
-            ],
-          );
-        }
-
-        if (toolbar == null && destinations == null) return content;
-
-        final effectiveToolbar = RZToolbar(
-          style: toolbar?.style ?? ToolbarStyle.standard,
-          leading: toolbar?.leading,
-          trailing: toolbar?.trailing,
-          fab: toolbar?.fab,
-          centerTitle: toolbar?.centerTitle ?? false,
-          scrollable: toolbar?.scrollable ?? false,
-          backgroundColor: toolbar?.backgroundColor,
-          elevation: toolbar?.elevation,
-          padding: toolbar?.padding,
-          borderRadius: toolbar?.borderRadius,
-          shape: toolbar?.shape,
-          children: mergeNavAndActions(
-            destinations,
-            widget.selectedIndex,
-            widget.onDestinationSelected,
-            toolbar?.children,
+        return LayoutToolbarOverlay(
+          content: content,
+          sizeClass: sizeClass,
+          toolbar: buildLayoutToolbar(
+            toolbar: toolbar,
+            destinations: destinations,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: onDestinationSelected,
           ),
-        );
-
-        return Stack(
-          children: [
-            content,
-            AdaptiveToolbarPlacement(
-              sizeClass: sizeClass,
-              toolbar: effectiveToolbar,
-            ),
-          ],
         );
       },
     );

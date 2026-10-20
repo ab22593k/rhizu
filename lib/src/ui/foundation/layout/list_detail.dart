@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/ui/components/toolbar/items.dart';
-import 'package:rhizu/src/ui/components/toolbar/placement.dart';
+
 import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/layout/layout_toolbar.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 /// A list-detail layout that shows either single or dual pane based on window size.
 ///
 /// Integrated with [RZToolbar] to handle navigation and contextual actions.
-class RZListDetailLayout extends StatefulWidget {
+class RZListDetailLayout extends StatelessWidget {
   const RZListDetailLayout({
     required this.list,
     this.detail,
@@ -44,177 +44,81 @@ class RZListDetailLayout extends StatefulWidget {
   final ValueChanged<int>? onDestinationSelected;
 
   @override
-  State<RZListDetailLayout> createState() => _RZListDetailLayoutState();
-}
-
-class _RZListDetailLayoutState extends State<RZListDetailLayout> {
-  late bool? _cachedIsCompact;
-  double? _cachedWidth;
-
-  /// Determines if layout should show single pane with caching.
-  bool _isCompact(double width) {
-    if (_cachedWidth != null && width == _cachedWidth) {
-      return _cachedIsCompact!;
-    }
-
-    _cachedWidth = width;
-    final sizeClass = WindowSizeClass.fromWidth(width);
-    _cachedIsCompact =
-        sizeClass == WindowSizeClass.compact ||
-        sizeClass == WindowSizeClass.medium;
-
-    return _cachedIsCompact!;
-  }
-
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final sizeClass = WindowSizeClass.fromWidth(width);
-        final isCompact = _isCompact(width);
+        final sizeClass = WindowSizeClass.fromWidth(constraints.maxWidth);
+        final isCompact = isCompactLayout(sizeClass);
+        final detail = this.detail;
 
-        if (isCompact || widget.detail == null) {
-          final showDetail = widget.isDetailVisible && widget.detail != null;
-          final content = showDetail ? widget.detail! : widget.list;
-          final toolbar = showDetail
-              ? widget.detailToolbar
-              : widget.listToolbar;
-
-          final effectiveToolbar =
-              toolbar != null || widget.destinations != null
-              ? RZToolbar(
-                  style: toolbar?.style ?? ToolbarStyle.standard,
-                  leading: toolbar?.leading,
-                  trailing: toolbar?.trailing,
-                  fab: toolbar?.fab,
-                  centerTitle: toolbar?.centerTitle ?? false,
-                  scrollable: toolbar?.scrollable ?? false,
-                  backgroundColor: toolbar?.backgroundColor,
-                  elevation: toolbar?.elevation,
-                  padding: toolbar?.padding,
-                  borderRadius: toolbar?.borderRadius,
-                  shape: toolbar?.shape,
-                  children: mergeNavAndActions(
-                    widget.destinations,
-                    widget.selectedIndex,
-                    widget.onDestinationSelected,
-                    toolbar?.children,
-                  ),
-                )
-              : null;
-
-          final bottomPadding = effectiveToolbar != null ? 80.0 : 0.0;
-
-          final Widget body = Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: bottomPadding),
-                child: content,
-              ),
-              if (effectiveToolbar != null)
-                AdaptiveToolbarPlacement(
-                  sizeClass: sizeClass,
-                  toolbar: effectiveToolbar,
-                ),
-            ],
-          );
-
-          if (!isCompact && widget.detail == null) {
-            return Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 840),
-                child: body,
-              ),
-            );
-          }
-
-          return body;
-        } else {
-          return Row(
-            children: [
-              Expanded(
-                flex: widget.listFlex,
-                child: _PaneWithToolbar(
-                  content: widget.list,
-                  toolbar: widget.listToolbar,
-                  sizeClass: sizeClass,
-                  destinations: widget.destinations,
-                  selectedIndex: widget.selectedIndex,
-                  onDestinationSelected: widget.onDestinationSelected,
-                ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                flex: widget.detailFlex,
-                child: _PaneWithToolbar(
-                  content: widget.detail!,
-                  toolbar: widget.detailToolbar,
-                  sizeClass: sizeClass,
-                ),
-              ),
-            ],
+        if (isCompact || detail == null) {
+          return _buildSinglePane(
+            context,
+            sizeClass: sizeClass,
+            isCompact: isCompact,
           );
         }
+
+        return Row(
+          children: [
+            Expanded(
+              flex: listFlex,
+              child: LayoutPaneWithToolbar(
+                content: list,
+                toolbar: listToolbar,
+                sizeClass: sizeClass,
+                destinations: destinations,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: onDestinationSelected,
+              ),
+            ),
+            const VerticalDivider(width: 1),
+            Expanded(
+              flex: detailFlex,
+              child: LayoutPaneWithToolbar(
+                content: detail,
+                toolbar: detailToolbar,
+                sizeClass: sizeClass,
+              ),
+            ),
+          ],
+        );
       },
     );
   }
-}
 
-class _PaneWithToolbar extends StatelessWidget {
-  const _PaneWithToolbar({
-    required this.content,
-    required this.toolbar,
-    required this.sizeClass,
-    this.destinations,
-    this.selectedIndex,
-    this.onDestinationSelected,
-  });
+  Widget _buildSinglePane(
+    BuildContext context, {
+    required WindowSizeClass sizeClass,
+    required bool isCompact,
+  }) {
+    final showDetail = isDetailVisible && detail != null;
+    final content = showDetail ? detail! : list;
+    final toolbar = showDetail ? detailToolbar : listToolbar;
 
-  final Widget content;
-  final RZToolbar? toolbar;
-  final WindowSizeClass sizeClass;
-  final List<NavigationDestination>? destinations;
-  final int? selectedIndex;
-  final ValueChanged<int>? onDestinationSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveToolbar = toolbar != null || destinations != null
-        ? RZToolbar(
-            style: toolbar?.style ?? ToolbarStyle.standard,
-            leading: toolbar?.leading,
-            trailing: toolbar?.trailing,
-            fab: toolbar?.fab,
-            centerTitle: toolbar?.centerTitle ?? false,
-            scrollable: toolbar?.scrollable ?? false,
-            backgroundColor: toolbar?.backgroundColor,
-            elevation: toolbar?.elevation,
-            padding: toolbar?.padding,
-            borderRadius: toolbar?.borderRadius,
-            shape: toolbar?.shape,
-            children: mergeNavAndActions(
-              destinations,
-              selectedIndex,
-              onDestinationSelected,
-              toolbar?.children,
-            ),
-          )
-        : null;
-
-    if (effectiveToolbar == null) return content;
-
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 100.0),
-          child: content,
-        ),
-        AdaptiveToolbarPlacement(
-          sizeClass: sizeClass,
-          toolbar: effectiveToolbar,
-        ),
-      ],
+    final body = LayoutToolbarOverlay(
+      content: content,
+      sizeClass: sizeClass,
+      toolbar: buildLayoutToolbar(
+        toolbar: toolbar,
+        destinations: destinations,
+        selectedIndex: selectedIndex,
+        onDestinationSelected: onDestinationSelected,
+      ),
+      bottomPadding: 80,
     );
+
+    // A lone list on a wide window reads better constrained to a comfortable
+    // reading width.
+    if (!isCompact && detail == null) {
+      return Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 840),
+          child: body,
+        ),
+      );
+    }
+
+    return body;
   }
 }

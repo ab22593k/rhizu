@@ -116,6 +116,46 @@ class RZToolbar extends StatefulWidget {
   /// Custom shape. If null, determined by [type] and [borderRadius].
   final ShapeBorder? shape;
 
+  /// Returns a copy of this toolbar with the given fields replaced.
+  ///
+  /// Nullable parameters that are omitted keep their current value; this
+  /// method cannot be used to clear a nullable field.
+  RZToolbar copyWith({
+    List<Widget>? children,
+    ToolbarType? type,
+    ToolbarLayout? layout,
+    ToolbarStyle? style,
+    bool? centerTitle,
+    Widget? leading,
+    Widget? trailing,
+    Widget? fab,
+    RZFabMenuConfig? fabMenu,
+    bool? scrollable,
+    Color? backgroundColor,
+    double? elevation,
+    EdgeInsetsGeometry? padding,
+    BorderRadiusGeometry? borderRadius,
+    ShapeBorder? shape,
+  }) {
+    return RZToolbar(
+      type: type ?? this.type,
+      layout: layout ?? this.layout,
+      style: style ?? this.style,
+      centerTitle: centerTitle ?? this.centerTitle,
+      leading: leading ?? this.leading,
+      trailing: trailing ?? this.trailing,
+      fab: fab ?? this.fab,
+      fabMenu: fabMenu ?? this.fabMenu,
+      scrollable: scrollable ?? this.scrollable,
+      backgroundColor: backgroundColor ?? this.backgroundColor,
+      elevation: elevation ?? this.elevation,
+      padding: padding ?? this.padding,
+      borderRadius: borderRadius ?? this.borderRadius,
+      shape: shape ?? this.shape,
+      children: children ?? this.children,
+    );
+  }
+
   @override
   State<RZToolbar> createState() => _RZToolbarState();
 }
@@ -391,7 +431,7 @@ class _RZToolbarState extends State<RZToolbar> {
 
 // --- Preview ---
 
-@Preview(name: 'Toolbars', size: Size.fromHeight(700))
+@Preview(name: 'Toolbars', size: Size(900, 700))
 Widget toolbarPreview() {
   return const MaterialApp(
     debugShowCheckedModeBanner: false,

@@ -10,6 +10,8 @@ analyzer:
     unreachable_from_main: ignore
     prefer_int_literals: ignore
     sort_pub_dependencies: ignore
+  exclude:
+    - build/**
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options

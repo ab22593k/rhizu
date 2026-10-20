@@ -37,20 +37,3 @@ abstract class LoadingIndicatorContract {
   /// Creates a widget that implements this contract.
   Widget buildWidget(BuildContext context);
 }
-
-/// Constants for loading indicator dimensions.
-class LoadingIndicatorConstants {
-  LoadingIndicatorConstants._();
-
-  /// Minimum container size (24.0).
-  static const double minContainerSize = 24.0;
-
-  /// Default container size (48.0).
-  static const double defaultContainerSize = 48.0;
-
-  /// Maximum container size (240.0).
-  static const double maxContainerSize = 240.0;
-
-  /// Resolution for shape morphing (number of points).
-  static const int shapeResolution = 64;
-}

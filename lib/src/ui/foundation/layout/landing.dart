@@ -1,15 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/widget_previews.dart';
-import 'package:rhizu/src/ui/components/toolbar/items.dart';
-import 'package:rhizu/src/ui/components/toolbar/placement.dart';
 import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/layout/layout_toolbar.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 /// A landing layout that stacks children vertically with a max width constraint.
 ///
 /// Integrated with [RZToolbar] to handle both actions and navigation
 /// on mobile and desktop.
-class RZLandingLayout extends StatefulWidget {
+class RZLandingLayout extends StatelessWidget {
   const RZLandingLayout({
     required this.children,
     super.key,
@@ -43,74 +42,41 @@ class RZLandingLayout extends StatefulWidget {
   final ValueChanged<int>? onDestinationSelected;
 
   @override
-  State<RZLandingLayout> createState() => _RZLandingLayoutState();
-}
-
-class _RZLandingLayoutState extends State<RZLandingLayout> {
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final sizeClass = WindowSizeClass.fromWidth(width);
-
-        // Calculate bottom padding for toolbar avoidance
-        final bottomPadding =
-            (widget.toolbar != null || widget.destinations != null)
-            ? (sizeClass == WindowSizeClass.compact ? 80.0 : 100.0)
-            : 16.0;
+        final sizeClass = WindowSizeClass.fromWidth(constraints.maxWidth);
+        final hasToolbar = toolbar != null || destinations != null;
 
         final list = SingleChildScrollView(
-          padding: widget.padding.copyWith(
-            bottom: widget.padding.bottom + bottomPadding,
+          padding: padding.copyWith(
+            bottom:
+                padding.bottom +
+                layoutBottomPadding(sizeClass, hasToolbar: hasToolbar),
           ),
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
           child: Center(
             child: ConstrainedBox(
-              constraints: BoxConstraints(maxWidth: widget.maxWidth),
+              constraints: BoxConstraints(maxWidth: maxWidth),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: widget.children,
+                children: children,
               ),
             ),
           ),
         );
 
-        final destinations = widget.destinations;
-        final toolbar = widget.toolbar;
-
-        if (toolbar == null && destinations == null) return list;
-
-        final effectiveToolbar = RZToolbar(
-          style: toolbar?.style ?? ToolbarStyle.standard,
-          leading: toolbar?.leading,
-          trailing: toolbar?.trailing,
-          fab: toolbar?.fab,
-          centerTitle: toolbar?.centerTitle ?? false,
-          scrollable: toolbar?.scrollable ?? false,
-          backgroundColor: toolbar?.backgroundColor,
-          elevation: toolbar?.elevation,
-          padding: toolbar?.padding,
-          borderRadius: toolbar?.borderRadius,
-          shape: toolbar?.shape,
-          children: mergeNavAndActions(
-            destinations,
-            widget.selectedIndex,
-            widget.onDestinationSelected,
-            toolbar?.children,
+        return LayoutToolbarOverlay(
+          content: list,
+          sizeClass: sizeClass,
+          toolbar: buildLayoutToolbar(
+            toolbar: toolbar,
+            destinations: destinations,
+            selectedIndex: selectedIndex,
+            onDestinationSelected: onDestinationSelected,
           ),
-        );
-
-        return Stack(
-          children: [
-            list,
-            AdaptiveToolbarPlacement(
-              sizeClass: sizeClass,
-              toolbar: effectiveToolbar,
-            ),
-          ],
         );
       },
     );

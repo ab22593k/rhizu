@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:rhizu/src/ui/components/toolbar/items.dart';
-import 'package:rhizu/src/ui/components/toolbar/placement.dart';
+
 import 'package:rhizu/src/ui/components/toolbar/toolbar.dart';
+import 'package:rhizu/src/ui/foundation/layout/layout_toolbar.dart';
 import 'package:rhizu/src/ui/foundation/window_size_class.dart';
 
 /// A supporting pane layout that shows supporting content based on window size.
 ///
 /// Integrated with [RZToolbar] to handle navigation and contextual actions.
-class RZSupportingPaneLayout extends StatefulWidget {
+class RZSupportingPaneLayout extends StatelessWidget {
   const RZSupportingPaneLayout({
     required this.main,
     required this.supporting,
@@ -42,160 +42,50 @@ class RZSupportingPaneLayout extends StatefulWidget {
   final ValueChanged<int>? onDestinationSelected;
 
   @override
-  State<RZSupportingPaneLayout> createState() => _RZSupportingPaneLayoutState();
-}
-
-class _RZSupportingPaneLayoutState extends State<RZSupportingPaneLayout> {
-  late bool? _cachedIsCompact;
-  double? _cachedWidth;
-
-  /// Determines if layout should show single pane with caching.
-  bool _isCompact(double width) {
-    if (_cachedWidth != null && width == _cachedWidth) {
-      return _cachedIsCompact!;
-    }
-
-    _cachedWidth = width;
-    final sizeClass = WindowSizeClass.fromWidth(width);
-    _cachedIsCompact =
-        sizeClass == WindowSizeClass.compact ||
-        sizeClass == WindowSizeClass.medium;
-
-    return _cachedIsCompact!;
-  }
-
-  @override
   Widget build(BuildContext context) {
     return LayoutBuilder(
       builder: (context, constraints) {
-        final width = constraints.maxWidth;
-        final sizeClass = WindowSizeClass.fromWidth(width);
-        final isCompact = _isCompact(width);
+        final sizeClass = WindowSizeClass.fromWidth(constraints.maxWidth);
 
-        if (isCompact) {
-          final effectiveToolbar =
-              widget.mainToolbar != null || widget.destinations != null
-              ? RZToolbar(
-                  style: widget.mainToolbar?.style ?? ToolbarStyle.standard,
-                  leading: widget.mainToolbar?.leading,
-                  trailing: widget.mainToolbar?.trailing,
-                  fab: widget.mainToolbar?.fab,
-                  centerTitle: widget.mainToolbar?.centerTitle ?? false,
-                  scrollable: widget.mainToolbar?.scrollable ?? false,
-                  backgroundColor: widget.mainToolbar?.backgroundColor,
-                  elevation: widget.mainToolbar?.elevation,
-                  padding: widget.mainToolbar?.padding,
-                  borderRadius: widget.mainToolbar?.borderRadius,
-                  shape: widget.mainToolbar?.shape,
-                  children: mergeNavAndActions(
-                    widget.destinations,
-                    widget.selectedIndex,
-                    widget.onDestinationSelected,
-                    widget.mainToolbar?.children,
-                  ),
-                )
-              : null;
-
-          final bottomPadding = effectiveToolbar != null ? 80.0 : 0.0;
-
-          return Stack(
-            children: [
-              Padding(
-                padding: EdgeInsets.only(bottom: bottomPadding),
-                child: widget.main,
-              ),
-              if (effectiveToolbar != null)
-                AdaptiveToolbarPlacement(
-                  sizeClass: sizeClass,
-                  toolbar: effectiveToolbar,
-                ),
-            ],
-          );
-        } else {
-          return Row(
-            children: [
-              Expanded(
-                flex: widget.mainFlex,
-                child: _PaneWithToolbar(
-                  content: widget.main,
-                  toolbar: widget.mainToolbar,
-                  sizeClass: sizeClass,
-                  destinations: widget.destinations,
-                  selectedIndex: widget.selectedIndex,
-                  onDestinationSelected: widget.onDestinationSelected,
-                ),
-              ),
-              const VerticalDivider(width: 1),
-              Expanded(
-                flex: widget.supportingFlex,
-                child: _PaneWithToolbar(
-                  content: widget.supporting,
-                  toolbar: widget.supportingToolbar,
-                  sizeClass: sizeClass,
-                ),
-              ),
-            ],
+        if (isCompactLayout(sizeClass)) {
+          return LayoutToolbarOverlay(
+            content: main,
+            sizeClass: sizeClass,
+            toolbar: buildLayoutToolbar(
+              toolbar: mainToolbar,
+              destinations: destinations,
+              selectedIndex: selectedIndex,
+              onDestinationSelected: onDestinationSelected,
+            ),
+            bottomPadding: 80,
           );
         }
-      },
-    );
-  }
-}
 
-class _PaneWithToolbar extends StatelessWidget {
-  const _PaneWithToolbar({
-    required this.content,
-    required this.toolbar,
-    required this.sizeClass,
-    this.destinations,
-    this.selectedIndex,
-    this.onDestinationSelected,
-  });
-
-  final Widget content;
-  final RZToolbar? toolbar;
-  final WindowSizeClass sizeClass;
-  final List<NavigationDestination>? destinations;
-  final int? selectedIndex;
-  final ValueChanged<int>? onDestinationSelected;
-
-  @override
-  Widget build(BuildContext context) {
-    final effectiveToolbar = toolbar != null || destinations != null
-        ? RZToolbar(
-            style: toolbar?.style ?? ToolbarStyle.standard,
-            leading: toolbar?.leading,
-            trailing: toolbar?.trailing,
-            fab: toolbar?.fab,
-            centerTitle: toolbar?.centerTitle ?? false,
-            scrollable: toolbar?.scrollable ?? false,
-            backgroundColor: toolbar?.backgroundColor,
-            elevation: toolbar?.elevation,
-            padding: toolbar?.padding,
-            borderRadius: toolbar?.borderRadius,
-            shape: toolbar?.shape,
-            children: mergeNavAndActions(
-              destinations,
-              selectedIndex,
-              onDestinationSelected,
-              toolbar?.children,
+        return Row(
+          children: [
+            Expanded(
+              flex: mainFlex,
+              child: LayoutPaneWithToolbar(
+                content: main,
+                toolbar: mainToolbar,
+                sizeClass: sizeClass,
+                destinations: destinations,
+                selectedIndex: selectedIndex,
+                onDestinationSelected: onDestinationSelected,
+              ),
             ),
-          )
-        : null;
-
-    if (effectiveToolbar == null) return content;
-
-    return Stack(
-      children: [
-        Padding(
-          padding: const EdgeInsets.only(bottom: 100.0),
-          child: content,
-        ),
-        AdaptiveToolbarPlacement(
-          sizeClass: sizeClass,
-          toolbar: effectiveToolbar,
-        ),
-      ],
+            const VerticalDivider(width: 1),
+            Expanded(
+              flex: supportingFlex,
+              child: LayoutPaneWithToolbar(
+                content: supporting,
+                toolbar: supportingToolbar,
+                sizeClass: sizeClass,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

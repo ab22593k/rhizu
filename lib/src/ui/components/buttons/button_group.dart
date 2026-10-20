@@ -1,218 +1,15 @@
-import 'dart:math' as math;
-
 import 'package:flutter/foundation.dart' show setEquals;
 import 'package:flutter/material.dart';
-import 'package:flutter/widget_previews.dart';
 
+import 'package:rhizu/src/ui/components/buttons/button_group_colors.dart';
+import 'package:rhizu/src/ui/components/buttons/button_group_geometry.dart';
+import 'package:rhizu/src/ui/components/buttons/button_group_item.dart';
+import 'package:rhizu/src/ui/components/buttons/button_group_tokens.dart';
 import 'package:rhizu/src/ui/components/indicators/animation/spring_curve.dart';
 import 'package:rhizu/src/ui/styles/motion/tokens.dart';
 
-/// The variants of the expressive [ButtonGroup].
-///
-/// Mirrors the M3 Expressive button group spec:
-/// - [ButtonGroupVariant.standard] adds interaction between adjacent buttons.
-///   Pressing or selecting a button grows its width by 15% (animated with the
-///   fast spatial spring) and the buttons directly next to it temporarily
-///   give up that width.
-/// - [ButtonGroupVariant.connected] visually joins the buttons with a 2dp
-///   gutter and only changes the shape of the pressed or selected button.
-///   It is the expressive replacement for the M3 segmented button.
-enum ButtonGroupVariant { standard, connected }
-
-/// The sizes of the expressive [ButtonGroup].
-///
-/// Container heights follow the M3 Expressive button group tokens
-/// (`md.comp.button-group.*.container.height`): XS 32dp, S 40dp, M 56dp,
-/// L 96dp, XL 136dp.
-enum ButtonGroupSize {
-  xs,
-  sm,
-  md,
-  lg,
-  xl;
-
-  /// The container height for this size.
-  double get height {
-    switch (this) {
-      case ButtonGroupSize.xs:
-        return 32.0;
-      case ButtonGroupSize.sm:
-        return 40.0;
-      case ButtonGroupSize.md:
-        return 56.0;
-      case ButtonGroupSize.lg:
-        return 96.0;
-      case ButtonGroupSize.xl:
-        return 136.0;
-    }
-  }
-
-  /// The gap between buttons in a [ButtonGroupVariant.standard] group
-  /// (`md.comp.button-group.standard.*.between-space`).
-  double get standardGap {
-    switch (this) {
-      case ButtonGroupSize.xs:
-        return 18.0;
-      case ButtonGroupSize.sm:
-        return 12.0;
-      case ButtonGroupSize.md:
-      case ButtonGroupSize.lg:
-      case ButtonGroupSize.xl:
-        return 8.0;
-    }
-  }
-
-  /// The resting inner corner radius of the buttons.
-  ///
-  /// For [ButtonGroupVariant.connected] this is the inner-corner token
-  /// (`md.comp.button-group.connected.*.inner-corner.corner-size`). For the
-  /// square shape it is also the outer corner radius
-  /// (`md.comp.button-group.connected.*.container.shape`).
-  double get innerCorner {
-    switch (this) {
-      case ButtonGroupSize.xs:
-        return 4.0;
-      case ButtonGroupSize.sm:
-      case ButtonGroupSize.md:
-        return 8.0;
-      case ButtonGroupSize.lg:
-        return 16.0;
-      case ButtonGroupSize.xl:
-        return 20.0;
-    }
-  }
-
-  /// The inner corner radius while a connected button is pressed
-  /// (`md.comp.button-group.connected.*.pressed.inner-corner.corner-size`).
-  double get pressedInnerCorner {
-    switch (this) {
-      case ButtonGroupSize.xs:
-      case ButtonGroupSize.sm:
-      case ButtonGroupSize.md:
-        return 4.0;
-      case ButtonGroupSize.lg:
-        return 12.0;
-      case ButtonGroupSize.xl:
-        return 16.0;
-    }
-  }
-
-  /// The icon size for this size.
-  double get iconSize {
-    switch (this) {
-      case ButtonGroupSize.xs:
-        return 20.0;
-      case ButtonGroupSize.sm:
-      case ButtonGroupSize.md:
-        return 24.0;
-      case ButtonGroupSize.lg:
-        return 32.0;
-      case ButtonGroupSize.xl:
-        return 40.0;
-    }
-  }
-
-  /// The horizontal padding of each button.
-  EdgeInsetsGeometry get padding {
-    switch (this) {
-      case ButtonGroupSize.xs:
-      case ButtonGroupSize.sm:
-        return const EdgeInsets.symmetric(horizontal: 12);
-      case ButtonGroupSize.md:
-        return const EdgeInsets.symmetric(horizontal: 16);
-      case ButtonGroupSize.lg:
-        return const EdgeInsets.symmetric(horizontal: 24);
-      case ButtonGroupSize.xl:
-        return const EdgeInsets.symmetric(horizontal: 32);
-    }
-  }
-
-  /// The label text style for this size.
-  TextStyle? textStyle(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    switch (this) {
-      case ButtonGroupSize.xs:
-        return textTheme.labelSmall;
-      case ButtonGroupSize.sm:
-        return textTheme.labelMedium;
-      case ButtonGroupSize.md:
-        return textTheme.labelLarge;
-      case ButtonGroupSize.lg:
-        return textTheme.bodyLarge;
-      case ButtonGroupSize.xl:
-        return textTheme.titleMedium;
-    }
-  }
-}
-
-/// The shapes of the expressive [ButtonGroup].
-enum ButtonGroupShape {
-  /// Fully rounded (pill) outer corners.
-  round,
-
-  /// Minimal corner radius on the outer corners.
-  square,
-}
-
-/// The color style of the expressive [ButtonGroup].
-///
-/// Button groups have no color properties of their own; they reuse the button
-/// color roles. The selected container always uses the toggle (segmented)
-/// color roles unless [ButtonGroupStyle.filled] is chosen.
-enum ButtonGroupStyle {
-  /// Filled container emphasis. Selected buttons use the primary container.
-  filled,
-
-  /// Tonal container emphasis. Selected buttons use the secondary container.
-  tonal,
-
-  /// Outlined treatment with a 1dp outline border.
-  outlined,
-
-  /// Elevated treatment with a subtle shadow.
-  elevated,
-}
-
-/// The overflow behavior of a [ButtonGroup] when it cannot fit its available
-/// width.
-enum ButtonGroupOverflowMode {
-  /// Buttons always render in the group; a fixed group may exceed the
-  /// available width.
-  none,
-
-  /// When the available width cannot fit every button, the trailing buttons
-  /// collapse into an overflow menu button (⋯). Only horizontal, fixed
-  /// (non-[ButtonGroup.expanded]) [ButtonGroupVariant.standard] groups
-  /// support this; connected, expanded, and vertical groups ignore it
-  /// because their buttons always fit by sharing the width.
-  menu,
-}
-
-/// A single item of a [ButtonGroup].
-class ButtonGroupItem<T> {
-  const ButtonGroupItem({
-    required this.value,
-    this.icon,
-    this.label,
-    this.tooltip,
-    this.enabled = true,
-  });
-
-  /// The value that identifies this item in the selection set.
-  final T value;
-
-  /// The leading icon, shown before [label] (optional).
-  final IconData? icon;
-
-  /// The label text (optional for icon-only segments).
-  final String? label;
-
-  /// A tooltip describing the item. Recommended for icon-only items.
-  final String? tooltip;
-
-  /// Whether the item is interactive. Disabled items cannot be selected.
-  final bool enabled;
-}
+export 'button_group_item.dart';
+export 'button_group_tokens.dart';
 
 /// The M3 Expressive button group.
 ///
@@ -382,9 +179,6 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
   late final AnimationController _pressController;
   late final Animation<double> _pressAnimation;
 
-  /// The pressed width multiplier (`pressed.item.width.multiplier`, 15%).
-  static const double _pressedWidthMultiplier = 0.15;
-
   /// Selection morph duration: 200ms per the expressive motion spec.
   static const Duration _selectionMorphDuration = Duration(milliseconds: 200);
 
@@ -484,255 +278,48 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
     }
   }
 
-  double _lerp(double a, double b, double t) => a + (b - a) * t;
+  /// The pure layout math for the current configuration and text direction.
+  ButtonGroupGeometry get _geometry => ButtonGroupGeometry(
+    size: widget.size,
+    variant: widget.variant,
+    shape: widget.shape,
+    direction: widget.direction,
+    textDirection: Directionality.of(context),
+    itemCount: widget.items.length,
+    expanded: widget.expanded,
+  );
 
-  /// Whether the group uses flexible (share-the-width) layout: connected
-  /// groups always do; standard groups only when [ButtonGroup.expanded] is
-  /// set.
-  bool get _flexible =>
-      widget.variant == ButtonGroupVariant.connected || widget.expanded;
-
-  /// The width each button should take for the current press progress.
-  ///
-  /// Returns `null` for flexible groups (they allocate width through flex
-  /// shares instead) and before the natural widths have been measured.
-  double? _widthFor(int index, double pressProgress) {
-    // Flexible groups allocate width through flex shares, not explicit sizes.
-    if (_flexible) return null;
-    final pressed = _pressedIndex;
-    if (!_widthsMeasured || pressed == null || pressProgress <= 0) return null;
-    final natural = _naturalWidths[index];
-    if (natural == null) return null;
-
-    if (index == pressed) {
-      return natural * (1 + _pressedWidthMultiplier * pressProgress);
-    }
-    if ((index - pressed).abs() == 1) {
-      final neighborCount =
-          (pressed > 0 ? 1 : 0) + (pressed < widget.items.length - 1 ? 1 : 0);
-      if (neighborCount == 0) return natural;
-      final growth =
-          _naturalWidths[pressed]! * _pressedWidthMultiplier * pressProgress;
-      final shrink = growth / neighborCount;
-      // Never shrink a neighbor by more than 10% so its content stays legible.
-      final clampedShrink = math.min(shrink, natural * 0.10);
-      return natural - clampedShrink;
-    }
-    return natural;
-  }
-
-  /// The flex share each button takes in a flexible (expanded) group.
-  ///
-  /// At rest every button gets an equal share. While pressed, a standard
-  /// group's pressed button grows by 15% and its neighbors give up exactly
-  /// that share, keeping the total (and therefore the group width) stable.
-  /// Connected groups never morph width on press. Shares are scaled to
-  /// integer flex units (×1000) so fractional 15% growth stays expressible.
-  int _flexFor(int index, double pressProgress) {
-    if (widget.variant == ButtonGroupVariant.connected) return 1000;
-    final pressed = _pressedIndex;
-    if (pressed == null || pressProgress <= 0) return 1000;
-    if (index == pressed) {
-      return (1000 * (1 + _pressedWidthMultiplier * pressProgress)).round();
-    }
-    if ((index - pressed).abs() == 1) {
-      final neighborCount =
-          (pressed > 0 ? 1 : 0) + (pressed < widget.items.length - 1 ? 1 : 0);
-      if (neighborCount == 0) return 1000;
-      return math.max(
-        (1000 * (1 - (_pressedWidthMultiplier * pressProgress) / neighborCount))
-            .round(),
-        100,
-      );
-    }
-    return 1000;
-  }
-
-  /// The four corner radii for the button at [index].
-  ///
-  /// [pressProgress] comes from the fast spatial spring (0 = rest, 1 =
-  /// pressed) and [selectionMorph] from the 200ms selection tween (0 =
-  /// unselected, 1 = selected).
-  ({Radius tl, Radius tr, Radius bl, Radius br}) _radiiFor(
-    int index,
-    double pressProgress,
-    double selectionMorph,
-  ) {
-    final height = widget.size.height;
-    final pill = height / 2;
-    final restInner = widget.size.innerCorner;
-    final pressedInner = widget.size.pressedInnerCorner;
-    final selectedInner = height * 0.5; // `selected.inner-corner = 50%`
-    final squareOuter = widget.size.innerCorner;
-    final isVertical = widget.direction == Axis.vertical;
-    final isRtl =
-        !isVertical && Directionality.of(context) == TextDirection.rtl;
-    final first = index == 0;
-    final last = index == widget.items.length - 1;
-
-    // The inner-facing corner value combines the press morph and the
-    // selection morph (selection dominates).
-    final inner = _lerp(
-      _lerp(restInner, pressedInner, pressProgress),
-      selectedInner,
-      selectionMorph,
-    );
-
-    double leading;
-    double trailing;
-    if (widget.variant == ButtonGroupVariant.standard) {
-      final rest = widget.shape == ButtonGroupShape.round ? pill : squareOuter;
-      // The selected button swaps between round and square; otherwise the
-      // inner-facing corners flatten slightly while pressed.
-      if (selectionMorph > 0) {
-        final swapped = widget.shape == ButtonGroupShape.round
-            ? squareOuter
-            : pill;
-        leading = _lerp(rest, swapped, selectionMorph);
-        trailing = leading;
-      } else {
-        leading = first ? rest : _lerp(rest, pressedInner, pressProgress);
-        trailing = last ? rest : _lerp(rest, pressedInner, pressProgress);
-      }
-    } else {
-      final outer = widget.shape == ButtonGroupShape.round ? pill : squareOuter;
-      leading = first ? outer : inner;
-      trailing = last ? outer : inner;
-    }
-
-    if (isVertical) {
-      return (
-        tl: Radius.circular(leading),
-        tr: Radius.circular(leading),
-        bl: Radius.circular(trailing),
-        br: Radius.circular(trailing),
-      );
-    }
-    if (isRtl) {
-      return (
-        tl: Radius.circular(trailing),
-        tr: Radius.circular(leading),
-        bl: Radius.circular(trailing),
-        br: Radius.circular(leading),
-      );
-    }
-    return (
-      tl: Radius.circular(leading),
-      tr: Radius.circular(trailing),
-      bl: Radius.circular(leading),
-      br: Radius.circular(trailing),
-    );
-  }
-
-  ({Color background, Color foreground, Color? border, double elevation})
-  _colorsFor(BuildContext context, bool selected, bool disabled) {
-    final colorScheme = Theme.of(context).colorScheme;
-
-    final (background, foreground, border, elevation) = switch (widget.style) {
-      ButtonGroupStyle.filled when selected => (
-        colorScheme.primary,
-        colorScheme.onPrimary,
-        colorScheme.outline as Color?,
-        0.0,
-      ),
-      ButtonGroupStyle.filled => (
-        colorScheme.surfaceContainerHighest,
-        colorScheme.onSurface,
-        colorScheme.outline as Color?,
-        0.0,
-      ),
-      ButtonGroupStyle.tonal when selected => (
-        colorScheme.secondaryContainer,
-        colorScheme.onSecondaryContainer,
-        null,
-        0.0,
-      ),
-      ButtonGroupStyle.tonal => (
-        colorScheme.surfaceContainerHighest,
-        colorScheme.onSurface,
-        null,
-        0.0,
-      ),
-      ButtonGroupStyle.outlined when selected => (
-        colorScheme.secondaryContainer,
-        colorScheme.onSecondaryContainer,
-        colorScheme.outline as Color?,
-        0.0,
-      ),
-      ButtonGroupStyle.outlined => (
-        Colors.transparent,
-        colorScheme.onSurface,
-        colorScheme.outline as Color?,
-        0.0,
-      ),
-      ButtonGroupStyle.elevated when selected => (
-        colorScheme.secondaryContainer,
-        colorScheme.onSecondaryContainer,
-        null,
-        1.0,
-      ),
-      ButtonGroupStyle.elevated => (
-        colorScheme.surfaceContainerLow,
-        colorScheme.primary,
-        null,
-        1.0,
-      ),
-    };
-
-    // Custom [ButtonGroup.selectedColor] / [ButtonGroup.unselectedColor]
-    // overrides replace the container color of their state and derive a
-    // readable foreground (and an outlined border) from it.
-    // The legacy [ButtonGroup.color] aliases [selectedColor].
+  /// The color resolver for the current style and custom-color overrides.
+  ButtonGroupPalette get _palette => ButtonGroupPalette(
+    style: widget.style,
+    selectedColor: widget.selectedColor,
+    unselectedColor: widget.unselectedColor,
+    // The legacy [ButtonGroup.color] aliases [ButtonGroup.selectedColor].
     // ignore: deprecated_member_use_from_same_package
-    final legacySelectedColor = widget.color;
-    final custom = selected
-        ? (widget.selectedColor ?? legacySelectedColor)
-        : widget.unselectedColor;
-    final resolvedBackground = custom ?? background;
-    final resolvedForeground = custom != null
-        ? _onColorFor(custom)
-        : foreground;
-    final resolvedBorder = custom != null
-        ? (widget.style == ButtonGroupStyle.outlined ? custom : border)
-        : border;
+    legacyColor: widget.color,
+  );
 
-    if (disabled) {
-      return (
-        background: resolvedBackground,
-        foreground: colorScheme.onSurface.withValues(alpha: 0.38),
-        border: colorScheme.onSurface.withValues(alpha: 0.12),
-        elevation: elevation,
-      );
-    }
-    return (
-      background: resolvedBackground,
-      foreground: resolvedForeground,
-      border: resolvedBorder,
-      elevation: elevation,
-    );
+  /// The measured width of [index], falling back to a synchronous estimate
+  /// before the post-frame measurement completes.
+  double _effectiveNaturalWidth(int index) {
+    final measured = _naturalWidths[index];
+    return measured != null && measured > 0
+        ? measured
+        : _estimatedNaturalWidth(index);
   }
 
-  /// The WCAG relative-luminance contrast ratio between two colors.
-  static double _contrastRatio(Color a, Color b) {
-    final la = a.computeLuminance();
-    final lb = b.computeLuminance();
-    final lighter = math.max(la, lb);
-    final darker = math.min(la, lb);
-    return (lighter + 0.05) / (darker + 0.05);
-  }
-
-  /// The foreground color that reads best on [background]: black or white,
-  /// whichever has the higher WCAG contrast ratio.
-  static Color _onColorFor(Color background) {
-    final white = _contrastRatio(background, Colors.white);
-    final black = _contrastRatio(background, Colors.black);
-    return white >= black ? Colors.white : Colors.black;
-  }
-
-  Widget _buildItem(BuildContext context, int index) {
+  Widget _buildItem(
+    BuildContext context,
+    ButtonGroupGeometry geometry,
+    int index,
+  ) {
     final item = widget.items[index];
     final selected = widget.selected.contains(item.value);
-    final colors = _colorsFor(context, selected, !item.enabled);
+    final colors = _palette.resolve(
+      Theme.of(context).colorScheme,
+      selected: selected,
+      disabled: !item.enabled,
+    );
     final reduceMotion = MediaQuery.of(context).disableAnimations;
     final textStyle = widget.size
         .textStyle(context)
@@ -742,7 +329,13 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
       animation: _pressAnimation,
       builder: (context, _) {
         final pressProgress = _pressAnimation.value;
-        final width = _widthFor(index, pressProgress);
+        final width = geometry.widthFor(
+          index: index,
+          pressProgress: pressProgress,
+          pressedIndex: _pressedIndex,
+          naturalWidths: _naturalWidths,
+          widthsMeasured: _widthsMeasured,
+        );
         return SizedBox(
           key: _itemKeys[index],
           height: widget.size.height,
@@ -755,10 +348,10 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
             duration: reduceMotion ? Duration.zero : _selectionMorphDuration,
             curve: Curves.easeInOutCubicEmphasized,
             builder: (context, selectionMorph, _) {
-              final radii = _radiiFor(
-                index,
-                pressProgress,
-                selectionMorph,
+              final radii = geometry.radiiFor(
+                index: index,
+                pressProgress: pressProgress,
+                selectionMorph: selectionMorph,
               );
               final shape = RoundedRectangleBorder(
                 side: colors.border != null
@@ -864,90 +457,6 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
     return width + 4;
   }
 
-  /// The number of leading items that fit in [availableWidth] next to the
-  /// overflow menu button, or `null` when every item fits on its own (no
-  /// overflow needed).
-  ///
-  /// Uses the measured natural widths when available and falls back to
-  /// [_estimatedNaturalWidth] on the first frame so the row never renders
-  /// more items than fit.
-  int? _overflowFit(double availableWidth, double gap, double overflowWidth) {
-    if (widget.items.length <= 1) return null;
-
-    double widthAt(int index) {
-      final measured = _naturalWidths[index];
-      return measured != null && measured > 0
-          ? measured
-          : _estimatedNaturalWidth(index);
-    }
-
-    // Everything fits without the overflow button?
-    var all = 0.0;
-    for (var i = 0; i < widget.items.length; i++) {
-      all += widthAt(i) + (i > 0 ? gap : 0);
-    }
-    if (all <= availableWidth) return null;
-
-    // Greedily fit leading items; every item carries a trailing gap and the
-    // overflow button sits at the end.
-    var count = 0;
-    var used = 0.0;
-    for (var i = 0; i < widget.items.length; i++) {
-      final next = used + widthAt(i) + gap + overflowWidth;
-      if (next > availableWidth) break;
-      used += widthAt(i) + gap;
-      count++;
-    }
-    // When nothing fits next to the overflow button, collapse every button
-    // into the menu and show the overflow button on its own.
-    return count.clamp(0, widget.items.length - 1);
-  }
-
-  /// The corner radii for the overflow menu button, which sits at the end of
-  /// the group and inherits the group's outer corner on the trailing edge.
-  ({Radius tl, Radius tr, Radius bl, Radius br}) _overflowRadii() {
-    final height = widget.size.height;
-    final pill = height / 2;
-    final inner = widget.size.innerCorner;
-    final rest = widget.shape == ButtonGroupShape.round ? pill : inner;
-    final isVertical = widget.direction == Axis.vertical;
-    final isRtl =
-        !isVertical && Directionality.of(context) == TextDirection.rtl;
-    // Standard items rest with the outer shape on every corner; connected
-    // items face the group with their inner corner.
-    final double leading;
-    final double trailing;
-    if (widget.variant == ButtonGroupVariant.standard) {
-      leading = rest;
-      trailing = rest;
-    } else {
-      leading = inner;
-      trailing = rest;
-    }
-    if (isVertical) {
-      return (
-        tl: Radius.circular(leading),
-        tr: Radius.circular(leading),
-        bl: Radius.circular(trailing),
-        br: Radius.circular(trailing),
-      );
-    }
-    if (isRtl) {
-      return (
-        tl: Radius.circular(trailing),
-        tr: Radius.circular(leading),
-        bl: Radius.circular(trailing),
-        br: Radius.circular(leading),
-      );
-    }
-    return (
-      tl: Radius.circular(leading),
-      tr: Radius.circular(trailing),
-      bl: Radius.circular(leading),
-      br: Radius.circular(trailing),
-    );
-  }
-
   /// The popup menu entries for the items hidden behind the overflow button.
   List<PopupMenuEntry<int>> _overflowMenuItems(
     BuildContext context,
@@ -990,16 +499,24 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
   /// The overflow menu button (⋯) shown in place of the collapsed trailing
   /// items. It mirrors the group's unselected styling and inherits the
   /// trailing edge's outer corner.
-  Widget _buildOverflowButton(BuildContext context, int firstHidden) {
+  Widget _buildOverflowButton(
+    BuildContext context,
+    ButtonGroupGeometry geometry,
+    int firstHidden,
+  ) {
     final hiddenIndices = [
       for (var i = firstHidden; i < widget.items.length; i++) i,
     ];
     final disabled = !widget.items
         .skip(firstHidden)
         .any((item) => item.enabled);
-    final colors = _colorsFor(context, false, disabled);
-    final overflowWidth = widget.size.iconSize + widget.size.padding.horizontal;
-    final radii = _overflowRadii();
+    final colors = _palette.resolve(
+      Theme.of(context).colorScheme,
+      selected: false,
+      disabled: disabled,
+    );
+    final overflowWidth = geometry.overflowButtonWidth;
+    final radii = geometry.overflowRadii();
     final shape = RoundedRectangleBorder(
       side: colors.border != null
           ? BorderSide(color: colors.border!)
@@ -1039,14 +556,15 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
   /// When [visibleCount] is set, only that many leading items are shown and
   /// an overflow menu button takes the place of the trailing items.
   Widget _buildRow(
-    double pressProgress,
-    double gap, {
+    ButtonGroupGeometry geometry,
+    double pressProgress, {
     int? visibleCount,
   }) {
-    final isVertical = widget.direction == Axis.vertical;
+    final isVertical = geometry.isVertical;
     final showingOverflow =
         visibleCount != null && visibleCount < widget.items.length;
     final count = showingOverflow ? visibleCount : widget.items.length;
+    final gap = geometry.gap;
 
     final children = <Widget>[];
     for (var i = 0; i < count; i++) {
@@ -1055,10 +573,17 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
           isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
         );
       }
-      final item = _buildItem(context, i);
+      final item = _buildItem(context, geometry, i);
       children.add(
-        _flexible && !isVertical
-            ? Expanded(flex: _flexFor(i, pressProgress), child: item)
+        geometry.isFlexible && !isVertical
+            ? Expanded(
+                flex: geometry.flexFor(
+                  index: i,
+                  pressProgress: pressProgress,
+                  pressedIndex: _pressedIndex,
+                ),
+                child: item,
+              )
             : item,
       );
     }
@@ -1071,33 +596,31 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
           isVertical ? SizedBox(height: gap) : SizedBox(width: gap),
         );
       }
-      children.add(_buildOverflowButton(context, count));
+      children.add(_buildOverflowButton(context, geometry, count));
     }
 
     if (isVertical) {
       return Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: _flexible
+        crossAxisAlignment: geometry.isFlexible
             ? CrossAxisAlignment.stretch
             : CrossAxisAlignment.start,
         children: children,
       );
     }
     return Row(
-      mainAxisSize: _flexible ? MainAxisSize.max : MainAxisSize.min,
+      mainAxisSize: geometry.isFlexible ? MainAxisSize.max : MainAxisSize.min,
       children: children,
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    final isVertical = widget.direction == Axis.vertical;
-    final connected = widget.variant == ButtonGroupVariant.connected;
-    final gap = connected ? 2.0 : widget.size.standardGap;
+    final geometry = _geometry;
     final overflow =
         widget.overflowMode == ButtonGroupOverflowMode.menu &&
-        !isVertical &&
-        !_flexible;
+        !geometry.isVertical &&
+        !geometry.isFlexible;
 
     // Flexible groups (connected, or standard with [ButtonGroup.expanded])
     // span the width of their surface and share it equally; fixed standard
@@ -1110,196 +633,25 @@ class _ButtonGroupState<T> extends State<ButtonGroup<T>>
           builder: (context, _) {
             final pressProgress = _pressAnimation.value;
             if (overflow) {
-              final overflowWidth =
-                  widget.size.iconSize + widget.size.padding.horizontal;
-              final fit = _overflowFit(
-                constraints.maxWidth,
-                gap,
-                overflowWidth,
+              final fit = ButtonGroupGeometry.overflowFitCount(
+                widths: [
+                  for (var i = 0; i < widget.items.length; i++)
+                    _effectiveNaturalWidth(i),
+                ],
+                availableWidth: constraints.maxWidth,
+                gap: geometry.gap,
+                overflowWidth: geometry.overflowButtonWidth,
               );
               return _buildRow(
+                geometry,
                 pressProgress,
-                gap,
                 visibleCount: fit,
               );
             }
-            return _buildRow(pressProgress, gap);
+            return _buildRow(geometry, pressProgress);
           },
         );
       },
     );
   }
 }
-
-@Preview(name: 'Button Group - Standard', size: Size.fromHeight(280))
-Widget buttonGroupStandardPreview() {
-  return const MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(body: Center(child: _ButtonGroupPreview())),
-  );
-}
-
-class _ButtonGroupPreview extends StatefulWidget {
-  const _ButtonGroupPreview();
-
-  @override
-  State<_ButtonGroupPreview> createState() => _ButtonGroupPreviewState();
-}
-
-class _ButtonGroupPreviewState extends State<_ButtonGroupPreview> {
-  final Set<ButtonGroupSize> _sizes = {ButtonGroupSize.md};
-  Set<int> _colors = {1, 3};
-  ViewMode _view = ViewMode.list;
-
-  @override
-  Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(24),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text('Standard - single select'),
-          const SizedBox(height: 12),
-          ButtonGroup<ButtonGroupSize>(
-            items: const [
-              ButtonGroupItem(
-                value: ButtonGroupSize.xs,
-                label: 'XS',
-                icon: Icons.done,
-              ),
-              ButtonGroupItem(
-                value: ButtonGroupSize.sm,
-                label: 'S',
-                icon: Icons.done,
-              ),
-              ButtonGroupItem(
-                value: ButtonGroupSize.md,
-                label: 'M',
-                icon: Icons.done,
-              ),
-              ButtonGroupItem(
-                value: ButtonGroupSize.lg,
-                label: 'L',
-                icon: Icons.done,
-              ),
-              ButtonGroupItem(
-                value: ButtonGroupSize.xl,
-                label: 'XL',
-                icon: Icons.done,
-              ),
-            ],
-            selected: _sizes,
-            onSelectionChanged: (next) => setState(
-              () => _sizes
-                ..clear()
-                ..addAll(next),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Text('Standard - expanded (flexible)'),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: 420,
-            child: ButtonGroup<ButtonGroupSize>(
-              expanded: true,
-              items: const [
-                ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
-                ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
-                ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
-              ],
-              selected: _sizes,
-              onSelectionChanged: (next) => setState(
-                () => _sizes
-                  ..clear()
-                  ..addAll(next),
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Text('Standard - custom color'),
-          const SizedBox(height: 12),
-          ButtonGroup<ButtonGroupSize>(
-            selectedColor: const Color(0xFF00696D),
-            unselectedColor: const Color(0xFFE3F2F2),
-            items: const [
-              ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
-              ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
-              ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
-            ],
-            selected: _sizes,
-            onSelectionChanged: (next) => setState(
-              () => _sizes
-                ..clear()
-                ..addAll(next),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Text('Standard - overflow menu (narrow)'),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: 260,
-            child: ButtonGroup<ButtonGroupSize>(
-              overflowMode: ButtonGroupOverflowMode.menu,
-              items: const [
-                ButtonGroupItem(value: ButtonGroupSize.xs, label: 'XS'),
-                ButtonGroupItem(value: ButtonGroupSize.sm, label: 'S'),
-                ButtonGroupItem(value: ButtonGroupSize.md, label: 'M'),
-                ButtonGroupItem(value: ButtonGroupSize.lg, label: 'L'),
-                ButtonGroupItem(value: ButtonGroupSize.xl, label: 'XL'),
-              ],
-              selected: _sizes,
-              onSelectionChanged: (next) => setState(
-                () => _sizes
-                  ..clear()
-                  ..addAll(next),
-              ),
-            ),
-          ),
-          const SizedBox(height: 40),
-          const Text('Connected - single select'),
-          const SizedBox(height: 12),
-          ButtonGroup<ViewMode>(
-            variant: ButtonGroupVariant.connected,
-            showSelectedIcon: true,
-            items: const [
-              ButtonGroupItem(
-                value: ViewMode.list,
-                label: 'List',
-                icon: Icons.view_list,
-              ),
-              ButtonGroupItem(
-                value: ViewMode.grid,
-                label: 'Grid',
-                icon: Icons.grid_view,
-              ),
-              ButtonGroupItem(
-                value: ViewMode.calendar,
-                label: 'Calendar',
-                icon: Icons.calendar_month,
-              ),
-            ],
-            selected: {_view},
-            onSelectionChanged: (next) => setState(() => _view = next.first),
-          ),
-          const SizedBox(height: 40),
-          const Text('Connected - multi select'),
-          const SizedBox(height: 12),
-          ButtonGroup<int>(
-            variant: ButtonGroupVariant.connected,
-            multiSelectionEnabled: true,
-            emptySelectionAllowed: true,
-            items: const [
-              ButtonGroupItem(value: 1, label: 'Red'),
-              ButtonGroupItem(value: 2, label: 'Green'),
-              ButtonGroupItem(value: 3, label: 'Blue'),
-            ],
-            selected: _colors,
-            onSelectionChanged: (next) => setState(() => _colors = next),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-enum ViewMode { list, grid, calendar }

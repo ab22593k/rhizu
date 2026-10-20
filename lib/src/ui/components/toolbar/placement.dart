@@ -19,25 +19,13 @@ class AdaptiveToolbarPlacement extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Reconfigure toolbar for placement
+    // Reconfigure toolbar for placement. Everything else (actions, FAB,
+    // styling, scrollability) is preserved by value semantics.
     final actuallyDocked = isDocked && sizeClass == WindowSizeClass.compact;
 
-    final adaptiveToolbar = RZToolbar(
+    final adaptiveToolbar = toolbar.copyWith(
       type: actuallyDocked ? ToolbarType.docked : ToolbarType.floating,
       layout: isVertical ? ToolbarLayout.vertical : ToolbarLayout.horizontal,
-      style: toolbar.style,
-      leading: toolbar.leading,
-      trailing: toolbar.trailing,
-      fab: toolbar.fab,
-      fabMenu: toolbar.fabMenu,
-      centerTitle: toolbar.centerTitle,
-      scrollable: toolbar.scrollable,
-      backgroundColor: toolbar.backgroundColor,
-      elevation: toolbar.elevation,
-      padding: toolbar.padding,
-      borderRadius: toolbar.borderRadius,
-      shape: toolbar.shape,
-      children: toolbar.children,
     );
 
     if (actuallyDocked) {

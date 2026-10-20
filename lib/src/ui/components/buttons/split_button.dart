@@ -1,129 +1,14 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart'
     hide CircularProgressIndicator, LinearProgressIndicator, ProgressIndicator;
-import 'package:flutter/widget_previews.dart';
 
+import 'package:rhizu/src/ui/components/buttons/split_button_geometry.dart';
+import 'package:rhizu/src/ui/components/buttons/split_button_item.dart';
+import 'package:rhizu/src/ui/components/buttons/split_button_menu.dart';
+import 'package:rhizu/src/ui/components/buttons/split_button_tokens.dart';
 import 'package:rhizu/src/ui/components/indicators/progress.dart';
 
-/// Sizes for the Expressive Split Button.
-enum SplitButtonSize {
-  xs,
-  sm,
-  md,
-  lg,
-  xl;
-
-  double get height {
-    switch (this) {
-      case SplitButtonSize.xs:
-        return 32.0;
-      case SplitButtonSize.sm:
-        return 40.0;
-      case SplitButtonSize.md:
-        return 56.0;
-      case SplitButtonSize.lg:
-        return 96.0;
-      case SplitButtonSize.xl:
-        return 136.0;
-    }
-  }
-
-  double get trailingWidth {
-    switch (this) {
-      case SplitButtonSize.xs:
-        return 22.0;
-      case SplitButtonSize.sm:
-        return 22.0;
-      case SplitButtonSize.md:
-        return 26.0;
-      case SplitButtonSize.lg:
-        return 38.0;
-      case SplitButtonSize.xl:
-        return 50.0;
-    }
-  }
-
-  double get iconSize {
-    switch (this) {
-      case SplitButtonSize.xs:
-        return 20.0;
-      case SplitButtonSize.sm:
-        return 24.0;
-      case SplitButtonSize.md:
-        return 24.0;
-      case SplitButtonSize.lg:
-        return 32.0;
-      case SplitButtonSize.xl:
-        return 40.0;
-    }
-  }
-
-  double get innerCornerRadius {
-    switch (this) {
-      case SplitButtonSize.xs:
-      case SplitButtonSize.sm:
-      case SplitButtonSize.md:
-        return 4.0;
-      case SplitButtonSize.lg:
-        return 8.0;
-      case SplitButtonSize.xl:
-        return 12.0;
-    }
-  }
-
-  double get opticalChevronOffset {
-    switch (this) {
-      case SplitButtonSize.xs:
-      case SplitButtonSize.sm:
-        return -1.0;
-      case SplitButtonSize.md:
-        return -2.0;
-      case SplitButtonSize.lg:
-        return -3.0;
-      case SplitButtonSize.xl:
-        return -6.0;
-    }
-  }
-
-  TextStyle? textStyle(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    switch (this) {
-      case SplitButtonSize.xs:
-        return textTheme.labelSmall;
-      case SplitButtonSize.sm:
-        return textTheme.labelMedium;
-      case SplitButtonSize.md:
-        return textTheme.labelLarge;
-      case SplitButtonSize.lg:
-        return textTheme.bodyLarge;
-      case SplitButtonSize.xl:
-        return textTheme.titleMedium;
-    }
-  }
-}
-
-/// Shapes for the Expressive Split Button.
-enum SplitButtonShape { round, square }
-
-/// Emphasis levels for the Expressive Split Button.
-enum SplitButtonEmphasis { filled, tonal, elevated, outlined, text }
-
-/// Alignment for the trailing segment's content.
-enum SplitButtonTrailingAlignment { opticalCenter, geometricCenter }
-
-/// An item for the split button menu.
-class SplitButtonItem<T> {
-  const SplitButtonItem({
-    required this.value,
-    required this.child,
-    this.enabled = true,
-  });
-
-  final T value;
-  final Object child; // String or Widget
-  final bool enabled;
-}
+export 'split_button_item.dart';
+export 'split_button_tokens.dart';
 
 /// Expressive Split Button.
 class SplitButton<T> extends StatefulWidget {
@@ -282,26 +167,11 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
                 size.width - 200, // Align right edge
                 size.height,
               ),
-              child: Material(
-                elevation: 4,
-                borderRadius: BorderRadius.circular(4),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children:
-                      widget.items?.map((item) {
-                        return ListTile(
-                          title: item.child is Widget
-                              ? (item.child as Widget)
-                              : Text(item.child.toString()),
-                          enabled: item.enabled,
-                          onTap: () {
-                            _closeMenu();
-                            widget.onSelected?.call(item.value);
-                          },
-                        );
-                      }).toList() ??
-                      widget.menuBuilder!(context),
-                ),
+              child: SplitButtonMenu<T>(
+                items: widget.items,
+                menuBuilder: widget.menuBuilder,
+                onDismiss: _closeMenu,
+                onSelected: widget.onSelected,
               ),
             ),
           ),
@@ -312,49 +182,13 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    Color backgroundColor;
-    Color foregroundColor;
-    Color? borderColor;
-    double elevation = 0;
-
-    switch (widget.emphasis) {
-      case SplitButtonEmphasis.filled:
-        backgroundColor = colorScheme.primary;
-        foregroundColor = colorScheme.onPrimary;
-      case SplitButtonEmphasis.tonal:
-        backgroundColor = colorScheme.secondaryContainer;
-        foregroundColor = colorScheme.onSecondaryContainer;
-      case SplitButtonEmphasis.elevated:
-        backgroundColor = colorScheme.surfaceContainerLow;
-        foregroundColor = colorScheme.primary;
-        elevation = 1;
-      case SplitButtonEmphasis.outlined:
-        backgroundColor = Colors.transparent;
-        foregroundColor = colorScheme.primary;
-        borderColor = colorScheme.outline;
-      case SplitButtonEmphasis.text:
-        backgroundColor = Colors.transparent;
-        foregroundColor = colorScheme.primary;
-    }
-
-    final height = widget.size.height;
-    final innerRadius = widget.size.innerCornerRadius;
-    final trailingWidth = widget.size.trailingWidth;
-
-    // Morphing Logic
-    final isRound = widget.shape == SplitButtonShape.round;
-    final isLarge =
-        widget.size == SplitButtonSize.md ||
-        widget.size == SplitButtonSize.lg ||
-        widget.size == SplitButtonSize.xl;
-    final canMorph = isRound && isLarge;
-
-    final textStyle = widget.size
-        .textStyle(context)
-        ?.copyWith(color: foregroundColor);
+    final geometry = SplitButtonGeometry(
+      size: widget.size,
+      shape: widget.shape,
+    );
+    final colors = SplitButtonPalette(
+      emphasis: widget.emphasis,
+    ).resolve(Theme.of(context).colorScheme);
 
     // While loading, both segments become non-interactive.
     final interactive = widget.enabled && !widget.isLoading;
@@ -362,149 +196,21 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
     return CompositedTransformTarget(
       link: _layerLink,
       child: SizedBox(
-        height: height,
+        height: geometry.height,
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            // Leading Segment
-            Material(
-              color: backgroundColor,
-              elevation: elevation,
-              shape: RoundedRectangleBorder(
-                side: borderColor != null
-                    ? BorderSide(color: borderColor)
-                    : BorderSide.none,
-                borderRadius: BorderRadius.only(
-                  topLeft: isRound
-                      ? Radius.circular(height / 2)
-                      : Radius.circular(innerRadius),
-                  bottomLeft: isRound
-                      ? Radius.circular(height / 2)
-                      : Radius.circular(innerRadius),
-                  topRight: Radius.circular(innerRadius),
-                  bottomRight: Radius.circular(innerRadius),
-                ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Tooltip(
-                message: widget.leadingTooltip ?? '',
-                child: InkWell(
-                  onTap: interactive ? widget.onPressed : null,
-                  child: Container(
-                    height: height,
-                    padding: _getLeadingPadding(widget.size),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        if (widget.isLoading)
-                          _buildLoadingIndicator(foregroundColor)
-                        else if (widget.leadingIcon != null) ...[
-                          Icon(
-                            widget.leadingIcon,
-                            size: widget.size.iconSize,
-                            color: foregroundColor,
-                          ),
-                          if (widget.label != null)
-                            SizedBox(width: _getIconLabelGap(widget.size)),
-                        ],
-                        if (widget.label != null)
-                          Text(widget.label!, style: textStyle),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
+            _buildLeadingSegment(
+              context,
+              geometry: geometry,
+              colors: colors,
+              interactive: interactive,
             ),
             const SizedBox(width: 2),
-            // Trailing Segment
-            AnimatedBuilder(
-              animation: _morphAnimation,
-              builder: (context, child) {
-                final morphProgress = canMorph ? _morphAnimation.value : 0.0;
-
-                // Calculate morphed width: lerp from base width to full height (circle)
-                final currentTrailingWidth = math.max(
-                  trailingWidth,
-                  height * morphProgress,
-                );
-
-                // Calculate padding based on morph
-                final horizontalPadding = canMorph
-                    ? (1.0 - morphProgress) *
-                          (trailingWidth - widget.size.iconSize) /
-                          2
-                    : 0.0;
-
-                final shape = RoundedRectangleBorder(
-                  side: borderColor != null
-                      ? BorderSide(color: borderColor)
-                      : BorderSide.none,
-                  borderRadius: BorderRadius.only(
-                    topLeft: Radius.circular(
-                      canMorph
-                          ? math.max(innerRadius, (height / 2) * morphProgress)
-                          : innerRadius,
-                    ),
-                    bottomLeft: Radius.circular(
-                      canMorph
-                          ? math.max(innerRadius, (height / 2) * morphProgress)
-                          : innerRadius,
-                    ),
-                    topRight: isRound
-                        ? Radius.circular(height / 2)
-                        : Radius.circular(innerRadius),
-                    bottomRight: isRound
-                        ? Radius.circular(height / 2)
-                        : Radius.circular(innerRadius),
-                  ),
-                );
-
-                return Material(
-                  color: backgroundColor,
-                  elevation: elevation,
-                  shape: shape,
-                  clipBehavior: Clip.antiAlias,
-                  child: Tooltip(
-                    message: widget.trailingTooltip ?? '',
-                    child: InkWell(
-                      onTap: interactive ? _toggleMenu : null,
-                      child: Container(
-                        height: height,
-                        width: canMorph ? null : 48.0, // Fixed width for small
-                        constraints: BoxConstraints(
-                          minWidth: canMorph
-                              ? currentTrailingWidth
-                              : 48.0, // Minimum touch target
-                        ),
-                        padding: EdgeInsets.symmetric(
-                          horizontal: horizontalPadding,
-                        ), // Handled by alignment
-                        child: Center(
-                          child: Transform.translate(
-                            offset: Offset(
-                              widget.trailingAlignment ==
-                                          SplitButtonTrailingAlignment
-                                              .opticalCenter &&
-                                      !_isMenuOpen
-                                  ? widget.size.opticalChevronOffset
-                                  : 0,
-                              0,
-                            ),
-                            child: RotationTransition(
-                              turns: _rotateAnimation,
-                              child: Icon(
-                                Icons.keyboard_arrow_down,
-                                size: widget.size.iconSize,
-                                color: foregroundColor,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                );
-              },
+            _buildTrailingSegment(
+              geometry: geometry,
+              colors: colors,
+              interactive: interactive,
             ),
           ],
         ),
@@ -512,7 +218,126 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
     );
   }
 
-  /// Builds the indeterminate loading indicator shown while [SplitButton.isLoading].
+  /// Builds the primary action segment.
+  Widget _buildLeadingSegment(
+    BuildContext context, {
+    required SplitButtonGeometry geometry,
+    required SplitButtonColors colors,
+    required bool interactive,
+  }) {
+    final textStyle = widget.size
+        .textStyle(context)
+        ?.copyWith(color: colors.foreground);
+
+    return Material(
+      color: colors.background,
+      elevation: colors.elevation,
+      shape: RoundedRectangleBorder(
+        side: colors.border != null
+            ? BorderSide(color: colors.border!)
+            : BorderSide.none,
+        borderRadius: geometry.leadingBorderRadius(),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Tooltip(
+        message: widget.leadingTooltip ?? '',
+        child: InkWell(
+          onTap: interactive ? widget.onPressed : null,
+          child: Container(
+            height: geometry.height,
+            padding: geometry.leadingPadding(),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (widget.isLoading)
+                  _buildLoadingIndicator(colors.foreground)
+                else if (widget.leadingIcon != null) ...[
+                  Icon(
+                    widget.leadingIcon,
+                    size: widget.size.iconSize,
+                    color: colors.foreground,
+                  ),
+                  if (widget.label != null)
+                    SizedBox(width: geometry.iconLabelGap()),
+                ],
+                if (widget.label != null) Text(widget.label!, style: textStyle),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// Builds the menu segment, animating its morph while the menu opens.
+  Widget _buildTrailingSegment({
+    required SplitButtonGeometry geometry,
+    required SplitButtonColors colors,
+    required bool interactive,
+  }) {
+    return AnimatedBuilder(
+      animation: _morphAnimation,
+      builder: (context, child) {
+        final morphProgress = geometry.morphProgress(_morphAnimation.value);
+        final currentTrailingWidth = geometry.trailingWidthFor(morphProgress);
+        final shape = RoundedRectangleBorder(
+          side: colors.border != null
+              ? BorderSide(color: colors.border!)
+              : BorderSide.none,
+          borderRadius: geometry.trailingBorderRadius(morphProgress),
+        );
+
+        return Material(
+          color: colors.background,
+          elevation: colors.elevation,
+          shape: shape,
+          clipBehavior: Clip.antiAlias,
+          child: Tooltip(
+            message: widget.trailingTooltip ?? '',
+            child: InkWell(
+              onTap: interactive ? _toggleMenu : null,
+              child: Container(
+                height: geometry.height,
+                width: geometry.canMorph
+                    ? null
+                    : SplitButtonGeometry.minimumTrailingWidth,
+                constraints: BoxConstraints(
+                  minWidth: geometry.canMorph
+                      ? currentTrailingWidth
+                      : SplitButtonGeometry.minimumTrailingWidth,
+                ),
+                padding: EdgeInsets.symmetric(
+                  horizontal: geometry.horizontalPaddingFor(morphProgress),
+                ),
+                child: Center(
+                  child: Transform.translate(
+                    offset: Offset(
+                      geometry.chevronOffset(
+                        menuOpen: _isMenuOpen,
+                        alignment: widget.trailingAlignment,
+                      ),
+                      0,
+                    ),
+                    child: RotationTransition(
+                      turns: _rotateAnimation,
+                      child: Icon(
+                        Icons.keyboard_arrow_down,
+                        size: widget.size.iconSize,
+                        color: colors.foreground,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Builds the indeterminate loading indicator shown while
+  /// [SplitButton.isLoading].
   ///
   /// Per the M3 progress-indicator-in-button guidance:
   /// - The active indicator matches the button's foreground color so it keeps
@@ -535,81 +360,6 @@ class _SplitButtonState<T> extends State<SplitButton<T>>
       trackColor: Colors.transparent,
     );
   }
-
-  EdgeInsetsGeometry _getLeadingPadding(SplitButtonSize size) {
-    switch (size) {
-      case SplitButtonSize.xs:
-        return const EdgeInsets.fromLTRB(12, 0, 10, 0);
-      case SplitButtonSize.sm:
-        return const EdgeInsets.fromLTRB(16, 0, 12, 0);
-      case SplitButtonSize.md:
-        return const EdgeInsets.fromLTRB(24, 0, 24, 0);
-      case SplitButtonSize.lg:
-        return const EdgeInsets.fromLTRB(48, 0, 48, 0);
-      case SplitButtonSize.xl:
-        return const EdgeInsets.fromLTRB(64, 0, 64, 0);
-    }
-  }
-
-  double _getIconLabelGap(SplitButtonSize size) {
-    switch (size) {
-      case SplitButtonSize.xs:
-        return 4.0;
-      case SplitButtonSize.sm:
-      case SplitButtonSize.md:
-        return 8.0;
-      case SplitButtonSize.lg:
-        return 12.0;
-      case SplitButtonSize.xl:
-        return 16.0;
-    }
-  }
 }
 
 // --- Previews ---
-
-@Preview(name: 'Split Button - Sizes', size: Size.fromHeight(500))
-Widget previewSplitButtonSizes() {
-  return MaterialApp(
-    debugShowCheckedModeBanner: false,
-    home: Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          spacing: 16,
-          children: [
-            SplitButton(
-              size: SplitButtonSize.xs,
-              label: 'XS',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              size: SplitButtonSize.sm,
-              label: 'Small',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              label: 'Medium',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              size: SplitButtonSize.lg,
-              label: 'Large',
-              onPressed: () {},
-              items: const [],
-            ),
-            SplitButton(
-              size: SplitButtonSize.xl,
-              label: 'Extra Large',
-              onPressed: () {},
-              items: const [],
-            ),
-          ],
-        ),
-      ),
-    ),
-  );
-}

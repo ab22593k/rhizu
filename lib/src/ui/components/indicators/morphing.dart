@@ -371,7 +371,7 @@ class _ShapePlaceholderPainter extends CustomPainter {
   }
 }
 
-@Preview(name: 'Morphing Loading indicator', size: Size.fromHeight(500))
+@Preview(name: 'Morphing Loading indicator', size: Size(800, 500))
 Widget previewExpressiveLoaderContained() => const MaterialApp(
   debugShowCheckedModeBanner: false,
   home: Scaffold(

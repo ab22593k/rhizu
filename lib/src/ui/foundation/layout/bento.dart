@@ -1,49 +1,12 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/widget_previews.dart';
 
-/// Defines the span of a tile in a Bento Grid.
-@immutable
-class BentoSpan {
-  const BentoSpan({this.crossAxis = 1, this.mainAxis = 1});
+import 'package:rhizu/src/ui/foundation/layout/bento_delegate.dart'
+    show BentoPacker, BentoSpanBuilder;
 
-  /// How many columns this tile covers.
-  final int crossAxis;
-
-  /// How many rows (in terms of grid blocks) this tile covers.
-  final int mainAxis;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      other is BentoSpan &&
-          runtimeType == other.runtimeType &&
-          crossAxis == other.crossAxis &&
-          mainAxis == other.mainAxis;
-
-  @override
-  int get hashCode => crossAxis.hashCode ^ mainAxis.hashCode;
-}
-
-/// A function to provide a [BentoSpan] for a given index.
-typedef BentoSpanBuilder = BentoSpan Function(int index);
-
-// --- Layout Logic ---
-
-class _BentoTileGeometry {
-  const _BentoTileGeometry({
-    required this.crossAxisIndex,
-    required this.mainAxisIndex,
-    required this.crossAxisSpan,
-    required this.mainAxisSpan,
-  });
-
-  final int crossAxisIndex;
-  final int mainAxisIndex;
-  final int crossAxisSpan;
-  final int mainAxisSpan;
-}
+export 'bento_delegate.dart' show BentoSpan, BentoSpanBuilder;
 
 /// A custom layout delegate that packs bento tiles into columns.
 class _BentoGridLayout extends SliverGridLayout {
@@ -51,10 +14,8 @@ class _BentoGridLayout extends SliverGridLayout {
     required this.crossAxisCount,
     required this.mainAxisSpacing,
     required this.crossAxisSpacing,
-    required this.spanBuilder,
     required this.crossAxisExtent,
-    required this.geometryCache,
-    required this.columnHeights,
+    required this.packer,
   }) : _cellExtent = math.max(
          0.0,
          (crossAxisExtent - crossAxisSpacing * (crossAxisCount - 1)) /
@@ -64,80 +25,14 @@ class _BentoGridLayout extends SliverGridLayout {
   final int crossAxisCount;
   final double mainAxisSpacing;
   final double crossAxisSpacing;
-  final BentoSpanBuilder spanBuilder;
   final double crossAxisExtent;
+  final BentoPacker packer;
 
   final double _cellExtent;
 
-  final Map<int, _BentoTileGeometry> geometryCache;
-  final List<int> columnHeights; // Tracking height in 'blocks'
-
-  _BentoTileGeometry _getTile(int index) {
-    if (geometryCache.containsKey(index)) {
-      return geometryCache[index]!;
-    }
-
-    if (columnHeights.isEmpty) {
-      columnHeights.addAll(List.filled(crossAxisCount, 0));
-    }
-
-    // Compute from the highest cached index + 1 up to 'index'
-    final startIndex = geometryCache.isEmpty
-        ? 0
-        : geometryCache.keys.reduce(math.max) + 1;
-
-    for (var i = startIndex; i <= index; i++) {
-      final span = spanBuilder(i);
-      // Ensure tiles don't exceed max columns
-      final int crossSpan = math.min(span.crossAxis, crossAxisCount);
-      final mainSpan = span.mainAxis;
-
-      var startMain = -1;
-      var startCross = -1;
-
-      // Find the earliest row where crossSpan fits seamlessly
-      var currentY = 0;
-      var found = false;
-
-      // Very basic packing: scan row by row, from left to right.
-      while (!found) {
-        for (var x = 0; x <= crossAxisCount - crossSpan; x++) {
-          var fits = true;
-          for (var c = x; c < x + crossSpan; c++) {
-            if (columnHeights[c] > currentY) {
-              fits = false;
-              break;
-            }
-          }
-          if (fits) {
-            startMain = currentY;
-            startCross = x;
-            found = true;
-            break;
-          }
-        }
-        if (!found) currentY++;
-      }
-
-      // Place tile and update column heights
-      for (var c = startCross; c < startCross + crossSpan; c++) {
-        columnHeights[c] = startMain + mainSpan;
-      }
-
-      geometryCache[i] = _BentoTileGeometry(
-        crossAxisIndex: startCross,
-        mainAxisIndex: startMain,
-        crossAxisSpan: crossSpan,
-        mainAxisSpan: mainSpan,
-      );
-    }
-
-    return geometryCache[index]!;
-  }
-
   @override
   SliverGridGeometry getGeometryForChildIndex(int index) {
-    final tile = _getTile(index);
+    final tile = packer.tileAt(index);
 
     final mainAxisOffset = tile.mainAxisIndex * (_cellExtent + mainAxisSpacing);
     final crossAxisOffset =
@@ -164,12 +59,12 @@ class _BentoGridLayout extends SliverGridLayout {
 
     // Convert scroll offset to an approximate block level.
     // This isn't perfect since tiles can span, but we walk backward in the cache.
-    if (geometryCache.isEmpty) return 0;
+    if (packer.geometryCache.isEmpty) return 0;
 
     var fallbackMin = 0;
     // Iterate backwards starting from the highest constructed index
-    for (var i = geometryCache.keys.reduce(math.max); i >= 0; i--) {
-      final tile = geometryCache[i];
+    for (var i = packer.geometryCache.keys.reduce(math.max); i >= 0; i--) {
+      final tile = packer.geometryCache[i];
       if (tile == null) continue;
 
       final tileBottomOffset =
@@ -197,11 +92,11 @@ class _BentoGridLayout extends SliverGridLayout {
     if (childCount == 0) return 0.0;
 
     // Calculate layout for all items to find true max height
-    _getTile(childCount - 1);
+    packer.tileAt(childCount - 1);
 
     // Find absolute highest column
     var maxHeight = 0;
-    for (final height in columnHeights) {
+    for (final height in packer.columnHeights) {
       if (height > maxHeight) maxHeight = height;
     }
 
@@ -217,15 +112,18 @@ class SliverGridDelegateWithBento extends SliverGridDelegate {
     required this.spanBuilder,
     this.mainAxisSpacing = 0.0,
     this.crossAxisSpacing = 0.0,
-  }) : assert(crossAxisCount > 0, 'crossAxisCount must be greater than 0');
+  }) : assert(crossAxisCount > 0, 'crossAxisCount must be greater than 0'),
+       _packer = BentoPacker(
+         crossAxisCount: crossAxisCount,
+         spanBuilder: spanBuilder,
+       );
 
   final int crossAxisCount;
   final BentoSpanBuilder spanBuilder;
   final double mainAxisSpacing;
   final double crossAxisSpacing;
 
-  final Map<int, _BentoTileGeometry> _geometryCache = {};
-  final List<int> _columnHeights = [];
+  final BentoPacker _packer;
 
   @override
   SliverGridLayout getLayout(SliverConstraints constraints) {
@@ -233,10 +131,8 @@ class SliverGridDelegateWithBento extends SliverGridDelegate {
       crossAxisCount: crossAxisCount,
       mainAxisSpacing: mainAxisSpacing,
       crossAxisSpacing: crossAxisSpacing,
-      spanBuilder: spanBuilder,
       crossAxisExtent: constraints.crossAxisExtent,
-      geometryCache: _geometryCache,
-      columnHeights: _columnHeights,
+      packer: _packer,
     );
   }
 
@@ -246,8 +142,7 @@ class SliverGridDelegateWithBento extends SliverGridDelegate {
         oldDelegate.mainAxisSpacing != mainAxisSpacing ||
         oldDelegate.crossAxisSpacing != crossAxisSpacing ||
         oldDelegate.spanBuilder != spanBuilder) {
-      _geometryCache.clear();
-      _columnHeights.clear();
+      _packer.clear();
       return true;
     }
     return false;
@@ -350,47 +245,4 @@ class SliverBentoGrid extends StatelessWidget {
 
     return sliver;
   }
-}
-
-@Preview(name: 'Bento Grid Dashboard')
-Widget bentoGridDashboard() {
-  return Scaffold(
-    body: Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: BentoGrid(
-        itemCount: 6,
-        itemBuilder: (context, index) {
-          final colors = [
-            Colors.orange,
-            Colors.purple,
-            Colors.teal,
-            Colors.indigo,
-            Colors.red,
-            Colors.green,
-          ];
-          return Container(
-            decoration: BoxDecoration(
-              color: colors[index % colors.length].withValues(alpha: 0.8),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Center(
-              child: Text(
-                'Tile $index',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          );
-        },
-        spanBuilder: (index) => switch (index) {
-          0 => const BentoSpan(crossAxis: 2, mainAxis: 2),
-          1 => const BentoSpan(crossAxis: 2),
-          2 => const BentoSpan(mainAxis: 2),
-          _ => const BentoSpan(),
-        },
-      ),
-    ),
-  );
 }
